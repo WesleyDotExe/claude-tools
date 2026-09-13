@@ -1,0 +1,21 @@
+{
+  "name": "time-arithmetic",
+  "summary": "Deterministic date/time/timezone math, exposed as an MCP server.",
+  "problem": "Language models are well-documented to get DST transitions, month/year rollover, and cross-timezone elapsed-time math wrong when they compute it by reasoning instead of by calculation -- a 2025 University of Edinburgh study (DateTimeReasoning) found even top models fail basic clock/calendar questions, and developer write-ups describe silently-wrong UTC conversions and 'same time' scheduling bugs across timezones.",
+  "keyless": true,
+  "requires_network": false,
+  "language": "python",
+  "python_version": ">=3.9",
+  "entry_point": "server.py",
+  "cli_module": "timekit.py",
+  "tests": "tests/test_timekit.py",
+  "proof": "proof/run_2026-09-13.txt",
+  "created": "2026-09-13",
+  "tools_exposed": [
+    "convert_timezone",
+    "add_time_delta",
+    "time_difference",
+    "date_facts",
+    "search_timezones"
+  ]
+}

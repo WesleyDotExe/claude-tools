@@ -1,0 +1,12 @@
+{
+  "name": "collection-index",
+  "summary": "Reads tools/*/manifest.json and reports the collection -- the foundational tool everything else (the dashboard, future runs deciding what to build next) reads from.",
+  "problem": "Before the collection had more than one tool, there was no single source of truth for what's in tools/ or whether a manifest is well-formed, which the dashboard and later runs both need.",
+  "keyless": true,
+  "requires_network": false,
+  "language": "python",
+  "python_version": ">=3.9",
+  "entry_point": "index.py",
+  "tests": "tests/test_index.py",
+  "created": "2026-09-13"
+}
