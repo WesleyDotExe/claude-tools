@@ -1,0 +1,19 @@
+[
+  {
+    "date": "2026-09-13",
+    "run": "first run under the standing project",
+    "setup": "Created tools/ and its manifest.json convention. Built the foundational tool, collection-index (tools/collection-index/), which scans tools/*/manifest.json and reports the collection -- it's what the dashboard reads instead of re-scanning the repo itself.",
+    "search_queries": [
+      "\"I wish Claude could\" OR \"is there an MCP for\" reddit 2026",
+      "people complain AI assistant can't reliably do unit conversion timezone date math"
+    ],
+    "found": "The first query mostly surfaced existing Reddit-integration MCP servers, not a fresh gap. The second turned up a genuine, well-documented recurring problem: language models are unreliable at date/time arithmetic -- DST transitions, month/year rollover, and cross-timezone 'same time' scheduling -- because they compute it by approximate reasoning instead of calculation. A 2025 University of Edinburgh study (DateTimeReasoning) found even strong models fail basic clock/calendar questions, and developer write-ups describe silently-wrong UTC conversions in production agents.",
+    "why": "Keyless (stdlib zoneinfo carries the full IANA tz database, no API or account needed), squarely inside 'gap in what Claude can do' (this is a case where a model should call a tool instead of reasoning it out), and checkable -- the fix is a deterministic function with a right answer, not a claim to trust.",
+    "built": {
+      "tool": "time-arithmetic",
+      "path": "tools/time-arithmetic",
+      "description": "An MCP server (stdio) wrapping five deterministic date/time functions: convert_timezone, add_time_delta, time_difference, date_facts, search_timezones."
+    },
+    "works": "13 unit tests targeting the exact failure modes (spring-forward gap, fall-back fold, leap-day/month-end clamping, cross-timezone diff) all pass. Beyond unit tests: a real MCP client session connected over stdio, called list_tools and five live tool calls, and got correct answers -- e.g. 01:30 America/New_York + 1 hour on the 2026-03-08 spring-forward night correctly lands at 03:30 (02:30 doesn't exist that night), and 9am Los Angeles vs 9am Berlin on the same date comes back as 9 hours apart, not zero. Full transcript: tools/time-arithmetic/proof/run_2026-09-13.txt. Note: the first version of add_time_delta got the spring-forward case wrong on the first test run (it added the hour using the fixed UTC offset already attached to the datetime instead of going through UTC first) -- the test caught it before it shipped, which is itself a small piece of evidence for why deterministic, tested tools beat unverified reasoning here."
+  }
+]
