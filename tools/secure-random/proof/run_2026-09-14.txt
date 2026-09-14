@@ -1,0 +1,133 @@
+=== unit tests (stdlib only, no mcp dependency needed) ===
+test_matches_textbook_critical_values (test_randkit.Chi2SfAgainstTextbookCriticalValuesTests.test_matches_textbook_critical_values) ... ok
+test_zero_statistic_is_p_one (test_randkit.Chi2SfAgainstTextbookCriticalValuesTests.test_zero_statistic_is_p_one) ... ok
+test_perfectly_uniform_counts_give_p_near_one (test_randkit.ChiSquareUniformTests.test_perfectly_uniform_counts_give_p_near_one) ... ok
+test_strongly_biased_counts_are_flagged (test_randkit.ChiSquareUniformTests.test_strongly_biased_counts_are_flagged) ... ok
+test_only_heads_or_tails (test_randkit.FlipCoinsTests.test_only_heads_or_tails) ... ok
+test_every_enabled_class_is_represented_over_many_generations (test_randkit.GeneratePasswordTests.test_every_enabled_class_is_represented_over_many_generations) ... ok
+test_exclude_ambiguous_removes_confusable_chars (test_randkit.GeneratePasswordTests.test_exclude_ambiguous_removes_confusable_chars) ... ok
+test_length_and_entropy (test_randkit.GeneratePasswordTests.test_length_and_entropy) ... ok
+test_length_shorter_than_class_count_raises (test_randkit.GeneratePasswordTests.test_length_shorter_than_class_count_raises) ... ok
+test_no_classes_enabled_raises (test_randkit.GeneratePasswordTests.test_no_classes_enabled_raises) ... ok
+test_bad_encoding_raises (test_randkit.GenerateTokenAndUuidTests.test_bad_encoding_raises) ... ok
+test_hex_token_length (test_randkit.GenerateTokenAndUuidTests.test_hex_token_length) ... ok
+test_urlsafe_token_is_nonempty_and_url_safe (test_randkit.GenerateTokenAndUuidTests.test_urlsafe_token_is_nonempty_and_url_safe) ... ok
+test_uuid4_is_well_formed_version_4 (test_randkit.GenerateTokenAndUuidTests.test_uuid4_is_well_formed_version_4) ... ok
+test_bounds_respected (test_randkit.RandomFloatsTests.test_bounds_respected) ... ok
+test_default_unit_interval (test_randkit.RandomFloatsTests.test_default_unit_interval) ... ok
+test_inclusive_bounds_respected (test_randkit.RandomIntegersTests.test_inclusive_bounds_respected) ... ok
+test_low_greater_than_high_raises (test_randkit.RandomIntegersTests.test_low_greater_than_high_raises) ... ok
+test_single_value_range (test_randkit.RandomIntegersTests.test_single_value_range) ... ok
+test_implicit_count_of_one (test_randkit.RollDiceTests.test_implicit_count_of_one) ... ok
+test_invalid_notation_raises (test_randkit.RollDiceTests.test_invalid_notation_raises) ... ok
+test_modifier_applied_to_total_not_rolls (test_randkit.RollDiceTests.test_modifier_applied_to_total_not_rolls) ... ok
+test_negative_modifier (test_randkit.RollDiceTests.test_negative_modifier) ... ok
+test_sides_out_of_range_raises (test_randkit.RollDiceTests.test_sides_out_of_range_raises) ... ok
+test_standard_notation (test_randkit.RollDiceTests.test_standard_notation) ... ok
+test_empty_items_raises (test_randkit.ShuffleAndPickTests.test_empty_items_raises) ... ok
+test_pick_unique_count_too_large_raises (test_randkit.ShuffleAndPickTests.test_pick_unique_count_too_large_raises) ... ok
+test_pick_unique_has_no_repeats_and_right_count (test_randkit.ShuffleAndPickTests.test_pick_unique_has_no_repeats_and_right_count) ... ok
+test_pick_with_replacement_can_repeat (test_randkit.ShuffleAndPickTests.test_pick_with_replacement_can_repeat) ... ok
+test_shuffle_actually_reorders_over_many_trials (test_randkit.ShuffleAndPickTests.test_shuffle_actually_reorders_over_many_trials) ... ok
+test_shuffle_is_a_permutation_and_does_not_mutate_input (test_randkit.ShuffleAndPickTests.test_shuffle_is_a_permutation_and_does_not_mutate_input) ... ok
+test_low_not_less_than_high_raises (test_randkit.VerifyUniformityIntegrationTests.test_low_not_less_than_high_raises) ... ok
+test_real_csprng_draws_pass_as_uniform (test_randkit.VerifyUniformityIntegrationTests.test_real_csprng_draws_pass_as_uniform) ... ok
+test_too_few_samples_for_buckets_raises (test_randkit.VerifyUniformityIntegrationTests.test_too_few_samples_for_buckets_raises) ... ok
+
+----------------------------------------------------------------------
+Ran 34 tests in 0.069s
+
+OK
+
+=== live MCP server session (mcp==2.2.0, stdio transport) ===
+Tools exposed: ['roll_dice', 'random_integers', 'random_floats', 'flip_coins', 'shuffle_list', 'pick_random', 'generate_password', 'generate_token', 'generate_uuid4', 'verify_uniformity']
+
+-- roll_dice: 4d6+2 --
+{
+  "notation": "4d6+2",
+  "rolls": [
+    5,
+    2,
+    4,
+    3
+  ],
+  "modifier": 2,
+  "total": 16
+}
+
+-- random_integers: 5 values in [1, 100] --
+[
+  24,
+  36,
+  37,
+  78,
+  17
+]
+
+-- flip_coins: 10 flips --
+{
+  "results": [
+    "heads",
+    "heads",
+    "heads",
+    "tails",
+    "tails",
+    "tails",
+    "heads",
+    "tails",
+    "heads",
+    "tails"
+  ],
+  "heads": 5,
+  "tails": 5
+}
+
+-- shuffle_list: a deck-ish list --
+[
+  "4",
+  "A",
+  "7",
+  "6",
+  "5",
+  "3",
+  "2"
+]
+
+-- pick_random: 3 unique winners from 8 entrants --
+[
+  "heidi",
+  "erin",
+  "grace"
+]
+
+-- generate_password: 20 chars --
+{
+  "password": "-}41aCE_c@C>(v0K6?#E",
+  "length": 20,
+  "alphabet_size": 87,
+  "entropy_bits": 128.9
+}
+
+-- generate_token: 16 bytes, urlsafe --
+"6qbeiyD4vutx-dkHTpICDg"
+
+-- generate_uuid4 --
+"b54524bc-a75c-4063-beb0-7cc6603ef398"
+
+-- verify_uniformity: does the classic '1-50' range cluster on 27? (20000 draws, chi-square test) --
+{
+  "range": [
+    1,
+    50
+  ],
+  "samples": 20000,
+  "buckets": 50,
+  "chi2_statistic": 53.62,
+  "degrees_of_freedom": 49,
+  "p_value": 0.301644,
+  "uniform_at_0.05": true,
+  "most_sampled_value": 41,
+  "most_sampled_share": 0.0217,
+  "expected_share": 0.02
+}
+

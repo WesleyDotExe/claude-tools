@@ -1,0 +1,24 @@
+{
+  "name": "secure-random",
+  "summary": "Cryptographically-secure randomness (dice, integers, floats, shuffling, passwords, tokens, UUIDs) exposed as an MCP server, plus a chi-square uniformity test to prove the output isn't biased.",
+  "problem": "Language models cannot generate genuine randomness: they predict a plausible-looking token rather than sampling one, so 'pick a random number' reliably comes back skewed toward whatever value is most common in training data -- the well-documented '27 phenomenon', where several major assistants asked for a random number 1-50 all answered 27.",
+  "keyless": true,
+  "requires_network": false,
+  "language": "python",
+  "python_version": ">=3.9",
+  "entry_point": "server.py",
+  "tests": "tests/test_randkit.py",
+  "tools_exposed": [
+    "roll_dice",
+    "random_integers",
+    "random_floats",
+    "flip_coins",
+    "shuffle_list",
+    "pick_random",
+    "generate_password",
+    "generate_token",
+    "generate_uuid4",
+    "verify_uniformity"
+  ],
+  "created": "2026-09-14"
+}
