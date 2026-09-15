@@ -20,7 +20,7 @@ Each tool lives in its own folder under [`tools/`](tools/) with its own README.
 
 - **[`time-arithmetic`](tools/time-arithmetic/)** — an MCP server for date and time math (durations, business-day offsets, timezone-aware calculations) — the kind of thing language models are notoriously unreliable at doing in their heads.
 - **[`collection-index`](tools/collection-index/)** — a tool that reads this collection and summarizes what's in it; used to keep the collection self-documenting.
-- **[`secure-random`](tools/secure-random/)** — an MCP server for cryptographically-secure randomness (dice, integers, passwords, tokens, UUIDs) plus a chi-square test to prove the output isn't biased — language models can't generate genuine randomness and reliably favor certain "random" answers.
+- **[`secure-random`](tools/secure-random/)** — an MCP server for cryptographically-secure randomness (dice, integers, passwords, tokens, UUIDs, weighted picks) plus chi-square tests to prove the output isn't biased — language models can't generate genuine randomness and reliably favor certain "random" answers.
 
 ## Using a tool
 

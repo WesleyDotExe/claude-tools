@@ -1,0 +1,90 @@
+=== unit tests (stdlib only, no mcp dependency needed) ===
+test_matches_textbook_critical_values (test_randkit.Chi2SfAgainstTextbookCriticalValuesTests.test_matches_textbook_critical_values) ... ok
+test_zero_statistic_is_p_one (test_randkit.Chi2SfAgainstTextbookCriticalValuesTests.test_zero_statistic_is_p_one) ... ok
+test_exact_match_to_non_uniform_expected_gives_p_one (test_randkit.ChiSquareFitTests.test_exact_match_to_non_uniform_expected_gives_p_one) ... ok
+test_length_mismatch_raises (test_randkit.ChiSquareFitTests.test_length_mismatch_raises) ... ok
+test_uniform_is_a_special_case_of_fit (test_randkit.ChiSquareFitTests.test_uniform_is_a_special_case_of_fit) ... ok
+test_perfectly_uniform_counts_give_p_near_one (test_randkit.ChiSquareUniformTests.test_perfectly_uniform_counts_give_p_near_one) ... ok
+test_strongly_biased_counts_are_flagged (test_randkit.ChiSquareUniformTests.test_strongly_biased_counts_are_flagged) ... ok
+test_only_heads_or_tails (test_randkit.FlipCoinsTests.test_only_heads_or_tails) ... ok
+test_every_enabled_class_is_represented_over_many_generations (test_randkit.GeneratePasswordTests.test_every_enabled_class_is_represented_over_many_generations) ... ok
+test_exclude_ambiguous_removes_confusable_chars (test_randkit.GeneratePasswordTests.test_exclude_ambiguous_removes_confusable_chars) ... ok
+test_length_and_entropy (test_randkit.GeneratePasswordTests.test_length_and_entropy) ... ok
+test_length_shorter_than_class_count_raises (test_randkit.GeneratePasswordTests.test_length_shorter_than_class_count_raises) ... ok
+test_no_classes_enabled_raises (test_randkit.GeneratePasswordTests.test_no_classes_enabled_raises) ... ok
+test_bad_encoding_raises (test_randkit.GenerateTokenAndUuidTests.test_bad_encoding_raises) ... ok
+test_hex_token_length (test_randkit.GenerateTokenAndUuidTests.test_hex_token_length) ... ok
+test_urlsafe_token_is_nonempty_and_url_safe (test_randkit.GenerateTokenAndUuidTests.test_urlsafe_token_is_nonempty_and_url_safe) ... ok
+test_uuid4_is_well_formed_version_4 (test_randkit.GenerateTokenAndUuidTests.test_uuid4_is_well_formed_version_4) ... ok
+test_bounds_respected (test_randkit.RandomFloatsTests.test_bounds_respected) ... ok
+test_default_unit_interval (test_randkit.RandomFloatsTests.test_default_unit_interval) ... ok
+test_inclusive_bounds_respected (test_randkit.RandomIntegersTests.test_inclusive_bounds_respected) ... ok
+test_low_greater_than_high_raises (test_randkit.RandomIntegersTests.test_low_greater_than_high_raises) ... ok
+test_single_value_range (test_randkit.RandomIntegersTests.test_single_value_range) ... ok
+test_implicit_count_of_one (test_randkit.RollDiceTests.test_implicit_count_of_one) ... ok
+test_invalid_notation_raises (test_randkit.RollDiceTests.test_invalid_notation_raises) ... ok
+test_modifier_applied_to_total_not_rolls (test_randkit.RollDiceTests.test_modifier_applied_to_total_not_rolls) ... ok
+test_negative_modifier (test_randkit.RollDiceTests.test_negative_modifier) ... ok
+test_sides_out_of_range_raises (test_randkit.RollDiceTests.test_sides_out_of_range_raises) ... ok
+test_standard_notation (test_randkit.RollDiceTests.test_standard_notation) ... ok
+test_empty_items_raises (test_randkit.ShuffleAndPickTests.test_empty_items_raises) ... ok
+test_pick_unique_count_too_large_raises (test_randkit.ShuffleAndPickTests.test_pick_unique_count_too_large_raises) ... ok
+test_pick_unique_has_no_repeats_and_right_count (test_randkit.ShuffleAndPickTests.test_pick_unique_has_no_repeats_and_right_count) ... ok
+test_pick_with_replacement_can_repeat (test_randkit.ShuffleAndPickTests.test_pick_with_replacement_can_repeat) ... ok
+test_shuffle_actually_reorders_over_many_trials (test_randkit.ShuffleAndPickTests.test_shuffle_actually_reorders_over_many_trials) ... ok
+test_shuffle_is_a_permutation_and_does_not_mutate_input (test_randkit.ShuffleAndPickTests.test_shuffle_is_a_permutation_and_does_not_mutate_input) ... ok
+test_weighted_pick_all_zero_weights_raises (test_randkit.ShuffleAndPickTests.test_weighted_pick_all_zero_weights_raises) ... ok
+test_weighted_pick_favors_heavy_item_over_many_trials (test_randkit.ShuffleAndPickTests.test_weighted_pick_favors_heavy_item_over_many_trials) ... ok
+test_weighted_pick_length_mismatch_raises (test_randkit.ShuffleAndPickTests.test_weighted_pick_length_mismatch_raises) ... ok
+test_weighted_pick_negative_weight_raises (test_randkit.ShuffleAndPickTests.test_weighted_pick_negative_weight_raises) ... ok
+test_weighted_pick_never_returns_a_zero_weight_item (test_randkit.ShuffleAndPickTests.test_weighted_pick_never_returns_a_zero_weight_item) ... ok
+test_weighted_unique_pick_has_no_repeats_and_right_count (test_randkit.ShuffleAndPickTests.test_weighted_unique_pick_has_no_repeats_and_right_count) ... ok
+test_low_not_less_than_high_raises (test_randkit.VerifyUniformityIntegrationTests.test_low_not_less_than_high_raises) ... ok
+test_real_csprng_draws_pass_as_uniform (test_randkit.VerifyUniformityIntegrationTests.test_real_csprng_draws_pass_as_uniform) ... ok
+test_too_few_samples_for_buckets_raises (test_randkit.VerifyUniformityIntegrationTests.test_too_few_samples_for_buckets_raises) ... ok
+test_real_csprng_draws_match_requested_weights (test_randkit.VerifyWeightedDistributionTests.test_real_csprng_draws_match_requested_weights) ... ok
+test_too_few_samples_for_buckets_raises (test_randkit.VerifyWeightedDistributionTests.test_too_few_samples_for_buckets_raises) ... ok
+test_too_few_weights_raises (test_randkit.VerifyWeightedDistributionTests.test_too_few_weights_raises) ... ok
+test_zero_weight_raises (test_randkit.VerifyWeightedDistributionTests.test_zero_weight_raises) ... ok
+
+----------------------------------------------------------------------
+Ran 47 tests in 0.153s
+
+OK
+
+=== live MCP server session (mcp==2.2.0, stdio transport) -- new weighted-selection tools on top of the existing 10 ===
+Tools exposed: ['roll_dice', 'random_integers', 'random_floats', 'flip_coins', 'shuffle_list', 'pick_random', 'generate_password', 'generate_token', 'generate_uuid4', 'verify_uniformity', 'verify_weighted_distribution']
+
+-- pick_random: weighted raffle, 3 unique winners from 5 tickets (weights [50,1,1,1,1]) --
+{"result": ["alice", "bob", "dave"]}
+
+-- pick_random: weighted with replacement, 10 picks, heavy bias to 'jackpot' (weights [9,1]) --
+{"result": ["jackpot", "jackpot", "jackpot", "jackpot", "jackpot", "nothing", "jackpot", "jackpot", "jackpot", "nothing"]}
+
+-- pick_random: unweighted call still works unchanged (no weights arg) --
+{"result": [3, 4]}
+
+-- verify_weighted_distribution: do weighted picks over [1,2,7] actually land ~10%/20%/70%? (60000 samples) --
+{
+  "weights": [
+    1.0,
+    2.0,
+    7.0
+  ],
+  "samples": 60000,
+  "buckets": 3,
+  "chi2_statistic": 4.14,
+  "degrees_of_freedom": 2,
+  "p_value": 0.126159,
+  "matches_weights_at_0.05": true,
+  "observed_shares": [
+    0.1007,
+    0.1967,
+    0.7026
+  ],
+  "expected_shares": [
+    0.1,
+    0.2,
+    0.7
+  ]
+}

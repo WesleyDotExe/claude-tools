@@ -4,6 +4,37 @@ Things a future cycle (or a human) should know that don't fit elsewhere.
 Per TASKS.md: this is also where an idea that needed an API key or account
 gets parked instead of built, since this project only ships keyless tools.
 
+## 2026-09-15: course-correction on the standing "next step" list
+
+The previous `special-projects/current.md` suggested extending
+`time-arithmetic` with natural-language relative-date parsing ("next
+Friday", "in 3 business days") as future work. Re-reading that tool's own
+README this cycle: its "What it doesn't do" section frames the *absence*
+of natural-language parsing as a deliberate design boundary ("this tool is
+for exact calculation once the inputs are already unambiguous, not for
+interpreting vague scheduling language"), not an unbuilt feature. Building
+it would cut against the tool's own stated scope. It's also a heavily
+saturated space already (chrono-node, dateparser, parsedatetime, and
+multiple existing NL-date MCP wrappers). Recommend dropping that specific
+suggestion rather than carrying it forward again; if a future cycle wants
+to revisit it, treat it as a *new, separate* tool decision (does the need
+clear the saturation/feasibility bar on its own?), not as "finishing" what
+time-arithmetic already deliberately declined to do.
+
+## 2026-09-15: this cycle's research reinforces "the obvious ideas are saturated"
+
+Checked several more candidates this cycle before deciding not to build a
+new tool: AI-generated regex correctness/ReDoS detection, WCAG color
+contrast checking, and general big-number/precise arithmetic. All three
+are real, well-documented "LLMs get this wrong" problems, and all three
+already have multiple existing MCP servers (including, for regex, at least
+one dedicated ReDoS-heuristics guard). Same outcome as last cycle's
+word-counting/diffing/cron/unit-conversion search: the visible, easy-to-
+articulate "AI can't do X" gaps are getting picked over fast across the
+whole MCP ecosystem, not just this repo. Future cycles may need to search
+for less obvious angles, or accept doing more "harden/extend existing tool"
+cycles (TASKS.md rule 9) than "ship a new tool" cycles.
+
 ## Ideas rejected this cycle, and why
 
 - **Word/character/token counting MCP tool.** Real, well-documented need
@@ -23,6 +54,20 @@ gets parked instead of built, since this project only ships keyless tools.
   reliably" problems, and all already have multiple existing, apparently
   solid MCP implementations found in search. Didn't build any of these
   this cycle for the same saturation reason.
+- **Regex correctness / ReDoS (catastrophic backtracking) checker.**
+  (2026-09-15) Real, sharply-documented problem — LLM-generated regexes are
+  known to have inconsistent escaping and, more seriously, nested-quantifier
+  ReDoS vulnerabilities exploitable as a DoS vector. Not built: multiple
+  existing MCP servers already do exactly this, including at least one
+  (Regex ReDoS Guard) whose entire focus is static ReDoS analysis with
+  caller-defined complexity limits — closer to this repo's "checkable
+  proof" style than a generic tester, so the differentiation this repo
+  would need isn't there.
+- **WCAG color contrast checker.** (2026-09-15) Real problem (models give
+  wrong contrast ratios because they don't run the actual luminance/ratio
+  math), but at least half a dozen existing MCP servers already compute
+  WCAG 2.1 contrast ratios from hex/RGB/HSL input. No differentiated angle
+  found.
 
 None of the above needed an API key — they were passed over for being
 already well-served elsewhere, not for infeasibility. If a future cycle

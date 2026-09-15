@@ -14,6 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from randkit import (  # noqa: E402
+    _chi_square_fit,
     _chi_square_uniform,
     chi2_sf,
     flip_coins,
@@ -26,6 +27,7 @@ from randkit import (  # noqa: E402
     roll_dice,
     shuffle_list,
     verify_uniformity,
+    verify_weighted_distribution,
 )
 
 
@@ -129,6 +131,37 @@ class ShuffleAndPickTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             pick_random([], count=1)
 
+    def test_weighted_pick_favors_heavy_item_over_many_trials(self):
+        # 1000:1:1 weighting -- "a" should dominate, but "b"/"c" must still
+        # be reachable (probability zero only for an actual zero weight).
+        results = [
+            pick_random(["a", "b", "c"], count=1, unique=False, weights=[1000, 1, 1])[0]
+            for _ in range(500)
+        ]
+        self.assertGreater(results.count("a"), 480)
+
+    def test_weighted_pick_never_returns_a_zero_weight_item(self):
+        for _ in range(200):
+            picked = pick_random(["a", "b"], count=1, unique=False, weights=[1, 0])
+            self.assertEqual(picked, ["a"])
+
+    def test_weighted_unique_pick_has_no_repeats_and_right_count(self):
+        picked = pick_random(list(range(10)), count=5, unique=True, weights=list(range(1, 11)))
+        self.assertEqual(len(picked), 5)
+        self.assertEqual(len(picked), len(set(picked)))
+
+    def test_weighted_pick_length_mismatch_raises(self):
+        with self.assertRaises(ValueError):
+            pick_random(["a", "b"], count=1, weights=[1, 2, 3])
+
+    def test_weighted_pick_negative_weight_raises(self):
+        with self.assertRaises(ValueError):
+            pick_random(["a", "b"], count=1, weights=[1, -1])
+
+    def test_weighted_pick_all_zero_weights_raises(self):
+        with self.assertRaises(ValueError):
+            pick_random(["a", "b"], count=1, weights=[0, 0])
+
 
 class GeneratePasswordTests(unittest.TestCase):
     def test_length_and_entropy(self):
@@ -226,6 +259,48 @@ class ChiSquareUniformTests(unittest.TestCase):
         chi2, df, p = _chi_square_uniform(counts)
         self.assertEqual(sum(counts), 10000)
         self.assertLess(p, 1e-10)
+
+
+class ChiSquareFitTests(unittest.TestCase):
+    def test_uniform_is_a_special_case_of_fit(self):
+        # _chi_square_uniform([100]*10) should equal _chi_square_fit against
+        # a flat expected distribution built by hand.
+        counts = [80, 95, 110, 105, 90, 120, 100, 95, 105, 100]
+        expected = [100.0] * 10
+        self.assertEqual(_chi_square_fit(counts, expected), _chi_square_uniform(counts))
+
+    def test_exact_match_to_non_uniform_expected_gives_p_one(self):
+        chi2, df, p = _chi_square_fit([400, 400, 200], [400.0, 400.0, 200.0])
+        self.assertEqual(chi2, 0.0)
+        self.assertEqual(df, 2)
+        self.assertEqual(p, 1.0)
+
+    def test_length_mismatch_raises(self):
+        with self.assertRaises(ValueError):
+            _chi_square_fit([1, 2], [1.0, 2.0, 3.0])
+
+
+class VerifyWeightedDistributionTests(unittest.TestCase):
+    def test_real_csprng_draws_match_requested_weights(self):
+        # Loose threshold, same rationale as the uniformity integration test:
+        # this only fails if the weighted-draw machinery is actually broken.
+        result = verify_weighted_distribution([1, 2, 7], samples=60000)
+        self.assertGreater(result["p_value"], 1e-6)
+        self.assertEqual(result["buckets"], 3)
+        for observed, expected in zip(result["observed_shares"], result["expected_shares"]):
+            self.assertAlmostEqual(observed, expected, delta=0.02)
+
+    def test_too_few_weights_raises(self):
+        with self.assertRaises(ValueError):
+            verify_weighted_distribution([1])
+
+    def test_zero_weight_raises(self):
+        with self.assertRaises(ValueError):
+            verify_weighted_distribution([1, 0], samples=1000)
+
+    def test_too_few_samples_for_buckets_raises(self):
+        with self.assertRaises(ValueError):
+            verify_weighted_distribution([1, 1, 1], samples=5)
 
 
 class VerifyUniformityIntegrationTests(unittest.TestCase):

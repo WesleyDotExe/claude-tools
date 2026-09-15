@@ -22,13 +22,27 @@ jobs:
           script: |
             const pr = context.payload.pull_request;
             const sha = pr.head.sha;
+            // Relevant checks (test.yml et al.) are triggered by a separate
+            // `pull_request` event and can take a few seconds to register a
+            // check run. Don't treat "none seen yet" as "nothing to wait
+            // for" until we've given them a grace period to show up --
+            // otherwise this job (triggered by `pull_request_target`, which
+            // fires in parallel) can race ahead and merge before the other
+            // workflow has even started.
+            const GRACE_ITERATIONS = 6; // 6 * 10s = 60s
             for (let i = 0; i < 30; i++) {
               const { data } = await github.rest.checks.listForRef({
                 owner: context.repo.owner, repo: context.repo.repo, ref: sha,
               });
               const runs = data.check_runs.filter(r => r.name !== 'auto-merge');
               const relevant = runs.filter(r => /deploy|build|test/i.test(r.name));
-              if (relevant.length === 0) return;
+              if (relevant.length === 0) {
+                if (i < GRACE_ITERATIONS) {
+                  await new Promise(r => setTimeout(r, 10000));
+                  continue;
+                }
+                return;
+              }
               const allDone = relevant.every(r => r.status === 'completed');
               const anyFail = relevant.some(r => ['failure','cancelled','timed_out'].includes(r.conclusion));
               if (anyFail) { core.setFailed('A required check failed; not merging.'); return; }

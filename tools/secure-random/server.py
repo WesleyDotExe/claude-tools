@@ -56,9 +56,14 @@ def shuffle_list(items: list[Any]) -> list[Any]:
 
 
 @server.tool()
-def pick_random(items: list[Any], count: int = 1, unique: bool = True) -> list[Any]:
-    """Pick `count` items from `items`; without replacement by default (unique=True)."""
-    return randkit.pick_random(items, count, unique)
+def pick_random(
+    items: list[Any], count: int = 1, unique: bool = True, weights: list[float] | None = None
+) -> list[Any]:
+    """Pick `count` items from `items`; without replacement by default (unique=True).
+    Optional `weights` (same length as `items`) makes the pick biased instead of
+    uniform, e.g. a raffle weighted by ticket count.
+    """
+    return randkit.pick_random(items, count, unique, weights)
 
 
 @server.tool()
@@ -95,6 +100,15 @@ def verify_uniformity(low: int, high: int, samples: int = 10000) -> dict:
     model's own guesses do.
     """
     return randkit.verify_uniformity(low, high, samples)
+
+
+@server.tool()
+def verify_weighted_distribution(weights: list[float], samples: int = 10000) -> dict:
+    """Chi-square-test `samples` weighted picks over `weights` against the distribution
+    they should follow, and report a p-value -- proof that pick_random's weighted mode
+    actually matches the requested weights instead of just plausibly resembling them.
+    """
+    return randkit.verify_weighted_distribution(weights, samples)
 
 
 if __name__ == "__main__":
