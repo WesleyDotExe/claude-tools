@@ -105,17 +105,63 @@ def shuffle_list(items: list) -> list:
     return arr
 
 
-def pick_random(items: list, count: int = 1, unique: bool = True) -> list:
-    """Pick `count` items from `items`, with or without replacement."""
+def _validate_weights(weights: list[float], n_items: int) -> None:
+    if len(weights) != n_items:
+        raise ValueError("weights must be the same length as items")
+    if any(w < 0 for w in weights):
+        raise ValueError("weights must be non-negative")
+    if sum(weights) <= 0:
+        raise ValueError("weights must sum to a positive number")
+
+
+def _weighted_index(weights: list[float]) -> int:
+    """Pick an index with probability proportional to `weights`, using CSPRNG-
+    backed uniform floats (not the `random` module) for the draw.
+    """
+    total = sum(weights)
+    target = _random_unit_float() * total
+    cumulative = 0.0
+    for i, w in enumerate(weights):
+        cumulative += w
+        if target < cumulative:
+            return i
+    return len(weights) - 1  # floating-point edge case: target == total
+
+
+def pick_random(
+    items: list, count: int = 1, unique: bool = True, weights: list[float] | None = None
+) -> list:
+    """Pick `count` items from `items`, with or without replacement.
+
+    `weights` (optional) makes the selection biased instead of uniform: item i
+    is picked with probability proportional to `weights[i]` (e.g. a raffle
+    weighted by ticket count). Omit it for the original uniform behavior.
+    """
     if not items:
         raise ValueError("items must be non-empty")
     if count < 1:
         raise ValueError("count must be >= 1")
-    if unique:
-        if count > len(items):
-            raise ValueError("count exceeds number of items for a unique selection")
-        return shuffle_list(items)[:count]
-    return [items[secrets.randbelow(len(items))] for _ in range(count)]
+    if weights is None:
+        if unique:
+            if count > len(items):
+                raise ValueError("count exceeds number of items for a unique selection")
+            return shuffle_list(items)[:count]
+        return [items[secrets.randbelow(len(items))] for _ in range(count)]
+
+    _validate_weights(weights, len(items))
+    if not unique:
+        return [items[_weighted_index(weights)] for _ in range(count)]
+
+    if count > len(items):
+        raise ValueError("count exceeds number of items for a unique selection")
+    pool_items = list(items)
+    pool_weights = list(weights)
+    picked = []
+    for _ in range(count):
+        i = _weighted_index(pool_weights)
+        picked.append(pool_items.pop(i))
+        pool_weights.pop(i)
+    return picked
 
 
 def generate_password(
@@ -243,21 +289,35 @@ def chi2_sf(x: float, df: int) -> float:
     return _upper_incomplete_gamma_cf(a, xx)
 
 
+def _chi_square_fit(counts: list[int], expected: list[float]) -> tuple[float, int, float]:
+    """Chi-square goodness-of-fit of `counts` against arbitrary `expected` counts.
+
+    Returns (chi2_statistic, degrees_of_freedom, p_value). Shared by
+    `_chi_square_uniform` (expected is a flat share) and
+    `verify_weighted_distribution` (expected follows arbitrary weights).
+    """
+    if len(counts) != len(expected):
+        raise ValueError("counts and expected must be the same length")
+    if len(counts) < 2:
+        raise ValueError("need at least 2 buckets")
+    chi2 = sum((c - e) ** 2 / e for c, e in zip(counts, expected))
+    df = len(counts) - 1
+    return chi2, df, chi2_sf(chi2, df)
+
+
 def _chi_square_uniform(counts: list[int]) -> tuple[float, int, float]:
     """Chi-square goodness-of-fit of `counts` against a uniform distribution.
 
-    Returns (chi2_statistic, degrees_of_freedom, p_value). Pulled out from
-    verify_uniformity so tests can feed it a synthetic histogram directly,
-    without needing to bias the CSPRNG itself to prove the test catches bias.
+    Pulled out from verify_uniformity so tests can feed it a synthetic
+    histogram directly, without needing to bias the CSPRNG itself to prove
+    the test catches bias.
     """
     n_buckets = len(counts)
     if n_buckets < 2:
         raise ValueError("need at least 2 buckets")
     samples = sum(counts)
-    expected = samples / n_buckets
-    chi2 = sum((c - expected) ** 2 / expected for c in counts)
-    df = n_buckets - 1
-    return chi2, df, chi2_sf(chi2, df)
+    expected = [samples / n_buckets] * n_buckets
+    return _chi_square_fit(counts, expected)
 
 
 def verify_uniformity(low: int, high: int, samples: int = 10000) -> dict:
@@ -288,4 +348,39 @@ def verify_uniformity(low: int, high: int, samples: int = 10000) -> dict:
         "most_sampled_value": low + peak_index,
         "most_sampled_share": round(counts[peak_index] / samples, 4),
         "expected_share": round(1 / n_buckets, 4),
+    }
+
+
+def verify_weighted_distribution(weights: list[float], samples: int = 10000) -> dict:
+    """Draw `samples` CSPRNG weighted picks over `weights` and chi-square test the
+    observed counts against the weight-proportional distribution they should
+    follow -- the same proof-not-assertion pattern as `verify_uniformity`, applied
+    to `pick_random`'s weighted mode so a claim like "item 2 comes up ~40% of the
+    time" is checkable instead of just plausible-sounding.
+    """
+    n_buckets = len(weights)
+    if n_buckets < 2:
+        raise ValueError("need at least 2 weights")
+    if any(w <= 0 for w in weights):
+        raise ValueError("weights must be strictly positive (a zero-weight bucket has no expected count to test)")
+    if samples < n_buckets * 5:
+        raise ValueError(f"need at least {n_buckets * 5} samples to test {n_buckets} buckets")
+    if samples > MAX_UNIFORMITY_SAMPLES:
+        raise ValueError(f"samples must be <= {MAX_UNIFORMITY_SAMPLES}")
+    total_weight = sum(weights)
+    counts = [0] * n_buckets
+    for _ in range(samples):
+        counts[_weighted_index(weights)] += 1
+    expected = [samples * w / total_weight for w in weights]
+    chi2, df, p_value = _chi_square_fit(counts, expected)
+    return {
+        "weights": weights,
+        "samples": samples,
+        "buckets": n_buckets,
+        "chi2_statistic": round(chi2, 3),
+        "degrees_of_freedom": df,
+        "p_value": round(p_value, 6),
+        "matches_weights_at_0.05": p_value > 0.05,
+        "observed_shares": [round(c / samples, 4) for c in counts],
+        "expected_shares": [round(w / total_weight, 4) for w in weights],
     }

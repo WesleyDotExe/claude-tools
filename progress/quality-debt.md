@@ -3,27 +3,30 @@
 Honest list of known gaps and shortcuts. Not urgent by default — surfaced
 so a future cycle (or the owner) can decide whether to pay them down.
 
-## No CI actually runs tests before auto-merge
+## Fixed this cycle (2026-09-15): no CI actually ran tests before auto-merge
 
-`.github/workflows/auto-merge.yml` waits for check runs matching
-`/deploy|build|test/i` on the PR's head commit, but no workflow in this
-repo currently *produces* a check with one of those names — there's no
-`test.yml` or similar that runs `python3 -m unittest discover` (or
-equivalent) on a PR. That means the "wait for checks to pass" step finds
-zero relevant checks, treats that as nothing to wait for, and merges
-immediately. In practice this hasn't caused a bad merge because each
-cycle's session runs the tests by hand before opening the PR and won't
-open one if they fail — but that's a human/session discipline
-guarantee, not a repo guarantee. A malformed PR (wrong branch, bad merge,
-anything that skips the "I ran the tests" step) would sail through
-unchecked.
+Was: `.github/workflows/auto-merge.yml` waits for check runs matching
+`/deploy|build|test/i` on the PR's head commit, but no workflow produced a
+check with one of those names, so the "wait for checks to pass" step found
+zero relevant checks and merged immediately without ever running a test.
 
-Fix would be a `.github/workflows/test.yml` that runs each
-`tools/*/tests/` suite (and maybe `collection-index` itself as a sanity
-check) on `pull_request`, matching one of the auto-merge workflow's name
-patterns. Not fixed this cycle because it's infrastructure work orthogonal
-to this cycle's tool, and touching CI/merge automation deserves its own
-focused pass rather than a drive-by edit.
+Fixed by adding `.github/workflows/test.yml` (job name `test`, matches the
+existing regex) that runs `python3 -m unittest discover -s tests` for every
+`tools/*/tests/` directory plus a `collection-index` sanity check, on every
+`pull_request` and on push to `main`.
+
+While fixing it, found and fixed a second, subtler bug in the same file:
+`auto-merge.yml` runs on `pull_request_target` (fires immediately when a PR
+opens) while `test.yml` runs on the separate `pull_request` event — a race.
+The old loop treated "no relevant check run exists yet" as "nothing to wait
+for" and merged instantly, which meant even a correctly-named test workflow
+could lose the race and never get waited on if its check run hadn't
+registered in the few hundred milliseconds before `auto-merge.yml`'s first
+poll. Fixed with a grace period (`GRACE_ITERATIONS`, 60s) before the loop
+concludes there's truly nothing to wait for. Not covered by an automated
+test (it's GitHub Actions timing behavior, hard to unit test locally) — the
+real proof is this cycle's own PR going through the now-live `test` check
+before merging; worth eyeballing that PR's checks tab to confirm.
 
 ## `secure-random`'s `verify_uniformity` is O(samples) in Python, not vectorized
 
@@ -36,12 +39,15 @@ in a reasonable diagnostic run), and adding NumPy would break the
 collection is built on. Documented, not fixed, because the tradeoff (stay
 dependency-free vs. faster large-N) favors staying dependency-free.
 
-## `pick_random`'s uniform-only sampling
+## Fixed this cycle (2026-09-15): `pick_random`'s uniform-only sampling
 
-`pick_random` (in `tools/secure-random`) only does uniform selection --
+Was: `pick_random` (in `tools/secure-random`) only did uniform selection --
 no weighted/biased sampling, even though callers sometimes want that
-("pick a winner weighted by ticket count"). Noted as a candidate
-extension in `special-projects/current.md` rather than built speculatively
-this cycle, since no real expressed need for it surfaced in this cycle's
-research (unlike the base uniform-randomness gap, which had direct
-documentation).
+("pick a winner weighted by ticket count").
+
+Fixed by adding an optional `weights` parameter to `pick_random` (both
+unique and with-replacement modes) and a new `verify_weighted_distribution`
+tool that chi-square-tests real draws against the requested weights,
+extending the same proof-not-assertion pattern `verify_uniformity` already
+used for the uniform case. 13 new unit tests plus a live MCP session
+(`proof/run_2026-09-15.txt`).
