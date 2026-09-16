@@ -4,6 +4,52 @@ Things a future cycle (or a human) should know that don't fit elsewhere.
 Per TASKS.md: this is also where an idea that needed an API key or account
 gets parked instead of built, since this project only ships keyless tools.
 
+## 2026-09-16: ideas rejected this cycle, and a sharper saturation signal
+
+Checked six more candidates before landing on `discrete-probability`:
+hashing/checksums (SHA256/MD5), text readability/syllable counting
+(Flesch-Kincaid), bitwise arithmetic (AND/OR/XOR on large numbers), semver
+range satisfaction, and haversine great-circle geodistance. All had at
+least one existing MCP server; readability, semver, and geodistance
+specifically are all published by the same account (pipeworx-io), which
+appears to be systematically working through exactly this "single
+deterministic calculation as an MCP tool" space. That's a sharper signal
+than the last two cycles' saturation findings: it's not just that any given
+idea has *a* competitor, it's that the whole shape of idea ("wrap one
+well-known formula/algorithm as an MCP tool") is being actively colonized.
+A future cycle chasing a new tool in that shape should expect saturation as
+the default outcome, not the exception, and either look for a fresh
+*angle* on an already-covered domain (the way `secure-random`'s
+`verify_uniformity` differentiates on checkability rather than novelty) or
+a problem shape that isn't "one deterministic calculation" at all
+(`discrete-probability`'s shape -- several related word-problem scenarios
+sharing a verification mechanism -- was one way out this cycle).
+
+- **Hashing/checksums (SHA256, MD5, etc.).** Real, well-documented failure
+  (models return a plausible-looking but wrong hash rather than computing
+  one). Not built: multiple existing MCP servers (Apify's hash-generator
+  connectors, kanad13/MCP-Server-for-Hashing, a Glama "Hash Digest Tool")
+  already cover exactly this.
+- **Text readability / syllable counting (Flesch-Kincaid etc.).** Real (the
+  syllable-counting heuristic is a documented weak point even for
+  dedicated tools, let alone models). Not built: pipeworx-io/mcp-textstats
+  and several older non-MCP libraries already do this.
+- **Bitwise arithmetic (AND/OR/XOR/shift on large numbers).** Plausible
+  failure mode, but no sharply-articulated real complaint turned up in
+  search (mostly generic bitwise-operation reference material, not people
+  reporting AI getting it wrong) -- didn't clear the "actually expressed
+  need" bar in TASKS.md step 2, separately from any saturation question.
+- **Semver range satisfaction (`^1.2.0`, `~1.2.0`, etc.).** Same shape as
+  hashing: plausible, but pipeworx-io/mcp-semver already implements
+  `satisfies_range` for caret/tilde/comparator/x-range/AND/OR syntax.
+- **Haversine / great-circle geodistance.** Same shape again:
+  pipeworx-io/mcp-geodistance and Mapbox's own MCP server both already
+  compute this.
+
+None of the above needed an API key or account — passed over for
+saturation (or, for bitwise arithmetic, a weak source signal), not
+infeasibility.
+
 ## 2026-09-15: course-correction on the standing "next step" list
 
 The previous `special-projects/current.md` suggested extending

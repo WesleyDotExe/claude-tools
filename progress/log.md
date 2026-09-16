@@ -2,6 +2,66 @@
 
 Newest entry on top. One entry per cycle: what was done, honestly.
 
+## 2026-09-16 — fourth run: built discrete-probability
+
+- Ran `tools/collection-index/index.py` first, per the loop: 3 tools
+  existed. Nothing overlapped a fresh candidate need.
+- Web-searched several candidate angles: general "wish Claude/ChatGPT
+  could" complaints, hashing/checksums, readability/syllable counting,
+  bitwise arithmetic, semver ranges, haversine geodistance, and discrete
+  probability. The first six all landed on the same saturation outcome as
+  the last two cycles -- notably discovering that a single account
+  (pipeworx-io) already publishes dedicated MCP servers for
+  readability/text-stats, semver, and geodistance, which is a stronger
+  signal than before that the obvious "AI can't do X" calculator-shaped
+  gaps are being actively picked over across the whole MCP ecosystem.
+- Discrete probability broke the streak: a 2026 paper on counterintuitive
+  discrete-probability problems (arxiv.org/pdf/2606.07516) found models
+  average 0.96 accuracy on standard probability problems but only 0.59 on
+  counterintuitive ones, and the "LLMs Can't Do Probability" writeup
+  (brainsteam.co.uk) documents the same failure informally, with an active
+  Hacker News discussion. Existing calculator MCP servers expose raw
+  combinatorics primitives (nCr, nPr, factorial) but not pre-composed
+  scenarios like the birthday paradox or Monty Hall, and none found pair
+  the answer with a Monte Carlo cross-check.
+- Built `tools/discrete-probability`: `probkit.py` (six exact functions --
+  `birthday_collision`, `dice_sum_distribution`, `hypergeometric_probability`,
+  `binomial_probability`, `bayes_update`, a generalized `monty_hall` -- using
+  `fractions.Fraction`/`math.comb` for exact arithmetic, plus a from-scratch
+  Wilson score confidence interval) and `server.py` (MCP stdio wrapper).
+  Every function accepts `verify=true` to actually play the scenario out via
+  CSPRNG draws (`secrets`, the same source `tools/secure-random` uses) and
+  check the exact answer against the simulated frequency's 95% interval --
+  deliberately building on the existing collection's proof-not-assertion
+  pattern rather than reinventing it.
+- Wrote 41 unit tests (`tests/test_probkit.py`): known textbook values
+  (birthday-23/365 ~= 50.73%, classic Monty Hall 1/3 vs 2/3, 2d6-sums-to-7 =
+  1/6, >=2 aces in a 5-card hand ~= 4.17%), input validation, and two
+  correctness cross-checks: `bayes_update`'s general machinery and
+  `monty_hall`'s independently-derived closed-form formula fed equivalent
+  problems and landing on the exact same fraction via two unrelated code
+  paths, and a "does the check have teeth" test proving the Wilson-interval
+  logic actually flags a wrong claim, not just passes a correct one -- the
+  same discipline `secure-random`'s chi-square tests apply to bias.
+- Drove the live MCP server over stdio with a real client: `list_tools` plus
+  all six tools called, several with `verify=true` (30,000 real CSPRNG
+  trials each), and a deliberately invalid input (an impossible `reveal`
+  count for a generalized Monty Hall) confirmed to come back as an MCP
+  error result rather than a silently wrong number.
+  `tools/discrete-probability/proof/run_2026-09-16.txt`.
+- Fixed one real bug caught while writing tests, not after shipping:
+  `_parse_probability` treated a plain int (`1` or `0`) as inexact (a bare
+  `float`/`int` branch), so `bayes_update("1/3", 1, 0)` silently downgraded
+  from exact-fraction arithmetic to float arithmetic partway through and
+  the returned `posterior` came back as a bare float instead of the
+  `{fraction, decimal}` shape every other exact result uses. Fixed by
+  making ints parse to `Fraction` like fraction strings do (floats still
+  stay float, since a literal like `0.3` isn't exactly representable and
+  shouldn't be laundered into a falsely-precise fraction).
+- Updated root `README.md`, appended this cycle to
+  `special-projects/cycles.json`, rebuilt `_site/dashboard.html`, updated
+  `special-projects/current.md` and `progress/notes-for-owner.md`.
+
 ## 2026-09-15 — third run: hardened CI, extended secure-random
 
 - Ran `tools/collection-index/index.py` first, per the loop: 3 tools

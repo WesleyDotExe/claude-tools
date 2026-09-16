@@ -1,10 +1,10 @@
 # Current state
 
-**Last cycle:** 2026-09-15 (third run)
+**Last cycle:** 2026-09-16 (fourth run)
 
 ## Where things stand
 
-Three tools in the collection, all hardened this cycle:
+Four tools in the collection:
 
 - `tools/collection-index` — reads `tools/*/manifest.json`, the source of
   truth the dashboard (and future runs) read from instead of re-scanning
@@ -16,12 +16,20 @@ Three tools in the collection, all hardened this cycle:
   integers, floats, shuffling, passwords, tokens, UUIDs, weighted picks)
   plus `verify_uniformity` and `verify_weighted_distribution`, chi-square
   tests that prove output isn't biased instead of asserting it.
+- `tools/discrete-probability` — MCP server for exact discrete-probability
+  calculations (birthday-paradox collisions, dice-sum distributions,
+  drawing without replacement, binomial trials, Bayes' theorem, a
+  generalized Monty Hall problem). Every function accepts `verify=true` to
+  actually play the scenario out via CSPRNG simulation and check the exact
+  answer against the simulated frequency's 95% confidence interval -- the
+  same proof-not-assertion discipline `secure-random` established, applied
+  to a different failure mode (LLMs are specifically bad at *counterintuitive*
+  discrete probability, not just randomness generation).
 
-CI now actually runs each tool's test suite on every PR
-(`.github/workflows/test.yml`) and `auto-merge.yml` genuinely waits for it
-(the previous "waits for checks matching a name that no workflow produced,
-so merges instantly" gap, and a related event-race bug, are both fixed —
-see `progress/quality-debt.md`).
+CI runs each tool's test suite on every PR (`.github/workflows/test.yml`,
+105 tests total across all four tools as of this cycle) and
+`auto-merge.yml` waits for it genuinely (fixed 2026-09-15, see
+`progress/quality-debt.md` for history).
 
 `special-projects/cycles.json` has the full story (searches, source links,
 why each tool was picked, proof) for all cycles so far.
@@ -34,22 +42,33 @@ Options for the next cycle, roughly in order of how promising they looked
 during this cycle's research (see `progress/notes-for-owner.md` for the
 full reasoning):
 
-1. **New tool, if a sharply-felt + undersaturated need turns up.** Two
-   cycles in a row now, the obvious "AI can't do X reliably" ideas (word
-   counting, diffing, unit/subnet conversion, cron parsing, calculators,
-   regex/ReDoS, WCAG contrast) all turned out to be heavily covered by
-   existing MCP servers elsewhere. Check saturation early, before
-   investing a full cycle in one candidate.
-2. Re-run the TASKS.md loop step 1 (dogfood `collection-index`) first,
-   every cycle, before searching for new candidates — it's cheap and
-   keeps this file honest.
-3. If nothing clears the bar again: there isn't an obvious next
-   hardening/extension item queued in `progress/quality-debt.md` right
-   now (both open items from the last two cycles are fixed as of this
-   cycle) — a future cycle in that position should read all three tools'
-   "what it doesn't do" sections fresh, rather than assume last cycle's
-   suggestions still apply (this cycle found one, the time-arithmetic
-   NL-date idea, that didn't — see `progress/notes-for-owner.md`).
+1. **Re-run the TASKS.md loop step 1 first, every cycle** (dogfood
+   `collection-index`, re-read each tool's own "what it doesn't do"
+   section fresh) before searching for new candidates — cheap, and keeps
+   this file honest instead of assuming a past cycle's framing still
+   applies.
+2. **New tool, if a sharply-felt + undersaturated need turns up** — but
+   treat "yet another single deterministic calculation" ideas (hashing,
+   readability/syllable counting, bitwise arithmetic, semver ranges,
+   haversine geodistance — all checked and rejected this cycle, see
+   `progress/notes-for-owner.md`) as low-probability now; a single account
+   (pipeworx-io) is systematically publishing MCP servers across exactly
+   that space. A next candidate that clears the bar will likely need either
+   a genuinely fresh angle (like this cycle's "pair the exact answer with a
+   checkable simulation" move on `discrete-probability`) or a problem shape
+   outside "single deterministic calculation" entirely.
+3. **Extend `discrete-probability` itself**, if a real gap surfaces — e.g.
+   a live MCP session or dogfooding surfaces a scenario shape (say,
+   negative binomial / geometric-distribution "expected number of trials
+   until first success" problems) that's a natural sibling to the six
+   already there. Don't add it speculatively; only if research turns up
+   the same kind of real, documented complaint the existing six answer.
+4. **If nothing clears the bar:** no open item is currently queued in
+   `progress/quality-debt.md` (the standing `secure-random`
+   non-vectorized-uniformity item is documented as an accepted tradeoff,
+   not a to-do) — a future cycle in that position should read all four
+   tools' "what it doesn't do" sections fresh rather than assume a past
+   cycle's suggestions still apply.
 
 Do NOT re-propose natural-language date parsing for `time-arithmetic` as
 "unbuilt future work" — its README frames the absence as a deliberate

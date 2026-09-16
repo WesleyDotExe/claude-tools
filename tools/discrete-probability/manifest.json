@@ -1,0 +1,22 @@
+{
+  "name": "discrete-probability",
+  "summary": "Exact discrete-probability calculations (birthday-paradox collisions, dice-sum distributions, drawing without replacement, binomial trials, Bayes' theorem, generalized Monty Hall) exposed as an MCP server, each answer optionally cross-checked against a real Monte Carlo simulation.",
+  "problem": "Language models are well-documented to be unreliable at discrete probability, and specifically worse on 'counterintuitive' problems: a 2026 study on counterintuitive discrete-probability problems found models average 0.96 accuracy on standard problems but only 0.59 on counterintuitive ones (arxiv.org/pdf/2606.07516), and the widely-discussed 'LLMs Can't Do Probability' writeup documents the same failure informally. The birthday paradox and the Monty Hall problem are the canonical examples of a single correct answer that both humans and models reliably get wrong by reasoning about it instead of calculating it.",
+  "keyless": true,
+  "requires_network": false,
+  "language": "python",
+  "python_version": ">=3.9",
+  "entry_point": "server.py",
+  "cli_module": "probkit.py",
+  "tests": "tests/test_probkit.py",
+  "proof": "proof/run_2026-09-16.txt",
+  "created": "2026-09-16",
+  "tools_exposed": [
+    "birthday_collision",
+    "dice_sum_distribution",
+    "hypergeometric_probability",
+    "binomial_probability",
+    "bayes_update",
+    "monty_hall"
+  ]
+}
