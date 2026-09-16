@@ -1,0 +1,276 @@
+=== unit tests (stdlib only, no mcp dependency needed) ===
+test_certain_evidence_gives_certain_posterior (test_probkit.BayesUpdateTests.test_certain_evidence_gives_certain_posterior) ... ok
+test_impossible_evidence_raises (test_probkit.BayesUpdateTests.test_impossible_evidence_raises) ... ok
+test_matches_monty_hall_switch_probability_independently (test_probkit.BayesUpdateTests.test_matches_monty_hall_switch_probability_independently) ... ok
+test_verify_matches_exact_answer (test_probkit.BayesUpdateTests.test_verify_matches_exact_answer) ... ok
+test_exact_fraction_input_stays_exact (test_probkit.BinomialProbabilityTests.test_exact_fraction_input_stays_exact) ... ok
+test_float_input_gives_decimal_only (test_probkit.BinomialProbabilityTests.test_float_input_gives_decimal_only) ... ok
+test_negative_n_raises (test_probkit.BinomialProbabilityTests.test_negative_n_raises) ... ok
+test_no_event_specified_raises (test_probkit.BinomialProbabilityTests.test_no_event_specified_raises) ... ok
+test_out_of_range_probability_raises (test_probkit.BinomialProbabilityTests.test_out_of_range_probability_raises) ... ok
+test_verify_matches_exact_answer (test_probkit.BinomialProbabilityTests.test_verify_matches_exact_answer) ... ok
+test_classic_23_people_365_days (test_probkit.BirthdayCollisionTests.test_classic_23_people_365_days) ... ok
+test_more_items_than_categories_is_certain (test_probkit.BirthdayCollisionTests.test_more_items_than_categories_is_certain) ... ok
+test_negative_n_raises (test_probkit.BirthdayCollisionTests.test_negative_n_raises) ... ok
+test_verify_matches_exact_answer (test_probkit.BirthdayCollisionTests.test_verify_matches_exact_answer) ... ok
+test_verify_trials_out_of_range_raises (test_probkit.BirthdayCollisionTests.test_verify_trials_out_of_range_raises) ... ok
+test_zero_categories_raises (test_probkit.BirthdayCollisionTests.test_zero_categories_raises) ... ok
+test_zero_or_one_item_has_no_collision (test_probkit.BirthdayCollisionTests.test_zero_or_one_item_has_no_collision) ... ok
+test_at_least_and_at_most_combine (test_probkit.DiceSumDistributionTests.test_at_least_and_at_most_combine) ... ok
+test_distribution_bounds (test_probkit.DiceSumDistributionTests.test_distribution_bounds) ... ok
+test_full_distribution_sums_to_one (test_probkit.DiceSumDistributionTests.test_full_distribution_sums_to_one) ... ok
+test_invalid_num_dice_raises (test_probkit.DiceSumDistributionTests.test_invalid_num_dice_raises) ... ok
+test_invalid_sides_raises (test_probkit.DiceSumDistributionTests.test_invalid_sides_raises) ... ok
+test_oversized_space_raises (test_probkit.DiceSumDistributionTests.test_oversized_space_raises) ... ok
+test_two_d6_sum_seven_is_one_sixth (test_probkit.DiceSumDistributionTests.test_two_d6_sum_seven_is_one_sixth) ... ok
+test_verify_matches_exact_answer (test_probkit.DiceSumDistributionTests.test_verify_matches_exact_answer) ... ok
+test_at_least_two_aces_in_five_card_hand (test_probkit.HypergeometricProbabilityTests.test_at_least_two_aces_in_five_card_hand) ... ok
+test_no_event_specified_raises (test_probkit.HypergeometricProbabilityTests.test_no_event_specified_raises) ... ok
+test_probabilities_over_full_range_sum_to_one (test_probkit.HypergeometricProbabilityTests.test_probabilities_over_full_range_sum_to_one) ... ok
+test_sample_size_out_of_range_raises (test_probkit.HypergeometricProbabilityTests.test_sample_size_out_of_range_raises) ... ok
+test_success_states_out_of_range_raises (test_probkit.HypergeometricProbabilityTests.test_success_states_out_of_range_raises) ... ok
+test_verify_matches_exact_answer (test_probkit.HypergeometricProbabilityTests.test_verify_matches_exact_answer) ... ok
+test_cars_out_of_range_raises (test_probkit.MontyHallTests.test_cars_out_of_range_raises) ... ok
+test_classic_three_door_version (test_probkit.MontyHallTests.test_classic_three_door_version) ... ok
+test_generalized_ten_door_version (test_probkit.MontyHallTests.test_generalized_ten_door_version) ... ok
+test_no_reveal_switching_is_no_better_than_staying (test_probkit.MontyHallTests.test_no_reveal_switching_is_no_better_than_staying) ... ok
+test_reveal_out_of_range_raises (test_probkit.MontyHallTests.test_reveal_out_of_range_raises) ... ok
+test_too_few_doors_raises (test_probkit.MontyHallTests.test_too_few_doors_raises) ... ok
+test_verify_matches_exact_answers_for_both_strategies (test_probkit.MontyHallTests.test_verify_matches_exact_answers_for_both_strategies) ... ok
+test_correct_claim_falls_inside_interval (test_probkit.SimulationMachineryTests.test_correct_claim_falls_inside_interval) ... ok
+test_wilson_interval_is_narrow_and_centered_for_large_n (test_probkit.SimulationMachineryTests.test_wilson_interval_is_narrow_and_centered_for_large_n) ... ok
+test_wrong_claim_is_flagged_outside_interval (test_probkit.SimulationMachineryTests.test_wrong_claim_is_flagged_outside_interval) ... ok
+
+----------------------------------------------------------------------
+Ran 41 tests in 1.415s
+
+OK
+
+=== live MCP server session (mcp==2.2.0, stdio transport) ===
+Tools exposed: ['birthday_collision', 'dice_sum_distribution', 'hypergeometric_probability', 'binomial_probability', 'bayes_update', 'monty_hall']
+
+-- birthday_collision: classic 23-people/365-day case, verified --
+{
+  "n": 23,
+  "categories": 365,
+  "probability_of_collision": {
+    "fraction": "38093904702297390785243708291056390518886454060947061/75091883268515350125426207425223147563269805908203125",
+    "decimal": 0.5072972343
+  },
+  "simulation": {
+    "trials": 30000,
+    "successes": 15256,
+    "observed_frequency": 0.508533,
+    "exact_probability": 0.507297,
+    "confidence_interval_95": [
+      0.502875,
+      0.514189
+    ],
+    "exact_within_confidence_interval": true
+  }
+}
+
+-- monty_hall: classic 3-door case, verified --
+{
+  "doors": 3,
+  "cars": 1,
+  "reveal": 1,
+  "win_probability_if_stay": {
+    "fraction": "1/3",
+    "decimal": 0.3333333333
+  },
+  "win_probability_if_switch": {
+    "fraction": "2/3",
+    "decimal": 0.6666666667
+  },
+  "switching_is_better": true,
+  "simulation": {
+    "trials": 30000,
+    "stay": {
+      "trials": 30000,
+      "successes": 9997,
+      "observed_frequency": 0.333233,
+      "exact_probability": 0.333333,
+      "confidence_interval_95": [
+        0.327921,
+        0.338588
+      ],
+      "exact_within_confidence_interval": true
+    },
+    "switch": {
+      "trials": 30000,
+      "successes": 20003,
+      "observed_frequency": 0.666767,
+      "exact_probability": 0.666667,
+      "confidence_interval_95": [
+        0.661412,
+        0.672079
+      ],
+      "exact_within_confidence_interval": true
+    }
+  }
+}
+
+-- monty_hall: generalized 5-door/2-car/2-reveal case --
+{
+  "doors": 5,
+  "cars": 2,
+  "reveal": 2,
+  "win_probability_if_stay": {
+    "fraction": "2/5",
+    "decimal": 0.4
+  },
+  "win_probability_if_switch": {
+    "fraction": "4/5",
+    "decimal": 0.8
+  },
+  "switching_is_better": true
+}
+
+-- dice_sum_distribution: 2d6 summing to exactly 7, verified --
+{
+  "num_dice": 2,
+  "sides": 6,
+  "min_sum": 2,
+  "max_sum": 12,
+  "distribution": {
+    "2": {
+      "fraction": "1/36",
+      "decimal": 0.0277777778
+    },
+    "3": {
+      "fraction": "1/18",
+      "decimal": 0.0555555556
+    },
+    "4": {
+      "fraction": "1/12",
+      "decimal": 0.0833333333
+    },
+    "5": {
+      "fraction": "1/9",
+      "decimal": 0.1111111111
+    },
+    "6": {
+      "fraction": "5/36",
+      "decimal": 0.1388888889
+    },
+    "7": {
+      "fraction": "1/6",
+      "decimal": 0.1666666667
+    },
+    "8": {
+      "fraction": "5/36",
+      "decimal": 0.1388888889
+    },
+    "9": {
+      "fraction": "1/9",
+      "decimal": 0.1111111111
+    },
+    "10": {
+      "fraction": "1/12",
+      "decimal": 0.0833333333
+    },
+    "11": {
+      "fraction": "1/18",
+      "decimal": 0.0555555556
+    },
+    "12": {
+      "fraction": "1/36",
+      "decimal": 0.0277777778
+    }
+  },
+  "event": {
+    "at_least": 7,
+    "at_most": 7
+  },
+  "event_probability": {
+    "fraction": "1/6",
+    "decimal": 0.1666666667
+  },
+  "simulation": {
+    "trials": 30000,
+    "successes": 5014,
+    "observed_frequency": 0.167133,
+    "exact_probability": 0.166667,
+    "confidence_interval_95": [
+      0.162954,
+      0.171398
+    ],
+    "exact_within_confidence_interval": true
+  }
+}
+
+-- hypergeometric_probability: >=2 aces in a 5-card hand, verified --
+{
+  "population_size": 52,
+  "success_states": 4,
+  "sample_size": 5,
+  "event": {
+    "at_least": 2,
+    "at_most": 4
+  },
+  "event_probability": {
+    "fraction": "2257/54145",
+    "decimal": 0.0416843661
+  },
+  "simulation": {
+    "trials": 30000,
+    "successes": 1261,
+    "observed_frequency": 0.042033,
+    "exact_probability": 0.041684,
+    "confidence_interval_95": [
+      0.039821,
+      0.044363
+    ],
+    "exact_within_confidence_interval": true
+  }
+}
+
+-- binomial_probability: >=1 six in 10 d6 rolls, verified --
+{
+  "n": 10,
+  "prob_success": "1/6",
+  "event": {
+    "at_least": 1,
+    "at_most": 10
+  },
+  "event_probability": {
+    "fraction": "50700551/60466176",
+    "decimal": 0.8384944171
+  },
+  "simulation": {
+    "trials": 30000,
+    "successes": 25170,
+    "observed_frequency": 0.839,
+    "exact_probability": 0.838494,
+    "confidence_interval_95": [
+      0.834798,
+      0.843116
+    ],
+    "exact_within_confidence_interval": true
+  }
+}
+
+-- bayes_update: Monty Hall's switch probability derived independently via Bayes, verified --
+{
+  "prior": 0.3333333333,
+  "likelihood_given_true": 1.0,
+  "likelihood_given_false": 0.25,
+  "evidence": 0.5,
+  "posterior": 0.6666666667,
+  "simulation": {
+    "trials": 14991,
+    "successes": 9896,
+    "observed_frequency": 0.660129,
+    "exact_probability": 0.666667,
+    "confidence_interval_95": [
+      0.652507,
+      0.66767
+    ],
+    "exact_within_confidence_interval": true,
+    "trials_where_evidence_occurred": 14991
+  }
+}
+
+-- monty_hall(doors=3, cars=1, reveal=2): an impossible reveal count is rejected, not silently miscomputed --
+is_error=True  content='Error executing tool monty_hall'
