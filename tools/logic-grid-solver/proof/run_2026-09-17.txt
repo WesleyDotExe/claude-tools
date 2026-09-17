@@ -1,0 +1,666 @@
+=== unit tests (stdlib only, no mcp dependency needed) ===
+test_every_clue_type_used_in_the_zebra_puzzle_is_documented (test_puzzlekit.DescribeClueTypesTests.test_every_clue_type_used_in_the_zebra_puzzle_is_documented) ... ok
+test_every_documented_example_is_actually_valid (test_puzzlekit.DescribeClueTypesTests.test_every_documented_example_is_actually_valid) ... ok
+test_contradictory_clues_raise (test_puzzlekit.SmallToyPuzzleTests.test_contradictory_clues_raise) ... ok
+test_left_of_and_distance_clues (test_puzzlekit.SmallToyPuzzleTests.test_left_of_and_distance_clues) ... ok
+test_max_nodes_cap_is_respected_without_crashing_or_hanging (test_puzzlekit.SmallToyPuzzleTests.test_max_nodes_cap_is_respected_without_crashing_or_hanging) ... ok
+test_not_next_to_and_different_position (test_puzzlekit.SmallToyPuzzleTests.test_not_next_to_and_different_position) ... ok
+test_right_of_and_immediately_right_of (test_puzzlekit.SmallToyPuzzleTests.test_right_of_and_immediately_right_of) ... ok
+test_underconstrained_puzzle_is_not_unique (test_puzzlekit.SmallToyPuzzleTests.test_underconstrained_puzzle_is_not_unique) ... ok
+test_distance_out_of_range_raises (test_puzzlekit.ValidationTests.test_distance_out_of_range_raises) ... ok
+test_duplicate_items_in_category_raise (test_puzzlekit.ValidationTests.test_duplicate_items_in_category_raise) ... ok
+test_empty_categories_raises (test_puzzlekit.ValidationTests.test_empty_categories_raises) ... ok
+test_mismatched_category_lengths_raise (test_puzzlekit.ValidationTests.test_mismatched_category_lengths_raise) ... ok
+test_no_clues_raises (test_puzzlekit.ValidationTests.test_no_clues_raises) ... ok
+test_out_of_range_position_raises (test_puzzlekit.ValidationTests.test_out_of_range_position_raises) ... ok
+test_self_referencing_clue_raises (test_puzzlekit.ValidationTests.test_self_referencing_clue_raises) ... ok
+test_too_many_positions_raises (test_puzzlekit.ValidationTests.test_too_many_positions_raises) ... ok
+test_unknown_category_reference_raises (test_puzzlekit.ValidationTests.test_unknown_category_reference_raises) ... ok
+test_unknown_clue_type_raises (test_puzzlekit.ValidationTests.test_unknown_clue_type_raises) ... ok
+test_unknown_item_reference_raises (test_puzzlekit.ValidationTests.test_unknown_item_reference_raises) ... ok
+test_correct_guess_verifies_clean (test_puzzlekit.VerifySolutionTests.test_correct_guess_verifies_clean) ... ok
+test_duplicate_item_is_a_structural_error (test_puzzlekit.VerifySolutionTests.test_duplicate_item_is_a_structural_error) ... ok
+test_missing_item_is_a_structural_error_not_a_crash (test_puzzlekit.VerifySolutionTests.test_missing_item_is_a_structural_error_not_a_crash) ... ok
+test_wrong_guess_is_caught_not_rubber_stamped (test_puzzlekit.VerifySolutionTests.test_wrong_guess_is_caught_not_rubber_stamped) ... ok
+test_wrong_position_key_raises (test_puzzlekit.VerifySolutionTests.test_wrong_position_key_raises) ... ok
+test_prove_unique_false_is_faster_and_still_correct (test_puzzlekit.ZebraPuzzleTests.test_prove_unique_false_is_faster_and_still_correct) ... ok
+test_solution_is_proven_unique (test_puzzlekit.ZebraPuzzleTests.test_solution_is_proven_unique) ... ok
+test_solvers_own_solution_passes_independent_verification (test_puzzlekit.ZebraPuzzleTests.test_solvers_own_solution_passes_independent_verification) ... ok
+test_solves_the_classic_puzzle (test_puzzlekit.ZebraPuzzleTests.test_solves_the_classic_puzzle) ... ok
+
+----------------------------------------------------------------------
+Ran 28 tests in 0.005s
+
+OK
+
+=== live MCP server session (mcp==unknown, stdio transport) ===
+Tools exposed: ['describe_clue_types', 'solve_logic_grid', 'verify_logic_grid_solution']
+
+-- describe_clue_types --
+{
+  "clue_types": {
+    "position": {
+      "fields": [
+        "item",
+        "position"
+      ],
+      "description": "item is at the given 1-indexed position.",
+      "example": {
+        "type": "position",
+        "item": [
+          "nationality",
+          "Norwegian"
+        ],
+        "position": 1
+      }
+    },
+    "same_position": {
+      "fields": [
+        "a",
+        "b"
+      ],
+      "description": "a and b are at the same position (e.g. 'the Brit lives in the red house').",
+      "example": {
+        "type": "same_position",
+        "a": [
+          "color",
+          "Red"
+        ],
+        "b": [
+          "nationality",
+          "Brit"
+        ]
+      }
+    },
+    "different_position": {
+      "fields": [
+        "a",
+        "b"
+      ],
+      "description": "a and b are at different positions.",
+      "example": {
+        "type": "different_position",
+        "a": [
+          "pet",
+          "Dogs"
+        ],
+        "b": [
+          "pet",
+          "Cats"
+        ]
+      }
+    },
+    "immediately_left_of": {
+      "fields": [
+        "a",
+        "b"
+      ],
+      "description": "a's position + 1 == b's position (a is directly left of b).",
+      "example": {
+        "type": "immediately_left_of",
+        "a": [
+          "color",
+          "Green"
+        ],
+        "b": [
+          "color",
+          "White"
+        ]
+      }
+    },
+    "immediately_right_of": {
+      "fields": [
+        "a",
+        "b"
+      ],
+      "description": "a's position - 1 == b's position (a is directly right of b).",
+      "example": {
+        "type": "immediately_right_of",
+        "a": [
+          "color",
+          "White"
+        ],
+        "b": [
+          "color",
+          "Green"
+        ]
+      }
+    },
+    "left_of": {
+      "fields": [
+        "a",
+        "b"
+      ],
+      "description": "a's position < b's position (a is somewhere left of b, not necessarily adjacent).",
+      "example": {
+        "type": "left_of",
+        "a": [
+          "color",
+          "Blue"
+        ],
+        "b": [
+          "color",
+          "Red"
+        ]
+      }
+    },
+    "right_of": {
+      "fields": [
+        "a",
+        "b"
+      ],
+      "description": "a's position > b's position (a is somewhere right of b, not necessarily adjacent).",
+      "example": {
+        "type": "right_of",
+        "a": [
+          "color",
+          "Red"
+        ],
+        "b": [
+          "color",
+          "Blue"
+        ]
+      }
+    },
+    "next_to": {
+      "fields": [
+        "a",
+        "b"
+      ],
+      "description": "a and b are at adjacent positions, either order.",
+      "example": {
+        "type": "next_to",
+        "a": [
+          "nationality",
+          "Norwegian"
+        ],
+        "b": [
+          "color",
+          "Blue"
+        ]
+      }
+    },
+    "not_next_to": {
+      "fields": [
+        "a",
+        "b"
+      ],
+      "description": "a and b are not at adjacent positions.",
+      "example": {
+        "type": "not_next_to",
+        "a": [
+          "pet",
+          "Horses"
+        ],
+        "b": [
+          "pet",
+          "Zebra"
+        ]
+      }
+    },
+    "distance": {
+      "fields": [
+        "a",
+        "b",
+        "n"
+      ],
+      "description": "the positions of a and b differ by exactly n (generalizes next_to, which is distance=1).",
+      "example": {
+        "type": "distance",
+        "a": [
+          "color",
+          "Red"
+        ],
+        "b": [
+          "color",
+          "Blue"
+        ],
+        "n": 2
+      }
+    }
+  }
+}
+
+-- solve_logic_grid: classic Einstein zebra puzzle (prove_unique=true by default) --
+{
+  "positions": 5,
+  "categories": [
+    "color",
+    "nationality",
+    "beverage",
+    "cigarette",
+    "pet"
+  ],
+  "solution_by_position": {
+    "1": {
+      "color": "Yellow",
+      "nationality": "Norwegian",
+      "beverage": "Water",
+      "cigarette": "Dunhill",
+      "pet": "Cats"
+    },
+    "2": {
+      "color": "Blue",
+      "nationality": "Dane",
+      "beverage": "Tea",
+      "cigarette": "Blend",
+      "pet": "Horses"
+    },
+    "3": {
+      "color": "Red",
+      "nationality": "Brit",
+      "beverage": "Milk",
+      "cigarette": "PallMall",
+      "pet": "Birds"
+    },
+    "4": {
+      "color": "Green",
+      "nationality": "German",
+      "beverage": "Coffee",
+      "cigarette": "Prince",
+      "pet": "Zebra"
+    },
+    "5": {
+      "color": "White",
+      "nationality": "Swede",
+      "beverage": "Beer",
+      "cigarette": "BlueMaster",
+      "pet": "Dogs"
+    }
+  },
+  "solution_by_category": {
+    "color": {
+      "Red": 3,
+      "Green": 4,
+      "White": 5,
+      "Yellow": 1,
+      "Blue": 2
+    },
+    "nationality": {
+      "Brit": 3,
+      "Swede": 5,
+      "Dane": 2,
+      "Norwegian": 1,
+      "German": 4
+    },
+    "beverage": {
+      "Tea": 2,
+      "Coffee": 4,
+      "Milk": 3,
+      "Beer": 5,
+      "Water": 1
+    },
+    "cigarette": {
+      "PallMall": 3,
+      "Dunhill": 1,
+      "Blend": 2,
+      "BlueMaster": 5,
+      "Prince": 4
+    },
+    "pet": {
+      "Dogs": 5,
+      "Birds": 3,
+      "Cats": 1,
+      "Horses": 2,
+      "Zebra": 4
+    }
+  },
+  "verification": {
+    "well_formed": true,
+    "structural_errors": [],
+    "clue_results": [
+      {
+        "index": 0,
+        "type": "same_position",
+        "satisfied": true
+      },
+      {
+        "index": 1,
+        "type": "same_position",
+        "satisfied": true
+      },
+      {
+        "index": 2,
+        "type": "same_position",
+        "satisfied": true
+      },
+      {
+        "index": 3,
+        "type": "immediately_left_of",
+        "satisfied": true
+      },
+      {
+        "index": 4,
+        "type": "same_position",
+        "satisfied": true
+      },
+      {
+        "index": 5,
+        "type": "same_position",
+        "satisfied": true
+      },
+      {
+        "index": 6,
+        "type": "same_position",
+        "satisfied": true
+      },
+      {
+        "index": 7,
+        "type": "position",
+        "satisfied": true
+      },
+      {
+        "index": 8,
+        "type": "position",
+        "satisfied": true
+      },
+      {
+        "index": 9,
+        "type": "next_to",
+        "satisfied": true
+      },
+      {
+        "index": 10,
+        "type": "next_to",
+        "satisfied": true
+      },
+      {
+        "index": 11,
+        "type": "same_position",
+        "satisfied": true
+      },
+      {
+        "index": 12,
+        "type": "same_position",
+        "satisfied": true
+      },
+      {
+        "index": 13,
+        "type": "next_to",
+        "satisfied": true
+      },
+      {
+        "index": 14,
+        "type": "next_to",
+        "satisfied": true
+      }
+    ],
+    "all_satisfied": true
+  },
+  "nodes_explored": 5,
+  "unique": true
+}
+
+-- verify_logic_grid_solution: checking the solver's own answer independently --
+{
+  "well_formed": true,
+  "structural_errors": [],
+  "clue_results": [
+    {
+      "index": 0,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 1,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 2,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 3,
+      "type": "immediately_left_of",
+      "satisfied": true
+    },
+    {
+      "index": 4,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 5,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 6,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 7,
+      "type": "position",
+      "satisfied": true
+    },
+    {
+      "index": 8,
+      "type": "position",
+      "satisfied": true
+    },
+    {
+      "index": 9,
+      "type": "next_to",
+      "satisfied": true
+    },
+    {
+      "index": 10,
+      "type": "next_to",
+      "satisfied": true
+    },
+    {
+      "index": 11,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 12,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 13,
+      "type": "next_to",
+      "satisfied": true
+    },
+    {
+      "index": 14,
+      "type": "next_to",
+      "satisfied": true
+    }
+  ],
+  "all_satisfied": true
+}
+
+-- verify_logic_grid_solution: a deliberately wrong guess (positions 1 and 2 swapped) --
+{
+  "well_formed": true,
+  "structural_errors": [],
+  "clue_results": [
+    {
+      "index": 0,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 1,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 2,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 3,
+      "type": "immediately_left_of",
+      "satisfied": true
+    },
+    {
+      "index": 4,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 5,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 6,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 7,
+      "type": "position",
+      "satisfied": true
+    },
+    {
+      "index": 8,
+      "type": "position",
+      "satisfied": false
+    },
+    {
+      "index": 9,
+      "type": "next_to",
+      "satisfied": true
+    },
+    {
+      "index": 10,
+      "type": "next_to",
+      "satisfied": true
+    },
+    {
+      "index": 11,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 12,
+      "type": "same_position",
+      "satisfied": true
+    },
+    {
+      "index": 13,
+      "type": "next_to",
+      "satisfied": true
+    },
+    {
+      "index": 14,
+      "type": "next_to",
+      "satisfied": true
+    }
+  ],
+  "all_satisfied": false
+}
+
+-- solve_logic_grid: deliberately under-constrained puzzle (proves NOT unique) --
+{
+  "positions": 3,
+  "categories": [
+    "color",
+    "animal"
+  ],
+  "solution_by_position": {
+    "1": {
+      "color": "Red",
+      "animal": "Cat"
+    },
+    "2": {
+      "color": "Green",
+      "animal": "Dog"
+    },
+    "3": {
+      "color": "Blue",
+      "animal": "Fish"
+    }
+  },
+  "solution_by_category": {
+    "color": {
+      "Red": 1,
+      "Green": 2,
+      "Blue": 3
+    },
+    "animal": {
+      "Cat": 1,
+      "Dog": 2,
+      "Fish": 3
+    }
+  },
+  "verification": {
+    "well_formed": true,
+    "structural_errors": [],
+    "clue_results": [
+      {
+        "index": 0,
+        "type": "position",
+        "satisfied": true
+      }
+    ],
+    "all_satisfied": true
+  },
+  "nodes_explored": 5,
+  "unique": false,
+  "alternate_solution_by_position": {
+    "1": {
+      "color": "Red",
+      "animal": "Cat"
+    },
+    "2": {
+      "color": "Green",
+      "animal": "Fish"
+    },
+    "3": {
+      "color": "Blue",
+      "animal": "Dog"
+    }
+  },
+  "note": "the clues do not pin down a unique solution -- at least one alternate solution also satisfies every clue, see alternate_solution_by_position"
+}
+Tool 'solve_logic_grid' raised an unexpected exception
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/base.py", line 176, in run
+    result = await self.fn_metadata.call_fn(self.fn, self.is_async, validated, pass_directly)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/utilities/func_metadata.py", line 164, in call_fn
+    return await anyio.to_thread.run_sync(functools.partial(fn, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/logic-grid-solver/server.py", line 66, in solve_logic_grid
+    return puzzlekit.solve(categories, clues, prove_unique, max_solutions, max_nodes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/logic-grid-solver/puzzlekit.py", line 344, in solve
+    raise ValueError("no solution satisfies all clues (the clue set is contradictory/over-constrained)")
+ValueError: no solution satisfies all clues (the clue set is contradictory/over-constrained)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/server.py", line 433, in _handle_call_tool
+    return await self.call_tool(params.name, params.arguments or {}, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/server.py", line 539, in call_tool
+    return await self._tool_manager.call_tool(name, arguments, context, convert_result=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/tool_manager.py", line 87, in call_tool
+    return await tool.run(arguments, context, convert_result=convert_result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/base.py", line 210, in run
+    raise UnexpectedToolError(f"Error executing tool {self.name}") from exc
+mcp.server.mcpserver.exceptions.UnexpectedToolError: Error executing tool solve_logic_grid
+
+-- solve_logic_grid: contradictory clues (Red at both position 1 and 2) --
+is_error=True content='Error executing tool solve_logic_grid'

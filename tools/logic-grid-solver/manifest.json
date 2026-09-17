@@ -1,0 +1,19 @@
+{
+  "name": "logic-grid-solver",
+  "summary": "Exact solver + independent verifier for logic grid ('zebra') puzzles, exposed as an MCP server. Clues are given in a small fixed JSON vocabulary (same_position, next_to, immediately_left_of, etc.) instead of requiring SMT-LIB/ASP formalization, and every answer is proven unique (or shown not to be) by continuing the search for a second solution rather than stopping at the first.",
+  "problem": "Language models are specifically bad at this puzzle shape: research on logic grid puzzles finds models can break individual clues down but fail the iterative cross-checking needed to keep every deduction consistent with every other clue, with reported success rates as low as 8%. Existing general-purpose constraint-solver MCP servers (z3-solver-mcp-server, mcp-solver) require the calling model to first translate the puzzle into SMT-LIB or ASP -- and separate research on 'LLM-as-formalizer' shows models are also unreliable at that translation step, so the fix just moves the failure earlier. No MCP server exposing a logic-grid-puzzle-specific solver with a simple structured clue vocabulary (the same_house/next_to/left_of shape several non-MCP web solvers already use) was found in the existing ecosystem.",
+  "keyless": true,
+  "requires_network": false,
+  "language": "python",
+  "python_version": ">=3.9",
+  "entry_point": "server.py",
+  "cli_module": "puzzlekit.py",
+  "tests": "tests/test_puzzlekit.py",
+  "proof": "proof/run_2026-09-17.txt",
+  "created": "2026-09-17",
+  "tools_exposed": [
+    "describe_clue_types",
+    "solve_logic_grid",
+    "verify_logic_grid_solution"
+  ]
+}
