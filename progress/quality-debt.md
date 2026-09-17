@@ -3,6 +3,21 @@
 Honest list of known gaps and shortcuts. Not urgent by default — surfaced
 so a future cycle (or the owner) can decide whether to pay them down.
 
+## `logic-grid-solver` doesn't support "between" (three-item) or quantified clues
+
+The 10-clue vocabulary (`position`, `same_position`, `different_position`,
+`immediately_left_of`, `immediately_right_of`, `left_of`, `right_of`,
+`next_to`, `not_next_to`, `distance`) covers ordinary logic grid puzzle
+phrasings, but not a genuinely three-way clue like "there is exactly one
+house between the red house and the blue house" in the fully general case
+(distinguishable from `distance` only when direction also matters), nor
+disjunctive/quantified clues ("at least one of X or Y holds"). Not fixed
+because it's outside what real "zebra puzzle" clue sets typically need —
+`describe_clue_types` and the README are explicit about this boundary so a
+future cycle doesn't mistake it for an oversight. If a genuine puzzle needs
+that expressiveness, that's exactly the z3/ASP solvers' job, at the cost of
+their own documented formalization-failure problem.
+
 ## Fixed this cycle (2026-09-15): no CI actually ran tests before auto-merge
 
 Was: `.github/workflows/auto-merge.yml` waits for check runs matching

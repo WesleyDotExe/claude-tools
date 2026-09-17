@@ -2,6 +2,77 @@
 
 Newest entry on top. One entry per cycle: what was done, honestly.
 
+## 2026-09-17 — fifth run: built logic-grid-solver
+
+- Ran `tools/collection-index/index.py` first, per the loop: 4 tools
+  existed. Nothing overlapped a fresh candidate need.
+- Per the previous cycle's `notes-for-owner.md` warning that "single
+  deterministic calculation" MCP ideas are actively saturated, deliberately
+  searched for a different problem *shape* this cycle rather than another
+  calculator. General "wish Claude could" and unit-conversion searches were
+  unproductive. Two real candidates surfaced: NP-hard combinatorial
+  optimization (knapsack/bin-packing) and logic grid ("zebra") puzzles.
+  Optimization is real (EHOP benchmark, "A Knapsack by Any Other Name") but
+  already served by two existing MCP servers built on Google OR-Tools (MCP
+  Optimizer, Opti-MCP), and OR-Tools' native-binary dependency cuts against
+  this collection's stdlib-only discipline. Logic grid puzzles are also
+  real and more sharply differentiated: research on GPT-4o found success
+  rates as low as 8% on this exact puzzle shape (a distinct failure mode
+  from arithmetic — it's the iterative cross-checking of many simultaneous
+  constraints that fails, not the math), and while general constraint
+  solvers exist as MCP servers (`z3-solver-mcp-server`, `mcp-solver`), they
+  require the calling model to first translate the puzzle into SMT-LIB/ASP
+  — and separate research on "LLM-as-formalizer" shows models are
+  specifically bad at that translation step too, so those tools just move
+  the failure earlier. No MCP server exposing a logic-grid-specific solver
+  with a simple structured clue vocabulary (the `same_house`/`next_to`/
+  `left_of` shape a few non-MCP web solvers already use) was found.
+- Built `tools/logic-grid-solver`: `puzzlekit.py` (a 10-type clue
+  vocabulary — `position`, `same_position`, `different_position`,
+  `immediately_left_of`, `immediately_right_of`, `left_of`, `right_of`,
+  `next_to`, `not_next_to`, `distance` — solved via constraint propagation:
+  arc consistency between every clue and each category's
+  bijection-to-positions constraint, iterated to a fixpoint, with MRV
+  backtracking when propagation alone doesn't finish) and `server.py` (MCP
+  stdio wrapper exposing `describe_clue_types`, `solve_logic_grid`,
+  `verify_logic_grid_solution`). `solve_logic_grid` proves uniqueness by
+  default (keeps searching for a second, distinct solution instead of
+  stopping at the first), and `verify_logic_grid_solution` independently
+  re-derives every clue's truth value from a plain grid — a different code
+  path from the solver's own search state — so it can check any proposed
+  answer, including a hand-written guess, standalone.
+- Wrote 28 unit tests (`tests/test_puzzlekit.py`): the classic 5-house
+  Einstein zebra puzzle solved and checked against its published answer
+  (German owns the zebra, Norwegian drinks water), uniqueness proven, all
+  15 of its clues independently re-verified; every clue type exercised on a
+  small hand-checkable puzzle; contradictory clues raising instead of
+  returning a wrong answer; an under-constrained puzzle correctly reported
+  as *not* unique with a concrete alternate solution; the verifier catching
+  a deliberately wrong guess and malformed grids instead of rubber-stamping
+  them; input validation for every malformed-input path; a `max_nodes`
+  budget cap that fails predictably instead of hanging.
+- Drove the live MCP server over stdio with a real client: `list_tools`,
+  `describe_clue_types`, the zebra puzzle solved (5 search nodes, proven
+  unique) and independently re-verified, a deliberately wrong guess caught
+  by the verifier, an under-constrained puzzle correctly reported as not
+  unique with its alternate solution, and contradictory clues coming back
+  as an MCP tool error instead of a silently wrong answer.
+  `tools/logic-grid-solver/proof/run_2026-09-17.txt`.
+- **Caught and fixed two real bugs while building, not after shipping.**
+  (1) The first backtracking implementation only restored its
+  dependency-counter on backtrack for clues that had become fully checked,
+  not every clue touched by an assignment — caught immediately by the test
+  suite as a `KeyError` crash on the very first run, not by the live
+  session. (2) That same naive backtracking (correct, but pruning only via
+  incremental clue checks with no real constraint propagation) took over
+  25 seconds and still hadn't solved the classic 5×5 zebra puzzle within a
+  3,000,000-node budget — replaced with the arc-consistency
+  constraint-propagation approach described above, which solves the same
+  puzzle in 5 nodes and under 2ms.
+- Updated root `README.md`, appended this cycle to
+  `special-projects/cycles.json`, rebuilt `_site/dashboard.html`, updated
+  `special-projects/current.md`.
+
 ## 2026-09-16 — fourth run: built discrete-probability
 
 - Ran `tools/collection-index/index.py` first, per the loop: 3 tools

@@ -22,6 +22,7 @@ Each tool lives in its own folder under [`tools/`](tools/) with its own README.
 - **[`collection-index`](tools/collection-index/)** — a tool that reads this collection and summarizes what's in it; used to keep the collection self-documenting.
 - **[`secure-random`](tools/secure-random/)** — an MCP server for cryptographically-secure randomness (dice, integers, passwords, tokens, UUIDs, weighted picks) plus chi-square tests to prove the output isn't biased — language models can't generate genuine randomness and reliably favor certain "random" answers.
 - **[`discrete-probability`](tools/discrete-probability/)** — an MCP server for exact discrete-probability calculations (birthday-paradox collisions, dice-sum distributions, drawing without replacement, binomial trials, Bayes' theorem, a generalized Monty Hall problem), each answer optionally cross-checked against a real Monte Carlo simulation — language models are well-documented to do fine on standard probability questions but drop sharply on "counterintuitive" ones.
+- **[`logic-grid-solver`](tools/logic-grid-solver/)** — an MCP server that exactly solves logic grid ("zebra") puzzles from a small structured clue vocabulary, proves whether the solution is unique, and independently re-verifies any proposed answer against the clues — language models are documented to solve these puzzles correctly as rarely as 8% of the time because they can't reliably cross-check every deduction against every other clue at once.
 
 ## Using a tool
 

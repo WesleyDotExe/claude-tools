@@ -4,6 +4,36 @@ Things a future cycle (or a human) should know that don't fit elsewhere.
 Per TASKS.md: this is also where an idea that needed an API key or account
 gets parked instead of built, since this project only ships keyless tools.
 
+## 2026-09-17: found a way out of the "single deterministic calculation" saturation, and a rejected optimization-solver candidate
+
+The previous cycle's saturation warning held for the searches this cycle
+tried directly (unit conversion, general "wish Claude could" threads
+turned up nothing new) — but the fix wasn't finding an unsaturated
+*calculator*, it was finding a different *problem shape* entirely:
+constraint satisfaction puzzles, where the documented LLM failure isn't
+"can't compute X" but "can't hold N simultaneous constraints consistent at
+once." `logic-grid-solver` came from that shift. Future cycles stuck on
+saturated calculator ideas should consider the same move — look for a
+class of problem where the failure mode is qualitatively different (search
+instead of arithmetic, cross-checking instead of computation, memory
+instead of formula lookup) rather than a fresh spin on the same shape.
+
+**Rejected this cycle: NP-hard combinatorial optimization (knapsack,
+bin-packing, scheduling).** Real, well-documented failure (EHOP benchmark,
+the ACL "A Knapsack by Any Other Name" paper, several others show LLM
+end-to-end solving degrading sharply with instance scale). Not built:
+already served by two existing MCP servers built on Google OR-Tools (MCP
+Optimizer, Opti-MCP). Also a weaker fit than usual for this collection even
+setting saturation aside — OR-Tools is a large native-binary dependency,
+which doesn't need an API key (so it's not a "parked for needing
+credentials" item) but sits awkwardly against the stdlib-only-where-possible
+discipline every other tool here follows. If a future cycle wants to
+revisit optimization, the differentiated angle would need to be something
+neither existing server does — a checkable-proof angle (e.g. proving a
+returned solution is provably optimal for small instances via exhaustive
+cross-check, the same move `logic-grid-solver` makes for uniqueness) is the
+most promising direction, not "another OR-Tools wrapper."
+
 ## 2026-09-16: ideas rejected this cycle, and a sharper saturation signal
 
 Checked six more candidates before landing on `discrete-probability`:
