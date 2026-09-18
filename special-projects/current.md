@@ -1,10 +1,10 @@
 # Current state
 
-**Last cycle:** 2026-09-17 (fifth run)
+**Last cycle:** 2026-09-18 (sixth run)
 
 ## Where things stand
 
-Five tools in the collection:
+Six tools in the collection:
 
 - `tools/collection-index` — reads `tools/*/manifest.json`, the source of
   truth the dashboard (and future runs) read from instead of re-scanning
@@ -23,23 +23,29 @@ Five tools in the collection:
   actually play the scenario out via CSPRNG simulation and check the exact
   answer against the simulated frequency's 95% confidence interval.
 - `tools/logic-grid-solver` — MCP server that exactly solves logic grid
-  ("zebra") puzzles from a small fixed clue vocabulary (`same_position`,
-  `next_to`, `immediately_left_of`, etc.), via constraint propagation
-  (arc consistency + MRV backtracking, not brute force). `solve_logic_grid`
-  proves the solution is *unique* by default (keeps searching for a second
-  one instead of stopping at the first), and `verify_logic_grid_solution`
-  independently re-checks any proposed grid against the clues via a
-  different code path than the solver's own search state -- the same
-  proof-not-assertion discipline as `secure-random`/`discrete-probability`,
-  applied to a genuinely different problem shape (constraint search, not
-  calculation) after the previous cycle flagged that "single deterministic
-  calculation" MCP ideas are getting actively saturated across the
-  ecosystem.
+  ("zebra") puzzles via constraint propagation (arc consistency + MRV
+  backtracking). `solve_logic_grid` proves uniqueness by continuing the
+  search for a second solution; `verify_logic_grid_solution` independently
+  re-checks any proposed grid via a different code path.
+- `tools/strips-planner` — MCP server that exactly solves STRIPS-style
+  planning problems (a sequence of actions from an initial state to a
+  goal) via real breadth-first search over a grounded state space, given
+  a small fixed JSON vocabulary (facts, action schemas with
+  preconditions/add/delete, optional `"not"`-negation) instead of PDDL/
+  ADL. `solve_planning_problem` proves its plan is shortest-possible, or
+  proves the goal is unreachable by exhausting the entire reachable state
+  space (distinct from a too-small search budget, which raises instead of
+  guessing). `verify_plan` independently replays any candidate plan step
+  by step via a separate, simpler forward-simulation code path.
+  `generate_blocks_world_problem` gives a seeded, reproducible instance of
+  the classic Blocksworld benchmark domain. This is a genuinely different
+  problem shape from every other tool here: sequential action search over
+  cumulative, interdependent state, not a static constraint assignment
+  (`logic-grid-solver`) or a single calculation (the other three).
 
 CI runs each tool's test suite on every PR (`.github/workflows/test.yml`,
-133 tests total across all five tools as of this cycle) and
-`auto-merge.yml` waits for it genuinely (fixed 2026-09-15, see
-`progress/quality-debt.md` for history).
+158 tests total across all six tools as of this cycle: 133 from before plus
+`strips-planner`'s 25) and `auto-merge.yml` waits for it genuinely.
 
 `special-projects/cycles.json` has the full story (searches, source links,
 why each tool was picked, proof) for all cycles so far.
@@ -54,30 +60,47 @@ during this cycle's research:
 1. **Re-run the TASKS.md loop step 1 first, every cycle** (dogfood
    `collection-index`, re-read each tool's own "what it doesn't do"
    section fresh) before searching for new candidates.
-2. **Keep chasing the "different problem shape" move that worked this
-   cycle**, not another single-deterministic-calculation idea. This
-   cycle's actual finding: the saturation isn't total, it's specific to
-   "wrap one well-known formula/algorithm as an MCP tool." Constraint
-   satisfaction (`logic-grid-solver`) was one way out; other shapes worth
-   scouting next time include search/planning problems, combinatorial
-   generation (not just counting), or anything where the LLM failure mode
-   is "can't hold many things consistent at once" rather than "can't
-   compute one formula."
-3. **Extend `logic-grid-solver`**, if a real gap surfaces — e.g. a
-   dogfooding session or live puzzle turns up a clue shape the current
-   10-type vocabulary can't express cleanly (see
-   `progress/quality-debt.md`'s "between"/quantified-clue note). Don't add
-   speculative clue types; only if a real puzzle needs one.
-4. **Do not re-propose OR-Tools-based combinatorial optimization** as an
-   unbuilt gap — it was checked this cycle and found already served by two
-   existing MCP servers (MCP Optimizer, Opti-MCP), see
-   `progress/notes-for-owner.md`'s 2026-09-17 entry for the full reasoning
-   and what a genuinely differentiated angle on it would need to look like.
-5. **If nothing clears the bar:** read all five tools' "what it doesn't do"
+2. **Keep looking for genuinely different problem shapes**, the move that
+   worked again this cycle (planning/state-space search, after
+   `logic-grid-solver`'s constraint satisfaction). Shapes not yet explored
+   in this collection: combinatorial generation under constraints (e.g.
+   generating structures with a guaranteed property, not just
+   counting/searching them), or "memory over many items" tasks (holding
+   and cross-referencing a large structured record set consistently)
+   rather than search or calculation. Don't reach for another CSP or
+   another single-formula calculator by default -- both shapes are already
+   represented here and the "single deterministic calculation" shape is
+   documented as actively saturated across the wider MCP ecosystem (see
+   `progress/notes-for-owner.md`'s 2026-09-15/16/17 entries).
+3. **Extend `strips-planner`, if a real gap surfaces** — e.g. a
+   dogfooding session turns up a domain that genuinely needs typed
+   objects, disjunctive preconditions, or action costs (currently
+   unbuilt, and deliberately so per its README's "what it doesn't do" —
+   don't re-propose these as unbuilt gaps without a concrete need driving
+   it; that's what a full PDDL/ADL planner is for). A* with a real
+   heuristic (vs. plain BFS) would only matter if a real domain's state
+   space is too large for BFS within a sane budget — not worth adding
+   speculatively.
+4. **When next building a live-session proof for any tool**, check
+   `result.content[0].text` (parsed as JSON) if `structured_content` is
+   `None` rather than assuming it's populated — see
+   `progress/notes-for-owner.md`'s 2026-09-18 entry; this affected every
+   tool's output under the `mcp==2.2.0` version installed this cycle, not
+   just `strips-planner`.
+5. **Do not re-propose sudoku, round-robin tournament scheduling, or
+   cryptarithmetic (SEND+MORE=MONEY) solving** as unbuilt gaps — all three
+   were checked this cycle and rejected (sudoku/cryptarithmetic overlap
+   `logic-grid-solver`'s existing CSP shape and are heavily saturated by
+   non-MCP solvers; round-robin scheduling didn't clear the "sharply
+   documented LLM failure" bar). See `special-projects/cycles.json`'s
+   2026-09-18 entry for the full reasoning.
+6. **Do not re-propose OR-Tools-based combinatorial optimization** as an
+   unbuilt gap — checked and rejected 2026-09-17, see
+   `progress/notes-for-owner.md`.
+7. **If nothing clears the bar:** read all six tools' "what it doesn't do"
    sections fresh rather than assume a past cycle's suggestions still
    apply, per rule 9.
 
-Do NOT re-propose natural-language date parsing for `time-arithmetic` as
-"unbuilt future work" — its README frames the absence as a deliberate
-design boundary, not a gap (2026-09-15 course-correction, see
-`progress/notes-for-owner.md`).
+Do NOT re-propose natural-language date parsing for `time-arithmetic` — its
+README frames the absence as a deliberate design boundary, not a gap
+(2026-09-15 course-correction, see `progress/notes-for-owner.md`).

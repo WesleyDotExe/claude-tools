@@ -3,6 +3,24 @@
 Honest list of known gaps and shortcuts. Not urgent by default — surfaced
 so a future cycle (or the owner) can decide whether to pay them down.
 
+## `strips-planner`'s BFS is exponential in the worst case, capped by `max_states`/`max_depth`, not by a smarter search
+
+`solve_planning_problem` uses plain breadth-first search over the grounded
+state space -- correct, and it's what makes the "shortest plan" and
+"proven unreachable" guarantees possible, but it explores every reachable
+state at each depth rather than using a heuristic (A*) to focus the search.
+For the domains this tool is meant for (the Blocksworld generator caps at
+8 blocks; hand-written custom domains are on the caller), the state space
+stays small enough that this doesn't matter in practice -- the proof
+transcript solves a 5-block generated instance and the 3-block Sussman
+anomaly comfortably within default budgets. Not fixed because a real need
+hasn't surfaced yet: adding a heuristic (e.g. relaxed-plan/FF-style) would
+help scale to much larger domains, at the cost of real complexity and a
+step away from "this collection's tools stay simple enough to read and
+trust in one sitting." Worth reconsidering only if a future cycle's actual
+use hits the `max_states`/`max_depth` ceiling on a domain that can't
+reasonably be made smaller.
+
 ## `logic-grid-solver` doesn't support "between" (three-item) or quantified clues
 
 The 10-clue vocabulary (`position`, `same_position`, `different_position`,
