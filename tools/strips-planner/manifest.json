@@ -1,0 +1,20 @@
+{
+  "name": "strips-planner",
+  "summary": "Exact STRIPS-style state-space planner + independent plan verifier, exposed as an MCP server. Domains (objects, actions with preconditions/add/delete, initial state, goal) are given in a small fixed JSON vocabulary instead of PDDL/ADL. solve_planning_problem proves its plan is the shortest possible (breadth-first search over the grounded state space) or proves the goal is unreachable by exhausting the whole reachable state space; verify_plan independently replays any candidate plan step by step. Includes a seeded generator for the classic Blocksworld benchmark domain.",
+  "problem": "Planning -- finding a sequence of state-changing actions that reaches a goal -- is a documented LLM failure mode with a different shape than calculation (secure-random, discrete-probability, time-arithmetic) or static constraint satisfaction (logic-grid-solver): a valid plan requires holding a consistent world-state across many interdependent steps and backtracking when an early action turns out to block a later goal, which is exactly what autoregressive generation doesn't do. Kambhampati et al.'s PlanBench and Blocksworld benchmarks show standard LLMs (including with chain-of-thought) fail reliably on this past a handful of objects. The one general PDDL/ADL planning MCP server found in the ecosystem (byte4ever/gp, a Go Graphplan wrapper) requires the caller to already speak PDDL or full ADL; separate research on 'LLM-as-formalizer' shows models are also unreliable at that translation step. No keyless MCP server was found exposing planning through a small fixed JSON action-schema vocabulary with an independent plan verifier in the proof-not-assertion style the rest of this collection uses.",
+  "keyless": true,
+  "requires_network": false,
+  "language": "python",
+  "python_version": ">=3.9",
+  "entry_point": "server.py",
+  "cli_module": "planner.py",
+  "tests": "tests/test_planner.py",
+  "proof": "proof/run_2026-09-18.txt",
+  "created": "2026-09-18",
+  "tools_exposed": [
+    "describe_planning_format",
+    "solve_planning_problem",
+    "verify_plan",
+    "generate_blocks_world_problem"
+  ]
+}

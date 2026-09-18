@@ -1,0 +1,2174 @@
+=== unit tests ===
+test_returns_worked_example (test_planner.DescribeFormatTests.test_returns_worked_example) ... ok
+test_different_seed_usually_differs (test_planner.GenerateBlocksWorldProblemTests.test_different_seed_usually_differs) ... ok
+test_generated_problem_is_solvable_and_verifiable (test_planner.GenerateBlocksWorldProblemTests.test_generated_problem_is_solvable_and_verifiable) ... ok
+test_goal_always_differs_from_initial_state (test_planner.GenerateBlocksWorldProblemTests.test_goal_always_differs_from_initial_state) ... ok
+test_num_blocks_out_of_range_rejected (test_planner.GenerateBlocksWorldProblemTests.test_num_blocks_out_of_range_rejected) ... ok
+test_reproducible_with_same_seed (test_planner.GenerateBlocksWorldProblemTests.test_reproducible_with_same_seed) ... ok
+test_already_at_goal_returns_empty_plan (test_planner.LightSwitchTests.test_already_at_goal_returns_empty_plan) ... ok
+test_negated_goal (test_planner.LightSwitchTests.test_negated_goal) ... ok
+test_one_step_plan (test_planner.LightSwitchTests.test_one_step_plan) ... ok
+test_finds_known_optimal_plan_length (test_planner.SussmanAnomalyTests.test_finds_known_optimal_plan_length) ... ok
+test_plan_passes_independent_verification (test_planner.SussmanAnomalyTests.test_plan_passes_independent_verification) ... ok
+test_verify_plan_standalone_matches_solver (test_planner.SussmanAnomalyTests.test_verify_plan_standalone_matches_solver) ... ok
+test_budget_exceeded_raises_instead_of_claiming_unsolvable (test_planner.UnsolvableProofTests.test_budget_exceeded_raises_instead_of_claiming_unsolvable) ... ok
+test_contradictory_goal_is_proven_unreachable (test_planner.UnsolvableProofTests.test_contradictory_goal_is_proven_unreachable) ... ok
+test_duplicate_initial_facts_rejected (test_planner.ValidationTests.test_duplicate_initial_facts_rejected) ... ok
+test_duplicate_objects_rejected (test_planner.ValidationTests.test_duplicate_objects_rejected) ... ok
+test_empty_objects_rejected (test_planner.ValidationTests.test_empty_objects_rejected) ... ok
+test_negated_add_effect_rejected (test_planner.ValidationTests.test_negated_add_effect_rejected) ... ok
+test_parameter_colliding_with_object_name_rejected (test_planner.ValidationTests.test_parameter_colliding_with_object_name_rejected) ... ok
+test_unknown_predicate_arg_rejected (test_planner.ValidationTests.test_unknown_predicate_arg_rejected) ... ok
+test_catches_unknown_action (test_planner.VerifyPlanCatchesBadPlansTests.test_catches_unknown_action) ... ok
+test_catches_unknown_object (test_planner.VerifyPlanCatchesBadPlansTests.test_catches_unknown_object) ... ok
+test_catches_unmet_precondition (test_planner.VerifyPlanCatchesBadPlansTests.test_catches_unmet_precondition) ... ok
+test_catches_wrong_arg_count (test_planner.VerifyPlanCatchesBadPlansTests.test_catches_wrong_arg_count) ... ok
+test_valid_plan_but_goal_not_actually_reached (test_planner.VerifyPlanCatchesBadPlansTests.test_valid_plan_but_goal_not_actually_reached) ... ok
+
+----------------------------------------------------------------------
+Ran 25 tests in 0.013s
+
+OK
+
+=== live MCP server session (stdio transport) ===
+Tools exposed: ['describe_planning_format', 'solve_planning_problem', 'verify_plan', 'generate_blocks_world_problem']
+
+-- describe_planning_format --
+{
+  "fact": "A flat list [predicate, arg1, arg2, ...]. Zero-arity predicates (no args) are fine, e.g. [\"handempty\"]. A state is the set of facts currently true; anything not listed is false (closed-world assumption).",
+  "action_schema": "An object with 'parameters' (list of parameter names used in this action's own literals), 'preconditions' (list of literals that must hold before the action can run), 'add' (facts that become true), and 'delete' (facts that become false). A literal's arguments are substituted from the action's parameter bindings when the action is grounded over actual objects; an argument that isn't one of the action's own parameter names is treated as a literal object constant instead.",
+  "negation": "Prefix a precondition literal with \"not\" to require the fact be absent: [\"not\", \"clear\", \"x\"] means x is NOT clear. Add/delete effects are never negated -- delete already says what becomes false.",
+  "goal": "A list of literals (optionally negated the same way as preconditions) that must ALL hold simultaneously in the final state.",
+  "grounding": "Actions are grounded over the 'objects' list you supply: every way of binding the action's parameters to distinct objects becomes one concrete (ground) action the search can take.",
+  "example_domain": {
+    "objects": [
+      "lamp"
+    ],
+    "actions": {
+      "turn_on": {
+        "parameters": [
+          "x"
+        ],
+        "preconditions": [
+          [
+            "not",
+            "on",
+            "x"
+          ]
+        ],
+        "add": [
+          [
+            "on",
+            "x"
+          ]
+        ],
+        "delete": []
+      },
+      "turn_off": {
+        "parameters": [
+          "x"
+        ],
+        "preconditions": [
+          [
+            "on",
+            "x"
+          ]
+        ],
+        "add": [],
+        "delete": [
+          [
+            "on",
+            "x"
+          ]
+        ]
+      }
+    },
+    "initial_state": [],
+    "goal": [
+      [
+        "on",
+        "lamp"
+      ]
+    ]
+  }
+}
+
+-- solve_planning_problem (Sussman anomaly) --
+{
+  "solvable": true,
+  "plan": [
+    {
+      "action": "unstack",
+      "args": [
+        "c",
+        "a"
+      ]
+    },
+    {
+      "action": "putdown",
+      "args": [
+        "c"
+      ]
+    },
+    {
+      "action": "pickup",
+      "args": [
+        "b"
+      ]
+    },
+    {
+      "action": "stack",
+      "args": [
+        "b",
+        "c"
+      ]
+    },
+    {
+      "action": "pickup",
+      "args": [
+        "a"
+      ]
+    },
+    {
+      "action": "stack",
+      "args": [
+        "a",
+        "b"
+      ]
+    }
+  ],
+  "plan_length": 6,
+  "optimal": true,
+  "states_expanded": 18,
+  "distinct_states_reached": 22,
+  "verification": {
+    "valid": true,
+    "steps_applied": 6,
+    "steps": [
+      {
+        "index": 0,
+        "action": "unstack",
+        "args": [
+          "c",
+          "a"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "a"
+          ],
+          [
+            "clear",
+            "b"
+          ],
+          [
+            "holding",
+            "c"
+          ],
+          [
+            "ontable",
+            "a"
+          ],
+          [
+            "ontable",
+            "b"
+          ]
+        ]
+      },
+      {
+        "index": 1,
+        "action": "putdown",
+        "args": [
+          "c"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "a"
+          ],
+          [
+            "clear",
+            "b"
+          ],
+          [
+            "clear",
+            "c"
+          ],
+          [
+            "handempty"
+          ],
+          [
+            "ontable",
+            "a"
+          ],
+          [
+            "ontable",
+            "b"
+          ],
+          [
+            "ontable",
+            "c"
+          ]
+        ]
+      },
+      {
+        "index": 2,
+        "action": "pickup",
+        "args": [
+          "b"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "a"
+          ],
+          [
+            "clear",
+            "c"
+          ],
+          [
+            "holding",
+            "b"
+          ],
+          [
+            "ontable",
+            "a"
+          ],
+          [
+            "ontable",
+            "c"
+          ]
+        ]
+      },
+      {
+        "index": 3,
+        "action": "stack",
+        "args": [
+          "b",
+          "c"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "a"
+          ],
+          [
+            "clear",
+            "b"
+          ],
+          [
+            "handempty"
+          ],
+          [
+            "on",
+            "b",
+            "c"
+          ],
+          [
+            "ontable",
+            "a"
+          ],
+          [
+            "ontable",
+            "c"
+          ]
+        ]
+      },
+      {
+        "index": 4,
+        "action": "pickup",
+        "args": [
+          "a"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "b"
+          ],
+          [
+            "holding",
+            "a"
+          ],
+          [
+            "on",
+            "b",
+            "c"
+          ],
+          [
+            "ontable",
+            "c"
+          ]
+        ]
+      },
+      {
+        "index": 5,
+        "action": "stack",
+        "args": [
+          "a",
+          "b"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "a"
+          ],
+          [
+            "handempty"
+          ],
+          [
+            "on",
+            "a",
+            "b"
+          ],
+          [
+            "on",
+            "b",
+            "c"
+          ],
+          [
+            "ontable",
+            "c"
+          ]
+        ]
+      }
+    ],
+    "final_state": [
+      [
+        "clear",
+        "a"
+      ],
+      [
+        "handempty"
+      ],
+      [
+        "on",
+        "a",
+        "b"
+      ],
+      [
+        "on",
+        "b",
+        "c"
+      ],
+      [
+        "ontable",
+        "c"
+      ]
+    ],
+    "goal_reached": true
+  }
+}
+
+-- verify_plan (solver's own Sussman plan) --
+{
+  "valid": true,
+  "steps_applied": 6,
+  "steps": [
+    {
+      "index": 0,
+      "action": "unstack",
+      "args": [
+        "c",
+        "a"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "a"
+        ],
+        [
+          "clear",
+          "b"
+        ],
+        [
+          "holding",
+          "c"
+        ],
+        [
+          "ontable",
+          "a"
+        ],
+        [
+          "ontable",
+          "b"
+        ]
+      ]
+    },
+    {
+      "index": 1,
+      "action": "putdown",
+      "args": [
+        "c"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "a"
+        ],
+        [
+          "clear",
+          "b"
+        ],
+        [
+          "clear",
+          "c"
+        ],
+        [
+          "handempty"
+        ],
+        [
+          "ontable",
+          "a"
+        ],
+        [
+          "ontable",
+          "b"
+        ],
+        [
+          "ontable",
+          "c"
+        ]
+      ]
+    },
+    {
+      "index": 2,
+      "action": "pickup",
+      "args": [
+        "b"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "a"
+        ],
+        [
+          "clear",
+          "c"
+        ],
+        [
+          "holding",
+          "b"
+        ],
+        [
+          "ontable",
+          "a"
+        ],
+        [
+          "ontable",
+          "c"
+        ]
+      ]
+    },
+    {
+      "index": 3,
+      "action": "stack",
+      "args": [
+        "b",
+        "c"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "a"
+        ],
+        [
+          "clear",
+          "b"
+        ],
+        [
+          "handempty"
+        ],
+        [
+          "on",
+          "b",
+          "c"
+        ],
+        [
+          "ontable",
+          "a"
+        ],
+        [
+          "ontable",
+          "c"
+        ]
+      ]
+    },
+    {
+      "index": 4,
+      "action": "pickup",
+      "args": [
+        "a"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "b"
+        ],
+        [
+          "holding",
+          "a"
+        ],
+        [
+          "on",
+          "b",
+          "c"
+        ],
+        [
+          "ontable",
+          "c"
+        ]
+      ]
+    },
+    {
+      "index": 5,
+      "action": "stack",
+      "args": [
+        "a",
+        "b"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "a"
+        ],
+        [
+          "handempty"
+        ],
+        [
+          "on",
+          "a",
+          "b"
+        ],
+        [
+          "on",
+          "b",
+          "c"
+        ],
+        [
+          "ontable",
+          "c"
+        ]
+      ]
+    }
+  ],
+  "final_state": [
+    [
+      "clear",
+      "a"
+    ],
+    [
+      "handempty"
+    ],
+    [
+      "on",
+      "a",
+      "b"
+    ],
+    [
+      "on",
+      "b",
+      "c"
+    ],
+    [
+      "ontable",
+      "c"
+    ]
+  ],
+  "goal_reached": true
+}
+
+-- verify_plan (deliberately broken plan -- pickup c without unstacking first) --
+{
+  "valid": false,
+  "steps_applied": 1,
+  "steps": [
+    {
+      "index": 0,
+      "action": "pickup",
+      "args": [
+        "c"
+      ],
+      "ok": false,
+      "error": "precondition(s) not satisfied",
+      "unmet_preconditions": [
+        [
+          "ontable",
+          "c"
+        ]
+      ],
+      "state_before": [
+        [
+          "clear",
+          "b"
+        ],
+        [
+          "clear",
+          "c"
+        ],
+        [
+          "handempty"
+        ],
+        [
+          "on",
+          "c",
+          "a"
+        ],
+        [
+          "ontable",
+          "a"
+        ],
+        [
+          "ontable",
+          "b"
+        ]
+      ]
+    }
+  ],
+  "final_state": [
+    [
+      "clear",
+      "b"
+    ],
+    [
+      "clear",
+      "c"
+    ],
+    [
+      "handempty"
+    ],
+    [
+      "on",
+      "c",
+      "a"
+    ],
+    [
+      "ontable",
+      "a"
+    ],
+    [
+      "ontable",
+      "b"
+    ]
+  ],
+  "goal_reached": false
+}
+
+-- generate_blocks_world_problem(5, seed=2026) --
+{
+  "objects": [
+    "b1",
+    "b2",
+    "b3",
+    "b4",
+    "b5"
+  ],
+  "actions": {
+    "pickup": {
+      "parameters": [
+        "x"
+      ],
+      "preconditions": [
+        [
+          "clear",
+          "x"
+        ],
+        [
+          "ontable",
+          "x"
+        ],
+        [
+          "handempty"
+        ]
+      ],
+      "add": [
+        [
+          "holding",
+          "x"
+        ]
+      ],
+      "delete": [
+        [
+          "clear",
+          "x"
+        ],
+        [
+          "ontable",
+          "x"
+        ],
+        [
+          "handempty"
+        ]
+      ]
+    },
+    "putdown": {
+      "parameters": [
+        "x"
+      ],
+      "preconditions": [
+        [
+          "holding",
+          "x"
+        ]
+      ],
+      "add": [
+        [
+          "ontable",
+          "x"
+        ],
+        [
+          "clear",
+          "x"
+        ],
+        [
+          "handempty"
+        ]
+      ],
+      "delete": [
+        [
+          "holding",
+          "x"
+        ]
+      ]
+    },
+    "stack": {
+      "parameters": [
+        "x",
+        "y"
+      ],
+      "preconditions": [
+        [
+          "holding",
+          "x"
+        ],
+        [
+          "clear",
+          "y"
+        ]
+      ],
+      "add": [
+        [
+          "on",
+          "x",
+          "y"
+        ],
+        [
+          "clear",
+          "x"
+        ],
+        [
+          "handempty"
+        ]
+      ],
+      "delete": [
+        [
+          "holding",
+          "x"
+        ],
+        [
+          "clear",
+          "y"
+        ]
+      ]
+    },
+    "unstack": {
+      "parameters": [
+        "x",
+        "y"
+      ],
+      "preconditions": [
+        [
+          "on",
+          "x",
+          "y"
+        ],
+        [
+          "clear",
+          "x"
+        ],
+        [
+          "handempty"
+        ]
+      ],
+      "add": [
+        [
+          "holding",
+          "x"
+        ],
+        [
+          "clear",
+          "y"
+        ]
+      ],
+      "delete": [
+        [
+          "on",
+          "x",
+          "y"
+        ],
+        [
+          "clear",
+          "x"
+        ],
+        [
+          "handempty"
+        ]
+      ]
+    }
+  },
+  "initial_state": [
+    [
+      "clear",
+      "b1"
+    ],
+    [
+      "clear",
+      "b5"
+    ],
+    [
+      "handempty"
+    ],
+    [
+      "on",
+      "b1",
+      "b3"
+    ],
+    [
+      "on",
+      "b3",
+      "b4"
+    ],
+    [
+      "on",
+      "b5",
+      "b2"
+    ],
+    [
+      "ontable",
+      "b2"
+    ],
+    [
+      "ontable",
+      "b4"
+    ]
+  ],
+  "goal": [
+    [
+      "on",
+      "b2",
+      "b1"
+    ],
+    [
+      "on",
+      "b3",
+      "b2"
+    ],
+    [
+      "on",
+      "b5",
+      "b4"
+    ],
+    [
+      "on",
+      "b4",
+      "b3"
+    ],
+    [
+      "ontable",
+      "b1"
+    ]
+  ],
+  "seed": 2026
+}
+
+-- solve_planning_problem (generated blocks-world instance) --
+{
+  "solvable": true,
+  "plan": [
+    {
+      "action": "unstack",
+      "args": [
+        "b1",
+        "b3"
+      ]
+    },
+    {
+      "action": "putdown",
+      "args": [
+        "b1"
+      ]
+    },
+    {
+      "action": "unstack",
+      "args": [
+        "b5",
+        "b2"
+      ]
+    },
+    {
+      "action": "putdown",
+      "args": [
+        "b5"
+      ]
+    },
+    {
+      "action": "pickup",
+      "args": [
+        "b2"
+      ]
+    },
+    {
+      "action": "stack",
+      "args": [
+        "b2",
+        "b1"
+      ]
+    },
+    {
+      "action": "unstack",
+      "args": [
+        "b3",
+        "b4"
+      ]
+    },
+    {
+      "action": "stack",
+      "args": [
+        "b3",
+        "b2"
+      ]
+    },
+    {
+      "action": "pickup",
+      "args": [
+        "b4"
+      ]
+    },
+    {
+      "action": "stack",
+      "args": [
+        "b4",
+        "b3"
+      ]
+    },
+    {
+      "action": "pickup",
+      "args": [
+        "b5"
+      ]
+    },
+    {
+      "action": "stack",
+      "args": [
+        "b5",
+        "b4"
+      ]
+    }
+  ],
+  "plan_length": 12,
+  "optimal": true,
+  "states_expanded": 652,
+  "distinct_states_reached": 762,
+  "verification": {
+    "valid": true,
+    "steps_applied": 12,
+    "steps": [
+      {
+        "index": 0,
+        "action": "unstack",
+        "args": [
+          "b1",
+          "b3"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "b3"
+          ],
+          [
+            "clear",
+            "b5"
+          ],
+          [
+            "holding",
+            "b1"
+          ],
+          [
+            "on",
+            "b3",
+            "b4"
+          ],
+          [
+            "on",
+            "b5",
+            "b2"
+          ],
+          [
+            "ontable",
+            "b2"
+          ],
+          [
+            "ontable",
+            "b4"
+          ]
+        ]
+      },
+      {
+        "index": 1,
+        "action": "putdown",
+        "args": [
+          "b1"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "b1"
+          ],
+          [
+            "clear",
+            "b3"
+          ],
+          [
+            "clear",
+            "b5"
+          ],
+          [
+            "handempty"
+          ],
+          [
+            "on",
+            "b3",
+            "b4"
+          ],
+          [
+            "on",
+            "b5",
+            "b2"
+          ],
+          [
+            "ontable",
+            "b1"
+          ],
+          [
+            "ontable",
+            "b2"
+          ],
+          [
+            "ontable",
+            "b4"
+          ]
+        ]
+      },
+      {
+        "index": 2,
+        "action": "unstack",
+        "args": [
+          "b5",
+          "b2"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "b1"
+          ],
+          [
+            "clear",
+            "b2"
+          ],
+          [
+            "clear",
+            "b3"
+          ],
+          [
+            "holding",
+            "b5"
+          ],
+          [
+            "on",
+            "b3",
+            "b4"
+          ],
+          [
+            "ontable",
+            "b1"
+          ],
+          [
+            "ontable",
+            "b2"
+          ],
+          [
+            "ontable",
+            "b4"
+          ]
+        ]
+      },
+      {
+        "index": 3,
+        "action": "putdown",
+        "args": [
+          "b5"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "b1"
+          ],
+          [
+            "clear",
+            "b2"
+          ],
+          [
+            "clear",
+            "b3"
+          ],
+          [
+            "clear",
+            "b5"
+          ],
+          [
+            "handempty"
+          ],
+          [
+            "on",
+            "b3",
+            "b4"
+          ],
+          [
+            "ontable",
+            "b1"
+          ],
+          [
+            "ontable",
+            "b2"
+          ],
+          [
+            "ontable",
+            "b4"
+          ],
+          [
+            "ontable",
+            "b5"
+          ]
+        ]
+      },
+      {
+        "index": 4,
+        "action": "pickup",
+        "args": [
+          "b2"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "b1"
+          ],
+          [
+            "clear",
+            "b3"
+          ],
+          [
+            "clear",
+            "b5"
+          ],
+          [
+            "holding",
+            "b2"
+          ],
+          [
+            "on",
+            "b3",
+            "b4"
+          ],
+          [
+            "ontable",
+            "b1"
+          ],
+          [
+            "ontable",
+            "b4"
+          ],
+          [
+            "ontable",
+            "b5"
+          ]
+        ]
+      },
+      {
+        "index": 5,
+        "action": "stack",
+        "args": [
+          "b2",
+          "b1"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "b2"
+          ],
+          [
+            "clear",
+            "b3"
+          ],
+          [
+            "clear",
+            "b5"
+          ],
+          [
+            "handempty"
+          ],
+          [
+            "on",
+            "b2",
+            "b1"
+          ],
+          [
+            "on",
+            "b3",
+            "b4"
+          ],
+          [
+            "ontable",
+            "b1"
+          ],
+          [
+            "ontable",
+            "b4"
+          ],
+          [
+            "ontable",
+            "b5"
+          ]
+        ]
+      },
+      {
+        "index": 6,
+        "action": "unstack",
+        "args": [
+          "b3",
+          "b4"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "b2"
+          ],
+          [
+            "clear",
+            "b4"
+          ],
+          [
+            "clear",
+            "b5"
+          ],
+          [
+            "holding",
+            "b3"
+          ],
+          [
+            "on",
+            "b2",
+            "b1"
+          ],
+          [
+            "ontable",
+            "b1"
+          ],
+          [
+            "ontable",
+            "b4"
+          ],
+          [
+            "ontable",
+            "b5"
+          ]
+        ]
+      },
+      {
+        "index": 7,
+        "action": "stack",
+        "args": [
+          "b3",
+          "b2"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "b3"
+          ],
+          [
+            "clear",
+            "b4"
+          ],
+          [
+            "clear",
+            "b5"
+          ],
+          [
+            "handempty"
+          ],
+          [
+            "on",
+            "b2",
+            "b1"
+          ],
+          [
+            "on",
+            "b3",
+            "b2"
+          ],
+          [
+            "ontable",
+            "b1"
+          ],
+          [
+            "ontable",
+            "b4"
+          ],
+          [
+            "ontable",
+            "b5"
+          ]
+        ]
+      },
+      {
+        "index": 8,
+        "action": "pickup",
+        "args": [
+          "b4"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "b3"
+          ],
+          [
+            "clear",
+            "b5"
+          ],
+          [
+            "holding",
+            "b4"
+          ],
+          [
+            "on",
+            "b2",
+            "b1"
+          ],
+          [
+            "on",
+            "b3",
+            "b2"
+          ],
+          [
+            "ontable",
+            "b1"
+          ],
+          [
+            "ontable",
+            "b5"
+          ]
+        ]
+      },
+      {
+        "index": 9,
+        "action": "stack",
+        "args": [
+          "b4",
+          "b3"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "b4"
+          ],
+          [
+            "clear",
+            "b5"
+          ],
+          [
+            "handempty"
+          ],
+          [
+            "on",
+            "b2",
+            "b1"
+          ],
+          [
+            "on",
+            "b3",
+            "b2"
+          ],
+          [
+            "on",
+            "b4",
+            "b3"
+          ],
+          [
+            "ontable",
+            "b1"
+          ],
+          [
+            "ontable",
+            "b5"
+          ]
+        ]
+      },
+      {
+        "index": 10,
+        "action": "pickup",
+        "args": [
+          "b5"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "b4"
+          ],
+          [
+            "holding",
+            "b5"
+          ],
+          [
+            "on",
+            "b2",
+            "b1"
+          ],
+          [
+            "on",
+            "b3",
+            "b2"
+          ],
+          [
+            "on",
+            "b4",
+            "b3"
+          ],
+          [
+            "ontable",
+            "b1"
+          ]
+        ]
+      },
+      {
+        "index": 11,
+        "action": "stack",
+        "args": [
+          "b5",
+          "b4"
+        ],
+        "ok": true,
+        "state_after": [
+          [
+            "clear",
+            "b5"
+          ],
+          [
+            "handempty"
+          ],
+          [
+            "on",
+            "b2",
+            "b1"
+          ],
+          [
+            "on",
+            "b3",
+            "b2"
+          ],
+          [
+            "on",
+            "b4",
+            "b3"
+          ],
+          [
+            "on",
+            "b5",
+            "b4"
+          ],
+          [
+            "ontable",
+            "b1"
+          ]
+        ]
+      }
+    ],
+    "final_state": [
+      [
+        "clear",
+        "b5"
+      ],
+      [
+        "handempty"
+      ],
+      [
+        "on",
+        "b2",
+        "b1"
+      ],
+      [
+        "on",
+        "b3",
+        "b2"
+      ],
+      [
+        "on",
+        "b4",
+        "b3"
+      ],
+      [
+        "on",
+        "b5",
+        "b4"
+      ],
+      [
+        "ontable",
+        "b1"
+      ]
+    ],
+    "goal_reached": true
+  }
+}
+
+-- verify_plan (generated instance's solved plan) --
+{
+  "valid": true,
+  "steps_applied": 12,
+  "steps": [
+    {
+      "index": 0,
+      "action": "unstack",
+      "args": [
+        "b1",
+        "b3"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "b3"
+        ],
+        [
+          "clear",
+          "b5"
+        ],
+        [
+          "holding",
+          "b1"
+        ],
+        [
+          "on",
+          "b3",
+          "b4"
+        ],
+        [
+          "on",
+          "b5",
+          "b2"
+        ],
+        [
+          "ontable",
+          "b2"
+        ],
+        [
+          "ontable",
+          "b4"
+        ]
+      ]
+    },
+    {
+      "index": 1,
+      "action": "putdown",
+      "args": [
+        "b1"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "b1"
+        ],
+        [
+          "clear",
+          "b3"
+        ],
+        [
+          "clear",
+          "b5"
+        ],
+        [
+          "handempty"
+        ],
+        [
+          "on",
+          "b3",
+          "b4"
+        ],
+        [
+          "on",
+          "b5",
+          "b2"
+        ],
+        [
+          "ontable",
+          "b1"
+        ],
+        [
+          "ontable",
+          "b2"
+        ],
+        [
+          "ontable",
+          "b4"
+        ]
+      ]
+    },
+    {
+      "index": 2,
+      "action": "unstack",
+      "args": [
+        "b5",
+        "b2"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "b1"
+        ],
+        [
+          "clear",
+          "b2"
+        ],
+        [
+          "clear",
+          "b3"
+        ],
+        [
+          "holding",
+          "b5"
+        ],
+        [
+          "on",
+          "b3",
+          "b4"
+        ],
+        [
+          "ontable",
+          "b1"
+        ],
+        [
+          "ontable",
+          "b2"
+        ],
+        [
+          "ontable",
+          "b4"
+        ]
+      ]
+    },
+    {
+      "index": 3,
+      "action": "putdown",
+      "args": [
+        "b5"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "b1"
+        ],
+        [
+          "clear",
+          "b2"
+        ],
+        [
+          "clear",
+          "b3"
+        ],
+        [
+          "clear",
+          "b5"
+        ],
+        [
+          "handempty"
+        ],
+        [
+          "on",
+          "b3",
+          "b4"
+        ],
+        [
+          "ontable",
+          "b1"
+        ],
+        [
+          "ontable",
+          "b2"
+        ],
+        [
+          "ontable",
+          "b4"
+        ],
+        [
+          "ontable",
+          "b5"
+        ]
+      ]
+    },
+    {
+      "index": 4,
+      "action": "pickup",
+      "args": [
+        "b2"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "b1"
+        ],
+        [
+          "clear",
+          "b3"
+        ],
+        [
+          "clear",
+          "b5"
+        ],
+        [
+          "holding",
+          "b2"
+        ],
+        [
+          "on",
+          "b3",
+          "b4"
+        ],
+        [
+          "ontable",
+          "b1"
+        ],
+        [
+          "ontable",
+          "b4"
+        ],
+        [
+          "ontable",
+          "b5"
+        ]
+      ]
+    },
+    {
+      "index": 5,
+      "action": "stack",
+      "args": [
+        "b2",
+        "b1"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "b2"
+        ],
+        [
+          "clear",
+          "b3"
+        ],
+        [
+          "clear",
+          "b5"
+        ],
+        [
+          "handempty"
+        ],
+        [
+          "on",
+          "b2",
+          "b1"
+        ],
+        [
+          "on",
+          "b3",
+          "b4"
+        ],
+        [
+          "ontable",
+          "b1"
+        ],
+        [
+          "ontable",
+          "b4"
+        ],
+        [
+          "ontable",
+          "b5"
+        ]
+      ]
+    },
+    {
+      "index": 6,
+      "action": "unstack",
+      "args": [
+        "b3",
+        "b4"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "b2"
+        ],
+        [
+          "clear",
+          "b4"
+        ],
+        [
+          "clear",
+          "b5"
+        ],
+        [
+          "holding",
+          "b3"
+        ],
+        [
+          "on",
+          "b2",
+          "b1"
+        ],
+        [
+          "ontable",
+          "b1"
+        ],
+        [
+          "ontable",
+          "b4"
+        ],
+        [
+          "ontable",
+          "b5"
+        ]
+      ]
+    },
+    {
+      "index": 7,
+      "action": "stack",
+      "args": [
+        "b3",
+        "b2"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "b3"
+        ],
+        [
+          "clear",
+          "b4"
+        ],
+        [
+          "clear",
+          "b5"
+        ],
+        [
+          "handempty"
+        ],
+        [
+          "on",
+          "b2",
+          "b1"
+        ],
+        [
+          "on",
+          "b3",
+          "b2"
+        ],
+        [
+          "ontable",
+          "b1"
+        ],
+        [
+          "ontable",
+          "b4"
+        ],
+        [
+          "ontable",
+          "b5"
+        ]
+      ]
+    },
+    {
+      "index": 8,
+      "action": "pickup",
+      "args": [
+        "b4"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "b3"
+        ],
+        [
+          "clear",
+          "b5"
+        ],
+        [
+          "holding",
+          "b4"
+        ],
+        [
+          "on",
+          "b2",
+          "b1"
+        ],
+        [
+          "on",
+          "b3",
+          "b2"
+        ],
+        [
+          "ontable",
+          "b1"
+        ],
+        [
+          "ontable",
+          "b5"
+        ]
+      ]
+    },
+    {
+      "index": 9,
+      "action": "stack",
+      "args": [
+        "b4",
+        "b3"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "b4"
+        ],
+        [
+          "clear",
+          "b5"
+        ],
+        [
+          "handempty"
+        ],
+        [
+          "on",
+          "b2",
+          "b1"
+        ],
+        [
+          "on",
+          "b3",
+          "b2"
+        ],
+        [
+          "on",
+          "b4",
+          "b3"
+        ],
+        [
+          "ontable",
+          "b1"
+        ],
+        [
+          "ontable",
+          "b5"
+        ]
+      ]
+    },
+    {
+      "index": 10,
+      "action": "pickup",
+      "args": [
+        "b5"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "b4"
+        ],
+        [
+          "holding",
+          "b5"
+        ],
+        [
+          "on",
+          "b2",
+          "b1"
+        ],
+        [
+          "on",
+          "b3",
+          "b2"
+        ],
+        [
+          "on",
+          "b4",
+          "b3"
+        ],
+        [
+          "ontable",
+          "b1"
+        ]
+      ]
+    },
+    {
+      "index": 11,
+      "action": "stack",
+      "args": [
+        "b5",
+        "b4"
+      ],
+      "ok": true,
+      "state_after": [
+        [
+          "clear",
+          "b5"
+        ],
+        [
+          "handempty"
+        ],
+        [
+          "on",
+          "b2",
+          "b1"
+        ],
+        [
+          "on",
+          "b3",
+          "b2"
+        ],
+        [
+          "on",
+          "b4",
+          "b3"
+        ],
+        [
+          "on",
+          "b5",
+          "b4"
+        ],
+        [
+          "ontable",
+          "b1"
+        ]
+      ]
+    }
+  ],
+  "final_state": [
+    [
+      "clear",
+      "b5"
+    ],
+    [
+      "handempty"
+    ],
+    [
+      "on",
+      "b2",
+      "b1"
+    ],
+    [
+      "on",
+      "b3",
+      "b2"
+    ],
+    [
+      "on",
+      "b4",
+      "b3"
+    ],
+    [
+      "on",
+      "b5",
+      "b4"
+    ],
+    [
+      "ontable",
+      "b1"
+    ]
+  ],
+  "goal_reached": true
+}
+
+-- solve_planning_problem (provably unsolvable: a-on-b and b-on-a at once) --
+{
+  "solvable": false,
+  "reason": "the entire reachable state space was explored without ever satisfying the goal -- the goal is provably unreachable from initial_state under this domain, not just unfound within a search budget",
+  "states_expanded": 5,
+  "distinct_states_reached": 5
+}
+Tool 'solve_planning_problem' raised an unexpected exception
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/base.py", line 176, in run
+    result = await self.fn_metadata.call_fn(self.fn, self.is_async, validated, pass_directly)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/utilities/func_metadata.py", line 164, in call_fn
+    return await anyio.to_thread.run_sync(functools.partial(fn, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/strips-planner/server.py", line 72, in solve_planning_problem
+    return planner.solve(objects, initial_state, goal, actions, max_states, max_depth)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/strips-planner/planner.py", line 349, in solve
+    raise ValueError(
+ValueError: search exceeded max_states=1 (or max_depth=60) without reaching the goal or exhausting the reachable state space; solvability could not be determined either way -- try raising max_states/max_depth
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/server.py", line 433, in _handle_call_tool
+    return await self.call_tool(params.name, params.arguments or {}, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/server.py", line 539, in call_tool
+    return await self._tool_manager.call_tool(name, arguments, context, convert_result=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/tool_manager.py", line 87, in call_tool
+    return await tool.run(arguments, context, convert_result=convert_result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/base.py", line 210, in run
+    raise UnexpectedToolError(f"Error executing tool {self.name}") from exc
+mcp.server.mcpserver.exceptions.UnexpectedToolError: Error executing tool solve_planning_problem
+
+-- solve_planning_problem (max_states=1, budget too small: should be an MCP tool error) --
+is_error: True
+Error executing tool solve_planning_problem

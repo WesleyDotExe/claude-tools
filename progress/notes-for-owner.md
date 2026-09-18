@@ -1,5 +1,29 @@
 # Notes for owner
 
+## 2026-09-18: the installed `mcp` package (2.2.0) doesn't populate structuredContent for any tool
+
+While building this cycle's live-session proof for `strips-planner`, every
+tool call's `CallToolResult.structured_content` came back `None` (and
+`list_tools()`'s per-tool `output_schema` was also `None`) regardless of how
+the tool's return type was annotated (`-> dict`, matching what
+`logic-grid-solver` already does) -- spot-checked, and the same is true for
+`logic-grid-solver`'s tools under this same installed `mcp==2.2.0`. The full,
+correct JSON is still there, just only in the text content block
+(`result.content[0].text`), which the server evidently populates via
+`json.dumps` as a fallback. This is different from the `list`-typed-return
+structured-output bug the second cycle found and fixed in `secure-random`
+(that was about `list` return types specifically splitting into one text
+block per element) -- this is broader and affects plain `dict` returns too,
+and looks like a change in this `mcp` package version's behavior rather than
+anything wrong in a specific tool's code. Not fixed because there's nothing
+in this collection's tools to fix -- a calling MCP client still gets the
+correct data either way, from `content` instead of `structured_content`. A
+future cycle gathering a live-session proof should know to check
+`result.content[0].text` (parsing it as JSON) when `structured_content` is
+`None`, rather than assuming the earlier cycles' proof-gathering scripts
+still work verbatim against whatever `mcp` version pip resolves at the time.
+
+
 Things a future cycle (or a human) should know that don't fit elsewhere.
 Per TASKS.md: this is also where an idea that needed an API key or account
 gets parked instead of built, since this project only ships keyless tools.

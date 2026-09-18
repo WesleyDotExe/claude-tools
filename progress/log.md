@@ -2,6 +2,69 @@
 
 Newest entry on top. One entry per cycle: what was done, honestly.
 
+## 2026-09-18 — sixth run
+
+- Ran `tools/collection-index/index.py` first, per the loop: 5 tools
+  existed, nothing to extend that clearly beat a fresh candidate.
+- Searched deliberately for a problem shape that isn't a single
+  calculation *or* static constraint satisfaction, per the previous
+  cycle's own note-for-owner (don't just repeat the CSP move that produced
+  `logic-grid-solver`). Sudoku surfaced as a real, sharply-documented LLM
+  failure but was rejected as too close to `logic-grid-solver`'s own shape
+  and heavily saturated by non-MCP solvers. Round-robin tournament
+  scheduling and cryptarithmetic (SEND+MORE=MONEY) were both checked and
+  rejected too -- see `special-projects/cycles.json` for the full
+  reasoning on all three.
+- Landed on **planning**: finding a sequence of state-changing actions
+  from an initial state to a goal. Kambhampati et al.'s PlanBench/
+  Blocksworld research documents LLMs failing reliably at this past a
+  handful of objects -- a genuinely different failure mode (can't hold
+  cumulative, interdependent state across a sequence) than anything
+  already in this collection. Found exactly one existing MCP server for
+  general planning (`byte4ever/gp`, Go/Graphplan), and it requires PDDL/
+  ADL input -- which "LLM-as-formalizer" research shows models are also
+  bad at producing, so it doesn't actually close the gap for a calling
+  model. No keyless MCP server was found exposing planning through a
+  small, fixed JSON vocabulary with an independent verifier.
+- Built `tools/strips-planner`: `planner.py` (fact/action-schema
+  validation and grounding, a breadth-first-search solver that proves its
+  plan is shortest-possible or proves the goal unreachable by exhausting
+  the reachable state space, a deliberately separate step-by-step
+  `verify_plan` forward simulator, and a seeded Blocksworld instance
+  generator) and `server.py` (MCP stdio wrapper, 4 tools). Mirrors
+  `logic-grid-solver`'s "small fixed vocabulary instead of a formal
+  language" and "proof, not assertion" moves, applied to a genuinely
+  different algorithm (BFS state-space search, not arc-consistency +
+  backtracking).
+- Wrote 25 unit tests (`tests/test_planner.py`), including the classic
+  Sussman anomaly solved and checked against its known-optimal 6-action
+  plan, `verify_plan` independently re-confirming the solver's own plan
+  and separately catching five different kinds of broken/invalid plans, a
+  contradictory goal proven unreachable via full state-space exhaustion
+  (distinct from a too-small search budget, which raises instead of
+  guessing), and the Blocksworld generator's reproducibility and
+  solvability checked across ten seeds.
+- Drove the live MCP server over stdio with a real client (not just
+  scaffolding): `tools/strips-planner/proof/run_2026-09-18.txt` --
+  `list_tools`, `describe_planning_format`, the Sussman anomaly solved and
+  independently re-verified, a deliberately broken plan caught with its
+  exact unmet precondition named, a generated 5-block instance (seed
+  2026) solved and verified end to end, a provably unsolvable goal
+  correctly reported as such, and a too-small search budget correctly
+  coming back as an MCP tool error instead of a silent wrong answer.
+- **Found (not a bug in this tool, but worth recording) while building the
+  proof:** the installed `mcp==2.2.0` doesn't populate
+  `structuredContent`/`outputSchema` for any tool in this server, nor
+  (spot-checked) for `logic-grid-solver`'s own tools under the same
+  installed version -- every tool's JSON only comes back in the text
+  content block. Correct data either way; recorded in
+  `progress/notes-for-owner.md` so a future cycle's proof-gathering script
+  doesn't assume `structured_content` and produce a misleadingly empty
+  proof.
+- Updated `tools/strips-planner/README.md` and `manifest.json`, root
+  `README.md`'s tool list, appended this cycle to
+  `special-projects/cycles.json`, rebuilt `_site/dashboard.html`.
+
 ## 2026-09-17 — fifth run: built logic-grid-solver
 
 - Ran `tools/collection-index/index.py` first, per the loop: 4 tools
