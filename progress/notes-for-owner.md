@@ -1,5 +1,29 @@
 # Notes for owner
 
+## 2026-09-19: this session's designated branch was already merged+deleted before work started
+
+The branch this run was told to develop on (`claude/happy-galileo-k8r2gx`)
+turned out to already be the head of `main` (all 5 prior cycles' work) by
+the time this session ran its first `git fetch` -- the branch had been
+merged and auto-deleted between the session's initial clone and its next
+fetch a few commands later, presumably a race with whatever merged the
+previous cycle's PR. Handled per the standing merged-branch protocol:
+restarted the branch from the fresh `main` tip and continued as a new
+cycle. No work was lost -- worth knowing this can happen mid-session (not
+just "checked once at the start"), so a future run shouldn't assume an
+initial `git branch -a` listing is still accurate several commands later
+without re-fetching.
+
+## 2026-09-19: `CallToolResult` uses `is_error` (snake_case), not `isError`
+
+While driving `graph-algorithms`' live-session proof, `result.isError`
+raised `AttributeError` under the installed `mcp` client library --
+pydantic's `main.py` explicitly suggested the fix. The correct attribute is
+`result.is_error`. Camel case shows up in the *wire* JSON-RPC field name
+(`isError`), but the Python `CallToolResult` model exposes it snake_cased.
+Noting this so a future cycle writing its own live-session proof driver
+doesn't lose time on the same `AttributeError`.
+
 ## 2026-09-18: the installed `mcp` package (2.2.0) doesn't populate structuredContent for any tool
 
 While building this cycle's live-session proof for `strips-planner`, every

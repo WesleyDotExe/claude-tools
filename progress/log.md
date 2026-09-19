@@ -2,6 +2,64 @@
 
 Newest entry on top. One entry per cycle: what was done, honestly.
 
+## 2026-09-19 — seventh run
+
+- This session's designated branch had already been merged into `main`
+  (all 5 prior cycles' work) and the branch deleted by the time this run
+  started, so per the standing merged-branch protocol, restarted the
+  branch fresh from `main` before doing any new work — nothing lost, just
+  a fresh base.
+- Ran `tools/collection-index/index.py` first, per the loop: 6 tools
+  existed, nothing screamed out to extend over a fresh candidate.
+- Searched broadly first ("I wish Claude could...", general LLM-limitation
+  reddit/forum queries, long-conversation entity-tracking research) — these
+  mostly surfaced generic MCP-marketing content or a much larger, fuzzier
+  problem (conversational memory) than this collection's "small fixed
+  vocabulary, exact answer, independently checkable" shape fits. Narrowed
+  to graph algorithms after finding four separate purpose-built 2025/2026
+  benchmarks (GraphArena, GraphOmni, GrAlgoBench, GTA) specifically
+  measuring LLM accuracy on shortest path/topological sort/MST/max flow,
+  all reporting sharp accuracy drops past a handful of nodes.
+- Checked existing MCP coverage before building: found `mcp-solver`
+  (requires SMT-LIB/ASP formalization — the same LLM-as-formalizer problem
+  `logic-grid-solver`/`strips-planner` already sidestep) and a research
+  prototype requiring a live Neo4j Graph Data Science instance (not
+  keyless). No MCP server exposing plain graph algorithms through a simple
+  node/edge JSON vocabulary with an independent verifier was found —
+  confirmed real gap. See `special-projects/cycles.json` for the full
+  search/reasoning record, including why sudoku/latin-square/maze
+  *generation* was checked again and still rejected as overlapping
+  `logic-grid-solver`'s shape.
+- Built `tools/graph-algorithms`: `graphkit.py` (four algorithm/verifier
+  pairs — Dijkstra verified via independent Bellman-Ford, Kahn's verified
+  against the direct topological-order definition with a concrete DFS-
+  found cycle as proof of non-DAG-ness, Kruskal verified via the
+  cycle-property exchange argument, Edmonds-Karp verified via flow
+  conservation plus the max-flow min-cut theorem — stdlib only) and
+  `server.py` (MCP stdio wrapper, 10 tools).
+- Wrote 44 unit tests (`tests/test_graphkit.py`): known-by-hand answers on
+  small hand-checkable graphs for all four algorithms, each verifier
+  independently catching a deliberately wrong/suboptimal/infeasible
+  candidate answer, and shared input validation (self-loops, duplicate
+  nodes, unknown node references, negative weights where disallowed,
+  duplicate flow edges, missing capacity).
+- Drove the live MCP server over stdio with a real client (not just
+  scaffolding): `list_tools` + all 10 tools called, including a
+  deliberately invalid negative-weight input confirmed to come back as an
+  MCP tool error (`is_error: true`) rather than a wrong answer — captured
+  in `tools/graph-algorithms/proof/run_2026-09-19.txt`.
+- Full repo test suite green locally: 202 tests across all seven tools
+  (158 from before + graph-algorithms' 44).
+- Wrote `tools/graph-algorithms/README.md`, added it to the root README's
+  tool list, appended the cycle to `special-projects/cycles.json`, updated
+  `special-projects/current.md`, and rebuilt `_site/dashboard.html` via
+  `scripts/build_site.py` (gitignored, not committed).
+- Deliberately did NOT build graph coloring in the same cycle even though
+  it's also documented in the same benchmarks — it's NP-hard and needs its
+  own backtracking-search-with-budget story to build fully rather than as
+  an afterthought; recorded as an explicit option for a future cycle in
+  `special-projects/current.md` and this tool's own README.
+
 ## 2026-09-18 — sixth run
 
 - Ran `tools/collection-index/index.py` first, per the loop: 5 tools

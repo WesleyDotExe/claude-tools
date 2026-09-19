@@ -3,6 +3,37 @@
 Honest list of known gaps and shortcuts. Not urgent by default — surfaced
 so a future cycle (or the owner) can decide whether to pay them down.
 
+## `graph-algorithms` has no graph coloring, despite being documented in the same benchmarks that motivated the tool
+
+Graph coloring (find the minimum number of colors so no two adjacent nodes
+match) is real and sharply documented as an LLM failure right alongside
+shortest path/topological sort/MST/max flow in the same 2025/2026 graph-
+reasoning benchmarks this tool's README cites. Not built this cycle: it's
+NP-hard and needs its own real backtracking-search-with-a-budget story
+(pruning, a `max_search_nodes` cap that fails predictably rather than
+hanging, and a minimality proof via exhausting a (k-1)-coloring search) --
+the same complexity level `logic-grid-solver`'s arc-consistency search or
+`strips-planner`'s BFS budget already required as a whole tool's worth of
+care. Folding it in alongside four other algorithm families in one cycle
+would have meant building it half-attentively. Left as an explicit next-
+step option (see `special-projects/current.md`) rather than a silent gap.
+
+## `graph-algorithms`'s implementations are plain Python, not vectorized or tuned for large graphs
+
+`shortest_path` (Dijkstra with a binary heap), `minimum_spanning_tree`
+(Kruskal with union-find), and `max_flow` (Edmonds-Karp, O(VE^2) worst
+case) are all correct, standard-textbook implementations, but plain
+Python loops over adjacency lists/dicts rather than anything vectorized
+(NumPy adjacency matrices, etc.). Fine for the sizes these tools are
+meant for (tens to low hundreds of nodes -- the kind of graph a person or
+a model would plausibly describe by hand or ask about in a session), not
+tuned for large-scale graph processing. Not fixed for the same reason
+`secure-random`'s `verify_uniformity` stays a plain Python loop: adding a
+numeric dependency would break this collection's "stdlib only, keyless, no
+dependency beyond `mcp`" property, and the tradeoff (stay dependency-free
+vs. faster large-N) favors staying dependency-free unless a real need for
+much larger graphs surfaces.
+
 ## `strips-planner`'s BFS is exponential in the worst case, capped by `max_states`/`max_depth`, not by a smarter search
 
 `solve_planning_problem` uses plain breadth-first search over the grounded
