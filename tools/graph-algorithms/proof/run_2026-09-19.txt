@@ -1,0 +1,429 @@
+=== unit tests ===
+test_returns_worked_example (test_graphkit.DescribeFormatTests.test_returns_worked_example) ... ok
+test_different_seed_usually_differs (test_graphkit.GenerateRandomGraphTests.test_different_seed_usually_differs) ... ok
+test_generated_graph_feeds_mst_and_shortest_path (test_graphkit.GenerateRandomGraphTests.test_generated_graph_feeds_mst_and_shortest_path) ... ok
+test_num_edges_out_of_range_rejected (test_graphkit.GenerateRandomGraphTests.test_num_edges_out_of_range_rejected) ... ok
+test_num_nodes_out_of_range_rejected (test_graphkit.GenerateRandomGraphTests.test_num_nodes_out_of_range_rejected) ... ok
+test_reproducible_with_same_seed (test_graphkit.GenerateRandomGraphTests.test_reproducible_with_same_seed) ... ok
+test_duplicate_edge_rejected (test_graphkit.MaxFlowTests.test_duplicate_edge_rejected) ... ok
+test_flow_respects_conservation_and_capacity (test_graphkit.MaxFlowTests.test_flow_respects_conservation_and_capacity) ... ok
+test_known_max_flow_value (test_graphkit.MaxFlowTests.test_known_max_flow_value) ... ok
+test_missing_capacity_rejected (test_graphkit.MaxFlowTests.test_missing_capacity_rejected) ... ok
+test_source_equals_sink_rejected (test_graphkit.MaxFlowTests.test_source_equals_sink_rejected) ... ok
+test_verify_catches_capacity_violation (test_graphkit.MaxFlowTests.test_verify_catches_capacity_violation) ... ok
+test_verify_catches_conservation_violation (test_graphkit.MaxFlowTests.test_verify_catches_conservation_violation) ... ok
+test_verify_rejects_mismatched_cut_as_non_optimal (test_graphkit.MaxFlowTests.test_verify_rejects_mismatched_cut_as_non_optimal) ... ok
+test_verify_without_cut_only_proves_feasibility (test_graphkit.MaxFlowTests.test_verify_without_cut_only_proves_feasibility) ... ok
+test_disconnected_graph_returns_forest (test_graphkit.MinimumSpanningTreeTests.test_disconnected_graph_returns_forest) ... ok
+test_known_minimum_weight (test_graphkit.MinimumSpanningTreeTests.test_known_minimum_weight) ... ok
+test_negative_weight_allowed (test_graphkit.MinimumSpanningTreeTests.test_negative_weight_allowed) ... ok
+test_verify_catches_cycle_in_claimed_tree (test_graphkit.MinimumSpanningTreeTests.test_verify_catches_cycle_in_claimed_tree) ... ok
+test_verify_catches_edge_not_in_graph (test_graphkit.MinimumSpanningTreeTests.test_verify_catches_edge_not_in_graph) ... ok
+test_verify_catches_incomplete_spanning (test_graphkit.MinimumSpanningTreeTests.test_verify_catches_incomplete_spanning) ... ok
+test_verify_catches_suboptimal_tree_via_cycle_property (test_graphkit.MinimumSpanningTreeTests.test_verify_catches_suboptimal_tree_via_cycle_property) ... ok
+test_directed_edge_cannot_be_used_backwards (test_graphkit.ShortestPathTests.test_directed_edge_cannot_be_used_backwards) ... ok
+test_known_shortest_path (test_graphkit.ShortestPathTests.test_known_shortest_path) ... ok
+test_negative_weight_rejected (test_graphkit.ShortestPathTests.test_negative_weight_rejected) ... ok
+test_undirected_allows_backwards_traversal (test_graphkit.ShortestPathTests.test_undirected_allows_backwards_traversal) ... ok
+test_unknown_source_rejected (test_graphkit.ShortestPathTests.test_unknown_source_rejected) ... ok
+test_unreachable_target_gives_proof_not_guess (test_graphkit.ShortestPathTests.test_unreachable_target_gives_proof_not_guess) ... ok
+test_unweighted_defaults_to_bfs_shortest_hop_count (test_graphkit.ShortestPathTests.test_unweighted_defaults_to_bfs_shortest_hop_count) ... ok
+test_verify_accepts_correct_standalone_claim (test_graphkit.ShortestPathTests.test_verify_accepts_correct_standalone_claim) ... ok
+test_verify_catches_nonexistent_edge_in_path (test_graphkit.ShortestPathTests.test_verify_catches_nonexistent_edge_in_path) ... ok
+test_verify_catches_path_not_ending_at_target (test_graphkit.ShortestPathTests.test_verify_catches_path_not_ending_at_target) ... ok
+test_verify_catches_wrong_distance_claim (test_graphkit.ShortestPathTests.test_verify_catches_wrong_distance_claim) ... ok
+test_cycle_detected_with_concrete_witness (test_graphkit.TopologicalSortTests.test_cycle_detected_with_concrete_witness) ... ok
+test_known_order_on_diamond_dag (test_graphkit.TopologicalSortTests.test_known_order_on_diamond_dag) ... ok
+test_partial_cycle_still_orders_the_acyclic_part (test_graphkit.TopologicalSortTests.test_partial_cycle_still_orders_the_acyclic_part) ... ok
+test_verify_accepts_valid_order (test_graphkit.TopologicalSortTests.test_verify_accepts_valid_order) ... ok
+test_verify_catches_backwards_edge (test_graphkit.TopologicalSortTests.test_verify_catches_backwards_edge) ... ok
+test_verify_catches_non_permutation (test_graphkit.TopologicalSortTests.test_verify_catches_non_permutation) ... ok
+test_duplicate_nodes_rejected (test_graphkit.ValidationTests.test_duplicate_nodes_rejected) ... ok
+test_empty_nodes_rejected (test_graphkit.ValidationTests.test_empty_nodes_rejected) ... ok
+test_non_number_weight_rejected (test_graphkit.ValidationTests.test_non_number_weight_rejected) ... ok
+test_self_loop_rejected (test_graphkit.ValidationTests.test_self_loop_rejected) ... ok
+test_unknown_edge_endpoint_rejected (test_graphkit.ValidationTests.test_unknown_edge_endpoint_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 44 tests in 0.003s
+
+OK
+
+=== live MCP server session (stdio transport) ===
+Tools exposed: ['describe_graph_format', 'shortest_path', 'verify_shortest_path', 'topological_sort', 'verify_topological_order', 'minimum_spanning_tree', 'verify_minimum_spanning_tree', 'max_flow', 'verify_max_flow', 'generate_random_graph']
+
+-- describe_graph_format() --
+{
+  "nodes": "A non-empty list of unique node-name strings.",
+  "edge": "An object {\"from\": node, \"to\": node, \"weight\": number}. 'weight' is optional and defaults to 1 (an unweighted graph is just edges without it). Self-loops (from == to) are rejected everywhere.",
+  "directed": "Most tools take a separate 'directed' boolean: the same edge list is read as one-way (from -> to only) or two-way (both directions) depending on it.",
+  "per_tool_notes": {
+    "shortest_path": "Requires weight >= 0 -- Dijkstra's algorithm (used to solve) requires non-negative weights; negative-weight shortest paths need a different algorithm family and aren't supported here.",
+    "minimum_spanning_tree": "Always undirected (no 'directed' parameter); weight may be any real number, including negative or zero -- Kruskal's algorithm doesn't care about sign.",
+    "topological_sort": "Always directed; 'weight', if present, is ignored.",
+    "max_flow": "Directed, with a 'capacity' field instead of 'weight' (required, must be >= 0, no default). Parallel edges between the same ordered pair are rejected -- combine them into one edge with the summed capacity first."
+  },
+  "example_graph": {
+    "nodes": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "edges": [
+      {
+        "from": "A",
+        "to": "B",
+        "weight": 1
+      },
+      {
+        "from": "B",
+        "to": "C",
+        "weight": 2
+      },
+      {
+        "from": "A",
+        "to": "C",
+        "weight": 5
+      },
+      {
+        "from": "C",
+        "to": "D",
+        "weight": 1
+      }
+    ]
+  }
+}
+
+-- shortest_path(nodes=['A', 'B', 'C', 'D', 'E'], edges=[{'from': 'A', 'to': 'B', 'weight': 6}, {'from': 'A', 'to': 'C', 'weight': 3}, {'from': 'C', 'to': 'B', 'weight': 2}, {'from': 'B', 'to': 'D', 'weight': 1}, {'from': 'C', 'to': 'D', 'weight': 5}, {'from': 'D', 'to': 'E', 'weight': 2}, {'from': 'B', 'to': 'E', 'weight': 6}], source='A', target='E', directed=True) --
+{
+  "reachable": true,
+  "path": [
+    "A",
+    "C",
+    "B",
+    "D",
+    "E"
+  ],
+  "distance": 8.0,
+  "nodes_expanded": 5,
+  "verification": {
+    "valid": true,
+    "path_is_real_walk": true,
+    "path_errors": [],
+    "path_weight": 8.0,
+    "claimed_distance": 8.0,
+    "independently_computed_shortest_distance": 8.0,
+    "optimality_conditions_hold": true,
+    "proof_method": "Bellman-Ford relaxation (a different algorithm than the Dijkstra's algorithm shortest_path uses), independently confirming the shortest-path optimality conditions rather than re-running the same code."
+  }
+}
+
+-- verify_shortest_path(nodes=['A', 'B', 'C', 'D', 'E'], edges=[{'from': 'A', 'to': 'B', 'weight': 6}, {'from': 'A', 'to': 'C', 'weight': 3}, {'from': 'C', 'to': 'B', 'weight': 2}, {'from': 'B', 'to': 'D', 'weight': 1}, {'from': 'C', 'to': 'D', 'weight': 5}, {'from': 'D', 'to': 'E', 'weight': 2}, {'from': 'B', 'to': 'E', 'weight': 6}], source='A', target='E', path=['A', 'C', 'B', 'D', 'E'], distance=7.0, directed=True) --
+{
+  "valid": false,
+  "path_is_real_walk": true,
+  "path_errors": [],
+  "path_weight": 8.0,
+  "claimed_distance": 7.0,
+  "independently_computed_shortest_distance": 8.0,
+  "optimality_conditions_hold": true,
+  "proof_method": "Bellman-Ford relaxation (a different algorithm than the Dijkstra's algorithm shortest_path uses), independently confirming the shortest-path optimality conditions rather than re-running the same code."
+}
+
+-- topological_sort(nodes=['A', 'B', 'C', 'D'], edges=[{'from': 'A', 'to': 'B'}, {'from': 'A', 'to': 'C'}, {'from': 'B', 'to': 'D'}, {'from': 'C', 'to': 'D'}]) --
+{
+  "is_dag": true,
+  "order": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "verification": {
+    "valid": true,
+    "violations": [],
+    "proof_method": "directly checks every edge (u, v) has position(u) < position(v) in the given order -- the definition of a valid topological order."
+  }
+}
+
+-- topological_sort(nodes=['A', 'B', 'C'], edges=[{'from': 'A', 'to': 'B'}, {'from': 'B', 'to': 'C'}, {'from': 'C', 'to': 'A'}]) --
+{
+  "is_dag": false,
+  "reason": "a cycle exists, so no order can satisfy every edge -- proof: a concrete cycle is given below (found by exploring the nodes Kahn's algorithm could never reach zero in-degree for)",
+  "nodes_not_orderable": [
+    "A",
+    "B",
+    "C"
+  ],
+  "cycle": [
+    "A",
+    "B",
+    "C",
+    "A"
+  ]
+}
+
+-- minimum_spanning_tree(nodes=['A', 'B', 'C', 'D'], edges=[{'from': 'A', 'to': 'B', 'weight': 1}, {'from': 'B', 'to': 'C', 'weight': 2}, {'from': 'C', 'to': 'D', 'weight': 3}, {'from': 'A', 'to': 'D', 'weight': 10}, {'from': 'A', 'to': 'C', 'weight': 4}]) --
+{
+  "tree_edges": [
+    {
+      "from": "A",
+      "to": "B",
+      "weight": 1.0
+    },
+    {
+      "from": "B",
+      "to": "C",
+      "weight": 2.0
+    },
+    {
+      "from": "C",
+      "to": "D",
+      "weight": 3.0
+    }
+  ],
+  "total_weight": 6.0,
+  "num_components": 1,
+  "is_spanning_tree": true,
+  "verification": {
+    "valid": true,
+    "violations": [],
+    "proof_method": "cycle-property exchange argument: for every edge outside the tree, checks it is not lighter than the heaviest edge on the tree path it would close into a cycle -- the standard mathematical proof of MST optimality."
+  }
+}
+
+-- verify_minimum_spanning_tree(nodes=['A', 'B', 'C', 'D'], edges=[{'from': 'A', 'to': 'B', 'weight': 1}, {'from': 'B', 'to': 'C', 'weight': 2}, {'from': 'C', 'to': 'D', 'weight': 3}, {'from': 'A', 'to': 'D', 'weight': 10}, {'from': 'A', 'to': 'C', 'weight': 4}], tree_edges=[{'from': 'A', 'to': 'B', 'weight': 1}, {'from': 'B', 'to': 'C', 'weight': 2}, {'from': 'A', 'to': 'D', 'weight': 10}]) --
+{
+  "valid": false,
+  "violations": [
+    {
+      "non_tree_edge": {
+        "from": "C",
+        "to": "D",
+        "weight": 3.0
+      },
+      "heaviest_edge_on_tree_path": 10.0,
+      "explanation": "this non-tree edge is lighter than the heaviest edge on the tree path it would close into a cycle -- swapping it in would produce a lighter spanning forest, so tree_edges is NOT minimum"
+    }
+  ],
+  "proof_method": "cycle-property exchange argument: for every edge outside the tree, checks it is not lighter than the heaviest edge on the tree path it would close into a cycle -- the standard mathematical proof of MST optimality."
+}
+
+-- max_flow(nodes=['S', 'A', 'B', 'T'], edges=[{'from': 'S', 'to': 'A', 'capacity': 3}, {'from': 'S', 'to': 'B', 'capacity': 2}, {'from': 'A', 'to': 'B', 'capacity': 1}, {'from': 'A', 'to': 'T', 'capacity': 2}, {'from': 'B', 'to': 'T', 'capacity': 4}], source='S', sink='T') --
+{
+  "max_flow": 5.0,
+  "flow_edges": [
+    {
+      "from": "S",
+      "to": "B",
+      "flow": 2.0,
+      "capacity": 2.0
+    },
+    {
+      "from": "A",
+      "to": "B",
+      "flow": 1.0,
+      "capacity": 1.0
+    },
+    {
+      "from": "A",
+      "to": "T",
+      "flow": 2.0,
+      "capacity": 2.0
+    },
+    {
+      "from": "B",
+      "to": "T",
+      "flow": 3.0,
+      "capacity": 4.0
+    },
+    {
+      "from": "S",
+      "to": "A",
+      "flow": 3.0,
+      "capacity": 3.0
+    }
+  ],
+  "augmenting_paths_found": 3,
+  "min_cut": {
+    "reachable_from_source": [
+      "S"
+    ],
+    "cut_edges": [
+      {
+        "from": "S",
+        "to": "B",
+        "capacity": 2.0
+      },
+      {
+        "from": "S",
+        "to": "A",
+        "capacity": 3.0
+      }
+    ],
+    "cut_capacity": 5.0
+  },
+  "verification": {
+    "valid": true,
+    "conservation_violations": [],
+    "flow_value": 5.0,
+    "source_outflow": 5.0,
+    "sink_inflow": 5.0,
+    "optimality_proven": true,
+    "cut_capacity": 5.0,
+    "proof_method": "max-flow min-cut theorem: any flow's value is always <= any cut's capacity, so finding a cut whose capacity equals this flow's value proves BOTH the flow is maximum AND the cut is minimum, independently of how the flow was computed."
+  }
+}
+
+-- verify_max_flow(nodes=['S', 'A', 'B', 'T'], edges=[{'from': 'S', 'to': 'A', 'capacity': 3}, {'from': 'S', 'to': 'B', 'capacity': 2}, {'from': 'A', 'to': 'B', 'capacity': 1}, {'from': 'A', 'to': 'T', 'capacity': 2}, {'from': 'B', 'to': 'T', 'capacity': 4}], source='S', sink='T', flow_edges=[{'from': 'S', 'to': 'A', 'flow': 999}, {'from': 'S', 'to': 'B', 'flow': 2}, {'from': 'A', 'to': 'B', 'flow': 0}, {'from': 'A', 'to': 'T', 'flow': 2}, {'from': 'B', 'to': 'T', 'flow': 2}]) --
+{
+  "valid": false,
+  "errors": [
+    "flow_edges[0]: flow 999 violates 0 <= flow <= capacity (3.0) on edge S -> A"
+  ],
+  "optimality_proven": false
+}
+
+-- generate_random_graph(num_nodes=6, num_edges=8, seed=2026, directed=False) --
+{
+  "nodes": [
+    "n1",
+    "n2",
+    "n3",
+    "n4",
+    "n5",
+    "n6"
+  ],
+  "edges": [
+    {
+      "from": "n1",
+      "to": "n2",
+      "weight": 4
+    },
+    {
+      "from": "n1",
+      "to": "n4",
+      "weight": 10
+    },
+    {
+      "from": "n1",
+      "to": "n6",
+      "weight": 5
+    },
+    {
+      "from": "n2",
+      "to": "n4",
+      "weight": 8
+    },
+    {
+      "from": "n2",
+      "to": "n5",
+      "weight": 2
+    },
+    {
+      "from": "n3",
+      "to": "n4",
+      "weight": 1
+    },
+    {
+      "from": "n3",
+      "to": "n6",
+      "weight": 2
+    },
+    {
+      "from": "n4",
+      "to": "n6",
+      "weight": 2
+    }
+  ],
+  "seed": 2026,
+  "directed": false,
+  "weighted": true
+}
+
+-- minimum_spanning_tree(nodes=['n1', 'n2', 'n3', 'n4', 'n5', 'n6'], edges=[{'from': 'n1', 'to': 'n2', 'weight': 4}, {'from': 'n1', 'to': 'n4', 'weight': 10}, {'from': 'n1', 'to': 'n6', 'weight': 5}, {'from': 'n2', 'to': 'n4', 'weight': 8}, {'from': 'n2', 'to': 'n5', 'weight': 2}, {'from': 'n3', 'to': 'n4', 'weight': 1}, {'from': 'n3', 'to': 'n6', 'weight': 2}, {'from': 'n4', 'to': 'n6', 'weight': 2}]) --
+{
+  "tree_edges": [
+    {
+      "from": "n3",
+      "to": "n4",
+      "weight": 1.0
+    },
+    {
+      "from": "n2",
+      "to": "n5",
+      "weight": 2.0
+    },
+    {
+      "from": "n3",
+      "to": "n6",
+      "weight": 2.0
+    },
+    {
+      "from": "n1",
+      "to": "n2",
+      "weight": 4.0
+    },
+    {
+      "from": "n1",
+      "to": "n6",
+      "weight": 5.0
+    }
+  ],
+  "total_weight": 14.0,
+  "num_components": 1,
+  "is_spanning_tree": true,
+  "verification": {
+    "valid": true,
+    "violations": [],
+    "proof_method": "cycle-property exchange argument: for every edge outside the tree, checks it is not lighter than the heaviest edge on the tree path it would close into a cycle -- the standard mathematical proof of MST optimality."
+  }
+}
+
+-- shortest_path(nodes=['A', 'B'], edges=[{'from': 'A', 'to': 'B', 'weight': -1}], source='A', target='B') --
+Tool 'shortest_path' raised an unexpected exception
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/dist-packages/mcp/server/mcpserver/tools/base.py", line 176, in run
+    result = await self.fn_metadata.call_fn(self.fn, self.is_async, validated, pass_directly)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/mcp/server/mcpserver/utilities/func_metadata.py", line 164, in call_fn
+    return await anyio.to_thread.run_sync(functools.partial(fn, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/graph-algorithms/server.py", line 56, in shortest_path
+    return graphkit.shortest_path(nodes, edges, source, target, directed)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/graph-algorithms/graphkit.py", line 211, in shortest_path
+    parsed = _parse_weighted_edges(edges, nodes, allow_negative=False)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/graph-algorithms/graphkit.py", line 99, in _parse_weighted_edges
+    raise ValueError(f"edges[{i}].weight must be >= 0, got {w}")
+ValueError: edges[0].weight must be >= 0, got -1
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/dist-packages/mcp/server/mcpserver/server.py", line 433, in _handle_call_tool
+    return await self.call_tool(params.name, params.arguments or {}, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/mcp/server/mcpserver/server.py", line 539, in call_tool
+    return await self._tool_manager.call_tool(name, arguments, context, convert_result=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/mcp/server/mcpserver/tools/tool_manager.py", line 87, in call_tool
+    return await tool.run(arguments, context, convert_result=convert_result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/mcp/server/mcpserver/tools/base.py", line 210, in run
+    raise UnexpectedToolError(f"Error executing tool {self.name}") from exc
+mcp.server.mcpserver.exceptions.UnexpectedToolError: Error executing tool shortest_path
+[MCP tool error, is_error=True] Error executing tool shortest_path
+
+All assertions passed.
