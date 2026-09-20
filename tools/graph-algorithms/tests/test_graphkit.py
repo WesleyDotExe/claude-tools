@@ -344,6 +344,151 @@ class GenerateRandomGraphTests(unittest.TestCase):
             graphkit.generate_random_graph(3, 100)
 
 
+class GraphColoringTests(unittest.TestCase):
+    # A triangle (K3): every pair of nodes is adjacent, so it needs exactly 3 colors.
+    TRIANGLE_NODES = ["A", "B", "C"]
+    TRIANGLE_EDGES = [{"from": "A", "to": "B"}, {"from": "B", "to": "C"}, {"from": "A", "to": "C"}]
+
+    # An even cycle (bipartite): 2 colors suffice.
+    SQUARE_NODES = ["A", "B", "C", "D"]
+    SQUARE_EDGES = [
+        {"from": "A", "to": "B"},
+        {"from": "B", "to": "C"},
+        {"from": "C", "to": "D"},
+        {"from": "D", "to": "A"},
+    ]
+
+    # An odd cycle (C5): triangle-free (max clique = 2) but needs 3 colors -- the
+    # standard example where the clique lower bound alone doesn't already prove the
+    # chromatic number, so an exhaustive search is genuinely needed at k=2.
+    PENTAGON_NODES = ["A", "B", "C", "D", "E"]
+    PENTAGON_EDGES = [
+        {"from": "A", "to": "B"},
+        {"from": "B", "to": "C"},
+        {"from": "C", "to": "D"},
+        {"from": "D", "to": "E"},
+        {"from": "E", "to": "A"},
+    ]
+
+    def test_triangle_colorable_with_three_not_two(self):
+        ok = graphkit.graph_coloring(self.TRIANGLE_NODES, self.TRIANGLE_EDGES, num_colors=3)
+        self.assertTrue(ok["colorable"])
+        self.assertEqual(len(ok["colors_used"]), 3)
+        self.assertTrue(ok["verification"]["valid"])
+
+        bad = graphkit.graph_coloring(self.TRIANGLE_NODES, self.TRIANGLE_EDGES, num_colors=2)
+        self.assertFalse(bad["colorable"])
+        self.assertIn("reason", bad)
+
+    def test_square_colorable_with_two(self):
+        result = graphkit.graph_coloring(self.SQUARE_NODES, self.SQUARE_EDGES, num_colors=2)
+        self.assertTrue(result["colorable"])
+        self.assertEqual(set(result["coloring"].keys()), set(self.SQUARE_NODES))
+        self.assertLessEqual(len(result["colors_used"]), 2)
+
+    def test_num_colors_directed_and_weight_ignored(self):
+        # Same square, but with 'directed'-shaped weighted edges -- coloring only cares
+        # about adjacency, so this must behave identically to the unweighted version.
+        weighted = [dict(e, weight=7) for e in self.SQUARE_EDGES]
+        result = graphkit.graph_coloring(self.SQUARE_NODES, weighted, num_colors=2)
+        self.assertTrue(result["colorable"])
+
+    def test_budget_exceeded_raises_instead_of_guessing(self):
+        with self.assertRaises(ValueError):
+            graphkit.graph_coloring(self.TRIANGLE_NODES, self.TRIANGLE_EDGES, num_colors=2, max_search_nodes=1)
+
+    def test_num_colors_validation(self):
+        with self.assertRaises(ValueError):
+            graphkit.graph_coloring(self.SQUARE_NODES, self.SQUARE_EDGES, num_colors=0)
+        with self.assertRaises(ValueError):
+            graphkit.graph_coloring(self.SQUARE_NODES, self.SQUARE_EDGES, num_colors=True)  # bool, not int
+        with self.assertRaises(ValueError):
+            graphkit.graph_coloring(self.SQUARE_NODES, self.SQUARE_EDGES, num_colors=2, max_search_nodes=0)
+
+
+class VerifyColoringTests(unittest.TestCase):
+    def test_valid_coloring_accepted(self):
+        v = graphkit.verify_coloring(
+            GraphColoringTests.TRIANGLE_NODES, GraphColoringTests.TRIANGLE_EDGES, {"A": 0, "B": 1, "C": 2}
+        )
+        self.assertTrue(v["valid"])
+        self.assertEqual(v["num_colors_used"], 3)
+
+    def test_catches_shared_color_on_adjacent_nodes(self):
+        v = graphkit.verify_coloring(
+            GraphColoringTests.TRIANGLE_NODES, GraphColoringTests.TRIANGLE_EDGES, {"A": 0, "B": 1, "C": 1}
+        )
+        self.assertFalse(v["valid"])
+        self.assertEqual(len(v["violations"]), 1)
+        self.assertEqual(v["violations"][0]["shared_color"], 1)
+
+    def test_catches_missing_node(self):
+        v = graphkit.verify_coloring(GraphColoringTests.TRIANGLE_NODES, GraphColoringTests.TRIANGLE_EDGES, {"A": 0, "B": 1})
+        self.assertFalse(v["valid"])
+        self.assertEqual(v["missing_nodes"], ["C"])
+
+    def test_catches_unexpected_node(self):
+        v = graphkit.verify_coloring(
+            GraphColoringTests.TRIANGLE_NODES, GraphColoringTests.TRIANGLE_EDGES, {"A": 0, "B": 1, "C": 2, "Z": 0}
+        )
+        self.assertFalse(v["valid"])
+        self.assertEqual(v["unexpected_nodes"], ["Z"])
+
+    def test_string_color_labels_allowed(self):
+        v = graphkit.verify_coloring(
+            GraphColoringTests.SQUARE_NODES, GraphColoringTests.SQUARE_EDGES, {"A": "red", "B": "blue", "C": "red", "D": "blue"}
+        )
+        self.assertTrue(v["valid"])
+
+    def test_bad_color_type_rejected(self):
+        with self.assertRaises(ValueError):
+            graphkit.verify_coloring(
+                GraphColoringTests.TRIANGLE_NODES, GraphColoringTests.TRIANGLE_EDGES, {"A": 0, "B": 1, "C": [1, 2]}
+            )
+
+
+class ChromaticNumberTests(unittest.TestCase):
+    def test_triangle_chromatic_number_three_proven_by_clique_alone(self):
+        result = graphkit.chromatic_number(GraphColoringTests.TRIANGLE_NODES, GraphColoringTests.TRIANGLE_EDGES)
+        self.assertEqual(result["chromatic_number"], 3)
+        self.assertEqual(result["lower_bound"], 3)
+        self.assertEqual(len(result["lower_bound_clique"]), 3)
+        # The clique lower bound already equals the answer -- no exhaustive search needed.
+        self.assertEqual(result["k_values_proven_uncolorable"], [])
+        self.assertTrue(result["verification"]["valid"])
+
+    def test_square_chromatic_number_two(self):
+        result = graphkit.chromatic_number(GraphColoringTests.SQUARE_NODES, GraphColoringTests.SQUARE_EDGES)
+        self.assertEqual(result["chromatic_number"], 2)
+        self.assertEqual(result["k_values_proven_uncolorable"], [])
+
+    def test_pentagon_chromatic_number_three_needs_real_search(self):
+        result = graphkit.chromatic_number(GraphColoringTests.PENTAGON_NODES, GraphColoringTests.PENTAGON_EDGES)
+        self.assertEqual(result["chromatic_number"], 3)
+        # Triangle-free, so the clique lower bound is only 2 -- k=2 must be exhaustively
+        # ruled out by real search before k=3 is found colorable.
+        self.assertEqual(result["lower_bound"], 2)
+        self.assertEqual(result["k_values_proven_uncolorable"], [2])
+        self.assertTrue(result["verification"]["valid"])
+        self.assertGreater(result["search_nodes_expanded_total"], 0)
+
+    def test_single_node_no_edges_chromatic_number_one(self):
+        result = graphkit.chromatic_number(["A"], [])
+        self.assertEqual(result["chromatic_number"], 1)
+
+    def test_budget_exceeded_raises(self):
+        with self.assertRaises(ValueError):
+            graphkit.chromatic_number(GraphColoringTests.PENTAGON_NODES, GraphColoringTests.PENTAGON_EDGES, max_search_nodes=1)
+
+    def test_generated_graph_coloring_is_self_consistent(self):
+        g = graphkit.generate_random_graph(8, 12, seed=3, directed=False)
+        result = graphkit.chromatic_number(g["nodes"], g["edges"], max_search_nodes=500_000)
+        self.assertTrue(result["verification"]["valid"])
+        # A coloring with fewer colors than the proven chromatic number cannot exist.
+        too_few = graphkit.graph_coloring(g["nodes"], g["edges"], num_colors=result["chromatic_number"] - 1)
+        self.assertFalse(too_few["colorable"])
+
+
 class ValidationTests(unittest.TestCase):
     def test_duplicate_nodes_rejected(self):
         with self.assertRaises(ValueError):

@@ -2,6 +2,63 @@
 
 Newest entry on top. One entry per cycle: what was done, honestly.
 
+## 2026-09-20 — eighth run
+
+- Ran `tools/collection-index/index.py` first, per the loop: 7 tools
+  existed. Re-read `special-projects/current.md`'s next-step list, which
+  flagged graph coloring (deferred from the previous cycle when
+  `graph-algorithms` was first built) as the most-ready option.
+- Web-searched three fresh angles before committing to that: general "I
+  wish Claude could" threads (unproductive, mostly SEO/explainer content,
+  same finding as several earlier cycles), symbolic/computer algebra
+  (simplify/factor/solve — real, documented failure via the ASyMOB
+  benchmark, but saturated by sympy-mcp/math-mcp/scimath-mcp/symkit-mcp/
+  MCP_Math and a poor fit for this collection's stdlib-only discipline
+  since it needs SymPy), and computational geometry (convex hull/polygon
+  intersection — plausible shape, but no sharply-documented "LLMs fail at
+  this" source found, and PostGIS MCP already exposes convex hull). See
+  `progress/notes-for-owner.md`'s 2026-09-20 entry for the full reasoning.
+- Picked graph coloring: real (same 2025/2026 graph-reasoning benchmark
+  suite that motivated `graph-algorithms` itself documents it), extends an
+  existing tool rather than risking duplication, and the design was
+  already sketched out in the previous cycle's `progress/quality-debt.md`
+  entry (DSATUR + forward-checking backtracking, a `max_search_nodes`
+  budget matching `strips-planner`'s contract, a minimality proof via a
+  clique lower bound plus exhaustive uncolorability at every smaller color
+  count) — cleared TASKS.md's feasibility gate cleanly.
+- Built `graph_coloring` (bounded-k backtracking solver), `verify_coloring`
+  (independent direct-definition check, no search), and `chromatic_number`
+  (minimum-colors search: proves its lower bound for free by exhibiting a
+  clique, then searches upward, proving every smaller count impossible by
+  full search-tree exhaustion rather than a budget cutoff) in
+  `tools/graph-algorithms/graphkit.py`, wired into `server.py` as three new
+  MCP tools.
+- Added 17 unit tests (61 total, up from 44) to
+  `tools/graph-algorithms/tests/test_graphkit.py`: a triangle colorable
+  with 3 colors but proven uncolorable with 2, a bipartite 4-cycle colored
+  with 2, weight/directedness confirmed ignored, a too-small search budget
+  raising instead of guessing; `verify_coloring` catching a shared color,
+  a missing node, an unexpected node, a bad color type, and accepting both
+  int and string labels; chromatic numbers for a triangle (3, proven by
+  the clique bound alone) and a 4-cycle (2, same), plus a 5-cycle (3) --
+  deliberately chosen because it's triangle-free (clique bound only 2), so
+  it's the one case that actually exercises real exhaustive search at k=2
+  rather than the proof coming from the clique bound alone; a generated
+  random graph's chromatic number cross-checked by confirming one fewer
+  color is genuinely uncolorable.
+- Drove the live MCP server over stdio with a real client (not just
+  scaffolding): all three new tools plus a pre-existing one
+  (`shortest_path`) called and captured in
+  `tools/graph-algorithms/proof/run_2026-09-20.txt`, including the
+  too-small-budget case correctly coming back as an MCP tool error
+  (`is_error: true`) instead of a silently wrong "not colorable" answer.
+- Updated `tools/graph-algorithms/README.md` and `manifest.json`
+  (`tools_exposed`, `updated` date, `proof` path), root `README.md`,
+  `progress/quality-debt.md` (moved the graph-coloring entry from "not
+  fixed" to "fixed this cycle"), `progress/notes-for-owner.md`, appended
+  this cycle to `special-projects/cycles.json`, rebuilt
+  `_site/dashboard.html`.
+
 ## 2026-09-19 — seventh run
 
 - This session's designated branch had already been merged into `main`

@@ -1,6 +1,6 @@
 # Current state
 
-**Last cycle:** 2026-09-19 (seventh run)
+**Last cycle:** 2026-09-20 (eighth run)
 
 ## Where things stand
 
@@ -40,18 +40,25 @@ Seven tools in the collection:
   recomputation against the formal optimality conditions), `topological_sort`
   (Kahn's algorithm, returning a concrete cycle as proof when the graph
   isn't a DAG), `minimum_spanning_tree` (Kruskal's algorithm, verified via
-  the cycle-property exchange argument), and `max_flow` (Edmonds-Karp,
+  the cycle-property exchange argument), `max_flow` (Edmonds-Karp,
   always paired with a minimum cut whose equal capacity IS the optimality
-  proof via the max-flow min-cut theorem). `generate_random_graph` gives a
-  seeded, reproducible graph. This is a fourth genuinely different problem
-  shape in the collection: structural traversal/optimization over an
-  explicit graph, not sequential action search (`strips-planner`),
-  constraint satisfaction over a static assignment (`logic-grid-solver`),
-  or a single calculation (the other three).
+  proof via the max-flow min-cut theorem), and, as of this cycle,
+  `graph_coloring` (DSATUR + forward-checking backtracking, budgeted by
+  `max_search_nodes`, verified via `verify_coloring`'s direct-definition
+  check) plus `chromatic_number` (the minimum colors needed: a clique
+  gives a lower bound for free, no search required, then backtracking
+  search upward proves every smaller count impossible by full exhaustion,
+  not just unfound). `generate_random_graph` gives a seeded, reproducible
+  graph. This is a fourth genuinely different problem shape in the
+  collection: structural traversal/optimization over an explicit graph,
+  not sequential action search (`strips-planner`), constraint satisfaction
+  over a static assignment (`logic-grid-solver`), or a single calculation
+  (the other three).
 
 CI runs each tool's test suite on every PR (`.github/workflows/test.yml`,
-202 tests total across all seven tools as of this cycle: 158 from before
-plus `graph-algorithms`' 44) and `auto-merge.yml` waits for it genuinely.
+219 tests total across all seven tools as of this cycle: 202 from before
+plus 17 new ones for `graph-algorithms`' graph-coloring extension) and
+`auto-merge.yml` waits for it genuinely.
 
 `special-projects/cycles.json` has the full story (searches, source links,
 why each tool was picked, proof) for all cycles so far.
@@ -66,29 +73,31 @@ during this cycle's research:
 1. **Re-run the TASKS.md loop step 1 first, every cycle** (dogfood
    `collection-index`, re-read each tool's own "what it doesn't do"
    section fresh) before searching for new candidates.
-2. **Graph coloring, if a future cycle wants to extend `graph-algorithms`**
-   — it's real and sharply documented (the same 2025/2026 graph-reasoning
-   benchmarks that motivated this cycle's build cover it explicitly), but
-   was deliberately deferred this cycle: it's NP-hard and needs its own
-   backtracking-search-with-budget story (like `logic-grid-solver`'s and
-   `strips-planner`'s own search budgets) to build *fully* rather than as
-   a bolted-on afterthought. Would need `verify_coloring` (validity) plus
-   a proof of minimality (exhausting a (k-1)-coloring search within
-   budget), following this collection's existing proof-not-assertion
-   pattern. Don't add it half-attentively just to pad `graph-algorithms`'
-   tool count.
+2. **Graph coloring is now built** (`graph_coloring`, `verify_coloring`,
+   `chromatic_number` in `tools/graph-algorithms`, this cycle) — don't
+   re-propose it. If a future cycle wants to go further on the same tool,
+   the next real gaps are maximum matching or LP-style network
+   optimization (see that tool's README "What it doesn't do"), not
+   anything already covered.
 3. **Keep looking for genuinely different problem shapes** before reaching
    for another instance of a shape already covered (calculation:
    `secure-random`/`discrete-probability`/`time-arithmetic`; static CSP:
    `logic-grid-solver`; sequential action search: `strips-planner`;
-   structural graph algorithms: `graph-algorithms`). Shapes not yet
-   explored: combinatorial generation under a guaranteed property (e.g.
-   generating a structure that provably satisfies some invariant, not just
-   searching/counting one), or exact symbolic/algebraic manipulation
-   (distinct from numeric calculation).
+   structural graph algorithms: `graph-algorithms`, now including
+   coloring). Shapes not yet explored: combinatorial generation under a
+   guaranteed property (e.g. generating a structure that provably
+   satisfies some invariant, not just searching/counting one). Exact
+   symbolic/algebraic manipulation was checked this cycle (2026-09-20) and
+   rejected for saturation (sympy-mcp, math-mcp, scimath-mcp, symkit-mcp,
+   MCP_Math) plus a poor fit for this collection's stdlib-only discipline
+   — don't re-propose it without a genuinely differentiated angle. Same
+   for computational geometry (convex hull/polygon intersection): checked
+   this cycle, no sharply-documented "LLMs fail at this" source found (see
+   `progress/notes-for-owner.md`'s 2026-09-20 entry) — revisit only if a
+   future search finds a real source for that specific failure mode.
 4. **Do not re-propose sudoku/latin-square/maze *generation*** as an
-   unbuilt gap without a genuinely differentiated angle — checked again
-   this cycle (2026-09-19) and still overlaps `logic-grid-solver`'s
+   unbuilt gap without a genuinely differentiated angle — checked again as
+   recently as 2026-09-19 and still overlaps `logic-grid-solver`'s
    existing CSP shape while being heavily saturated by non-MCP generators.
    See `progress/notes-for-owner.md`'s 2026-09-19 entry.
 5. **When next building a live-session proof for any tool**, check

@@ -3,20 +3,32 @@
 Honest list of known gaps and shortcuts. Not urgent by default — surfaced
 so a future cycle (or the owner) can decide whether to pay them down.
 
-## `graph-algorithms` has no graph coloring, despite being documented in the same benchmarks that motivated the tool
+## Fixed this cycle (2026-09-20): `graph-algorithms` had no graph coloring, despite being documented in the same benchmarks that motivated the tool
 
-Graph coloring (find the minimum number of colors so no two adjacent nodes
-match) is real and sharply documented as an LLM failure right alongside
-shortest path/topological sort/MST/max flow in the same 2025/2026 graph-
-reasoning benchmarks this tool's README cites. Not built this cycle: it's
-NP-hard and needs its own real backtracking-search-with-a-budget story
-(pruning, a `max_search_nodes` cap that fails predictably rather than
-hanging, and a minimality proof via exhausting a (k-1)-coloring search) --
-the same complexity level `logic-grid-solver`'s arc-consistency search or
-`strips-planner`'s BFS budget already required as a whole tool's worth of
-care. Folding it in alongside four other algorithm families in one cycle
-would have meant building it half-attentively. Left as an explicit next-
-step option (see `special-projects/current.md`) rather than a silent gap.
+Was: graph coloring (find the minimum number of colors so no two adjacent
+nodes match) is real and sharply documented as an LLM failure right
+alongside shortest path/topological sort/MST/max flow in the same
+2025/2026 graph-reasoning benchmarks this tool's README cites, but wasn't
+built in the tool's first cycle -- deliberately deferred rather than
+folded in half-attentively alongside four other algorithm families (see
+the previous version of this entry, and `special-projects/current.md`'s
+2026-09-19 next-step list).
+
+Fixed by adding `graph_coloring` (backtracking search: DSATUR variable
+ordering + forward checking, budgeted by `max_search_nodes` -- exhausting
+the whole search tree without a colorable branch is a proof the color
+count is too few, running out of budget first raises instead of guessing,
+the same contract `strips-planner`'s `max_states`/`max_depth` already
+established), `verify_coloring` (independent direct-definition check, no
+search), and `chromatic_number` (the minimum colors needed: a lower bound
+proven for free by exhibiting a clique, then backtracking search upward
+from there, so every smaller color count it rules out along the way is
+proven uncolorable by full exhaustion, not merely unfound). 17 new unit
+tests (61 total, up from 44) plus a live MCP session
+(`proof/run_2026-09-20.txt`), including the deliberately-chosen odd-cycle
+(5-cycle) case whose clique bound alone (2) doesn't already equal its
+chromatic number (3), so real exhaustive search at k=2 is genuinely
+exercised rather than the proof always coming from the clique bound alone.
 
 ## `graph-algorithms`'s implementations are plain Python, not vectorized or tuned for large graphs
 

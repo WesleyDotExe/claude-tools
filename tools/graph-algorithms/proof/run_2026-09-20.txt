@@ -1,0 +1,355 @@
+=== unit tests ===
+test_budget_exceeded_raises (test_graphkit.ChromaticNumberTests.test_budget_exceeded_raises) ... ok
+test_generated_graph_coloring_is_self_consistent (test_graphkit.ChromaticNumberTests.test_generated_graph_coloring_is_self_consistent) ... ok
+test_pentagon_chromatic_number_three_needs_real_search (test_graphkit.ChromaticNumberTests.test_pentagon_chromatic_number_three_needs_real_search) ... ok
+test_single_node_no_edges_chromatic_number_one (test_graphkit.ChromaticNumberTests.test_single_node_no_edges_chromatic_number_one) ... ok
+test_square_chromatic_number_two (test_graphkit.ChromaticNumberTests.test_square_chromatic_number_two) ... ok
+test_triangle_chromatic_number_three_proven_by_clique_alone (test_graphkit.ChromaticNumberTests.test_triangle_chromatic_number_three_proven_by_clique_alone) ... ok
+test_returns_worked_example (test_graphkit.DescribeFormatTests.test_returns_worked_example) ... ok
+test_different_seed_usually_differs (test_graphkit.GenerateRandomGraphTests.test_different_seed_usually_differs) ... ok
+test_generated_graph_feeds_mst_and_shortest_path (test_graphkit.GenerateRandomGraphTests.test_generated_graph_feeds_mst_and_shortest_path) ... ok
+test_num_edges_out_of_range_rejected (test_graphkit.GenerateRandomGraphTests.test_num_edges_out_of_range_rejected) ... ok
+test_num_nodes_out_of_range_rejected (test_graphkit.GenerateRandomGraphTests.test_num_nodes_out_of_range_rejected) ... ok
+test_reproducible_with_same_seed (test_graphkit.GenerateRandomGraphTests.test_reproducible_with_same_seed) ... ok
+test_budget_exceeded_raises_instead_of_guessing (test_graphkit.GraphColoringTests.test_budget_exceeded_raises_instead_of_guessing) ... ok
+test_num_colors_directed_and_weight_ignored (test_graphkit.GraphColoringTests.test_num_colors_directed_and_weight_ignored) ... ok
+test_num_colors_validation (test_graphkit.GraphColoringTests.test_num_colors_validation) ... ok
+test_square_colorable_with_two (test_graphkit.GraphColoringTests.test_square_colorable_with_two) ... ok
+test_triangle_colorable_with_three_not_two (test_graphkit.GraphColoringTests.test_triangle_colorable_with_three_not_two) ... ok
+test_duplicate_edge_rejected (test_graphkit.MaxFlowTests.test_duplicate_edge_rejected) ... ok
+test_flow_respects_conservation_and_capacity (test_graphkit.MaxFlowTests.test_flow_respects_conservation_and_capacity) ... ok
+test_known_max_flow_value (test_graphkit.MaxFlowTests.test_known_max_flow_value) ... ok
+test_missing_capacity_rejected (test_graphkit.MaxFlowTests.test_missing_capacity_rejected) ... ok
+test_source_equals_sink_rejected (test_graphkit.MaxFlowTests.test_source_equals_sink_rejected) ... ok
+test_verify_catches_capacity_violation (test_graphkit.MaxFlowTests.test_verify_catches_capacity_violation) ... ok
+test_verify_catches_conservation_violation (test_graphkit.MaxFlowTests.test_verify_catches_conservation_violation) ... ok
+test_verify_rejects_mismatched_cut_as_non_optimal (test_graphkit.MaxFlowTests.test_verify_rejects_mismatched_cut_as_non_optimal) ... ok
+test_verify_without_cut_only_proves_feasibility (test_graphkit.MaxFlowTests.test_verify_without_cut_only_proves_feasibility) ... ok
+test_disconnected_graph_returns_forest (test_graphkit.MinimumSpanningTreeTests.test_disconnected_graph_returns_forest) ... ok
+test_known_minimum_weight (test_graphkit.MinimumSpanningTreeTests.test_known_minimum_weight) ... ok
+test_negative_weight_allowed (test_graphkit.MinimumSpanningTreeTests.test_negative_weight_allowed) ... ok
+test_verify_catches_cycle_in_claimed_tree (test_graphkit.MinimumSpanningTreeTests.test_verify_catches_cycle_in_claimed_tree) ... ok
+test_verify_catches_edge_not_in_graph (test_graphkit.MinimumSpanningTreeTests.test_verify_catches_edge_not_in_graph) ... ok
+test_verify_catches_incomplete_spanning (test_graphkit.MinimumSpanningTreeTests.test_verify_catches_incomplete_spanning) ... ok
+test_verify_catches_suboptimal_tree_via_cycle_property (test_graphkit.MinimumSpanningTreeTests.test_verify_catches_suboptimal_tree_via_cycle_property) ... ok
+test_directed_edge_cannot_be_used_backwards (test_graphkit.ShortestPathTests.test_directed_edge_cannot_be_used_backwards) ... ok
+test_known_shortest_path (test_graphkit.ShortestPathTests.test_known_shortest_path) ... ok
+test_negative_weight_rejected (test_graphkit.ShortestPathTests.test_negative_weight_rejected) ... ok
+test_undirected_allows_backwards_traversal (test_graphkit.ShortestPathTests.test_undirected_allows_backwards_traversal) ... ok
+test_unknown_source_rejected (test_graphkit.ShortestPathTests.test_unknown_source_rejected) ... ok
+test_unreachable_target_gives_proof_not_guess (test_graphkit.ShortestPathTests.test_unreachable_target_gives_proof_not_guess) ... ok
+test_unweighted_defaults_to_bfs_shortest_hop_count (test_graphkit.ShortestPathTests.test_unweighted_defaults_to_bfs_shortest_hop_count) ... ok
+test_verify_accepts_correct_standalone_claim (test_graphkit.ShortestPathTests.test_verify_accepts_correct_standalone_claim) ... ok
+test_verify_catches_nonexistent_edge_in_path (test_graphkit.ShortestPathTests.test_verify_catches_nonexistent_edge_in_path) ... ok
+test_verify_catches_path_not_ending_at_target (test_graphkit.ShortestPathTests.test_verify_catches_path_not_ending_at_target) ... ok
+test_verify_catches_wrong_distance_claim (test_graphkit.ShortestPathTests.test_verify_catches_wrong_distance_claim) ... ok
+test_cycle_detected_with_concrete_witness (test_graphkit.TopologicalSortTests.test_cycle_detected_with_concrete_witness) ... ok
+test_known_order_on_diamond_dag (test_graphkit.TopologicalSortTests.test_known_order_on_diamond_dag) ... ok
+test_partial_cycle_still_orders_the_acyclic_part (test_graphkit.TopologicalSortTests.test_partial_cycle_still_orders_the_acyclic_part) ... ok
+test_verify_accepts_valid_order (test_graphkit.TopologicalSortTests.test_verify_accepts_valid_order) ... ok
+test_verify_catches_backwards_edge (test_graphkit.TopologicalSortTests.test_verify_catches_backwards_edge) ... ok
+test_verify_catches_non_permutation (test_graphkit.TopologicalSortTests.test_verify_catches_non_permutation) ... ok
+test_duplicate_nodes_rejected (test_graphkit.ValidationTests.test_duplicate_nodes_rejected) ... ok
+test_empty_nodes_rejected (test_graphkit.ValidationTests.test_empty_nodes_rejected) ... ok
+test_non_number_weight_rejected (test_graphkit.ValidationTests.test_non_number_weight_rejected) ... ok
+test_self_loop_rejected (test_graphkit.ValidationTests.test_self_loop_rejected) ... ok
+test_unknown_edge_endpoint_rejected (test_graphkit.ValidationTests.test_unknown_edge_endpoint_rejected) ... ok
+test_bad_color_type_rejected (test_graphkit.VerifyColoringTests.test_bad_color_type_rejected) ... ok
+test_catches_missing_node (test_graphkit.VerifyColoringTests.test_catches_missing_node) ... ok
+test_catches_shared_color_on_adjacent_nodes (test_graphkit.VerifyColoringTests.test_catches_shared_color_on_adjacent_nodes) ... ok
+test_catches_unexpected_node (test_graphkit.VerifyColoringTests.test_catches_unexpected_node) ... ok
+test_string_color_labels_allowed (test_graphkit.VerifyColoringTests.test_string_color_labels_allowed) ... ok
+test_valid_coloring_accepted (test_graphkit.VerifyColoringTests.test_valid_coloring_accepted) ... ok
+
+----------------------------------------------------------------------
+Ran 61 tests in 0.004s
+
+OK
+
+=== live MCP server session (stdio transport) ===
+Tools exposed: ['describe_graph_format', 'shortest_path', 'verify_shortest_path', 'topological_sort', 'verify_topological_order', 'minimum_spanning_tree', 'verify_minimum_spanning_tree', 'max_flow', 'verify_max_flow', 'graph_coloring', 'verify_coloring', 'chromatic_number', 'generate_random_graph']
+
+-- graph_coloring(triangle, num_colors=3) -- should be colorable --
+{
+  "colorable": true,
+  "coloring": {
+    "A": 0,
+    "B": 1,
+    "C": 2
+  },
+  "colors_used": [
+    0,
+    1,
+    2
+  ],
+  "search_nodes_expanded": 4,
+  "verification": {
+    "valid": true,
+    "violations": [],
+    "num_colors_used": 3,
+    "colors_used": [
+      0,
+      1,
+      2
+    ],
+    "proof_method": "directly checks every node has exactly one assigned color and no edge connects two same-colored nodes -- the definition of a proper coloring."
+  }
+}
+
+-- graph_coloring(triangle, num_colors=2) -- should be proven impossible --
+{
+  "colorable": false,
+  "reason": "the entire search tree was explored without finding a proper coloring using 2 colors -- proven impossible with this many colors, not just unfound within a search budget",
+  "search_nodes_expanded": 3
+}
+
+-- verify_coloring(triangle, A=0,B=1,C=1) -- should catch B-C sharing a color --
+{
+  "valid": false,
+  "violations": [
+    {
+      "from": "B",
+      "to": "C",
+      "shared_color": 1
+    }
+  ],
+  "num_colors_used": 2,
+  "colors_used": [
+    0,
+    1
+  ],
+  "proof_method": "directly checks every node has exactly one assigned color and no edge connects two same-colored nodes -- the definition of a proper coloring."
+}
+
+-- chromatic_number(C5 pentagon) -- triangle-free, needs real search at k=2 --
+{
+  "chromatic_number": 3,
+  "coloring": {
+    "A": 0,
+    "B": 1,
+    "C": 0,
+    "D": 1,
+    "E": 2
+  },
+  "colors_used": [
+    0,
+    1,
+    2
+  ],
+  "lower_bound": 2,
+  "lower_bound_clique": [
+    "A",
+    "B"
+  ],
+  "upper_bound_greedy": 3,
+  "k_values_proven_uncolorable": [
+    2
+  ],
+  "search_nodes_expanded_total": 13,
+  "proof_method": "lower bound 2 is proven by lower_bound_clique (2 pairwise-adjacent nodes each need a distinct color); k=[2] were each then proven uncolorable by exhausting the entire backtracking search tree (not a budget cutoff) before k=3 was found colorable.",
+  "verification": {
+    "valid": true,
+    "violations": [],
+    "num_colors_used": 3,
+    "colors_used": [
+      0,
+      1,
+      2
+    ],
+    "proof_method": "directly checks every node has exactly one assigned color and no edge connects two same-colored nodes -- the definition of a proper coloring."
+  }
+}
+Tool 'graph_coloring' raised an unexpected exception
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/base.py", line 176, in run
+    result = await self.fn_metadata.call_fn(self.fn, self.is_async, validated, pass_directly)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/utilities/func_metadata.py", line 164, in call_fn
+    return await anyio.to_thread.run_sync(functools.partial(fn, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/graph-algorithms/server.py", line 146, in graph_coloring
+    return graphkit.graph_coloring(nodes, edges, num_colors, max_search_nodes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/graph-algorithms/graphkit.py", line 1066, in graph_coloring
+    raise ValueError(
+ValueError: search exceeded max_search_nodes=1 without determining whether the graph is colorable with 2 colors; colorability could not be determined either way -- try raising max_search_nodes
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/server.py", line 433, in _handle_call_tool
+    return await self.call_tool(params.name, params.arguments or {}, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/server.py", line 539, in call_tool
+    return await self._tool_manager.call_tool(name, arguments, context, convert_result=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/tool_manager.py", line 87, in call_tool
+    return await tool.run(arguments, context, convert_result=convert_result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/base.py", line 210, in run
+    raise UnexpectedToolError(f"Error executing tool {self.name}") from exc
+mcp.server.mcpserver.exceptions.UnexpectedToolError: Error executing tool graph_coloring
+
+-- graph_coloring(triangle, num_colors=2, max_search_nodes=1) -- budget too small, should be an MCP error --
+ERROR: Error executing tool graph_coloring
+
+-- generate_random_graph(8, 14, seed=11) --
+{
+  "nodes": [
+    "n1",
+    "n2",
+    "n3",
+    "n4",
+    "n5",
+    "n6",
+    "n7",
+    "n8"
+  ],
+  "edges": [
+    {
+      "from": "n1",
+      "to": "n2",
+      "weight": 6
+    },
+    {
+      "from": "n1",
+      "to": "n3",
+      "weight": 10
+    },
+    {
+      "from": "n1",
+      "to": "n4",
+      "weight": 4
+    },
+    {
+      "from": "n1",
+      "to": "n6",
+      "weight": 9
+    },
+    {
+      "from": "n2",
+      "to": "n4",
+      "weight": 8
+    },
+    {
+      "from": "n2",
+      "to": "n5",
+      "weight": 2
+    },
+    {
+      "from": "n2",
+      "to": "n6",
+      "weight": 4
+    },
+    {
+      "from": "n2",
+      "to": "n7",
+      "weight": 1
+    },
+    {
+      "from": "n2",
+      "to": "n8",
+      "weight": 1
+    },
+    {
+      "from": "n3",
+      "to": "n4",
+      "weight": 4
+    },
+    {
+      "from": "n4",
+      "to": "n7",
+      "weight": 8
+    },
+    {
+      "from": "n4",
+      "to": "n8",
+      "weight": 10
+    },
+    {
+      "from": "n5",
+      "to": "n7",
+      "weight": 1
+    },
+    {
+      "from": "n6",
+      "to": "n8",
+      "weight": 9
+    }
+  ],
+  "seed": 11,
+  "directed": false,
+  "weighted": true
+}
+
+-- chromatic_number(generated graph) -- feeding generate_random_graph straight in --
+{
+  "chromatic_number": 3,
+  "coloring": {
+    "n2": 0,
+    "n4": 1,
+    "n1": 2,
+    "n6": 1,
+    "n7": 2,
+    "n8": 2,
+    "n3": 0,
+    "n5": 1
+  },
+  "colors_used": [
+    0,
+    1,
+    2
+  ],
+  "lower_bound": 3,
+  "lower_bound_clique": [
+    "n2",
+    "n4",
+    "n1"
+  ],
+  "upper_bound_greedy": 3,
+  "k_values_proven_uncolorable": [],
+  "search_nodes_expanded_total": 9,
+  "proof_method": "lower bound 3 is proven by lower_bound_clique (3 pairwise-adjacent nodes each need a distinct color), and a coloring using exactly that many colors was found immediately -- no exhaustive search was needed for any smaller k.",
+  "verification": {
+    "valid": true,
+    "violations": [],
+    "num_colors_used": 3,
+    "colors_used": [
+      0,
+      1,
+      2
+    ],
+    "proof_method": "directly checks every node has exactly one assigned color and no edge connects two same-colored nodes -- the definition of a proper coloring."
+  }
+}
+
+-- shortest_path(generated graph) -- pre-existing tool, unchanged --
+{
+  "reachable": true,
+  "path": [
+    "n1",
+    "n2",
+    "n8"
+  ],
+  "distance": 7.0,
+  "nodes_expanded": 5,
+  "verification": {
+    "valid": true,
+    "path_is_real_walk": true,
+    "path_errors": [],
+    "path_weight": 7.0,
+    "claimed_distance": 7.0,
+    "independently_computed_shortest_distance": 7.0,
+    "optimality_conditions_hold": true,
+    "proof_method": "Bellman-Ford relaxation (a different algorithm than the Dijkstra's algorithm shortest_path uses), independently confirming the shortest-path optimality conditions rather than re-running the same code."
+  }
+}
