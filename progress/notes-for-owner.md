@@ -1,5 +1,48 @@
 # Notes for owner
 
+## 2026-09-20: ideas rejected this cycle before extending `graph-algorithms` with coloring
+
+Checked two fresh candidates before deciding to pay down the deferred
+graph-coloring gap in `graph-algorithms` instead (per TASKS.md rule 9,
+"deepen/extend an existing tool" counts as a valid cycle outcome, and
+`special-projects/current.md`'s own next-step list flagged this as the
+most-ready option):
+
+- **Symbolic/computer algebra (simplify, factor, solve, derivatives/
+  integrals).** Real, sharply-documented failure mode (the ASyMOB
+  benchmark and 2026 "Beyond Accuracy: Diagnosing Algebraic Reasoning
+  Failures" paper both show LLMs failing symbolic manipulation tasks
+  distinct from numeric calculation -- exactly the "exact symbolic/
+  algebraic manipulation" unexplored shape the previous cycle's
+  `current.md` flagged). Not built: heavily saturated -- sdiehl/sympy-mcp,
+  codeprimate/math-mcp, matheusbgodoi/scimath-mcp, LBurny/symkit-mcp, and
+  azzindani/MCP_Math all already wrap SymPy for exactly this. Also a weak
+  fit regardless of saturation: SymPy is a large non-stdlib dependency,
+  cutting against this collection's stdlib-only-where-possible discipline
+  every other tool follows (the same tension `secure-random`'s
+  `verify_uniformity` and `graph-algorithms`' own non-vectorized
+  implementations already document for themselves).
+- **Computational geometry (convex hull, polygon intersection, collision
+  detection).** Plausible shape (a fifth structural/geometric algorithm
+  family, distinct from graph algorithms), but didn't clear TASKS.md step
+  2/3's "actually expressed need" bar -- search turned up geometry
+  reference material and existing libraries/implementations, not a
+  sharply-documented "LLMs get this wrong" complaint the way the graph-
+  reasoning benchmarks motivated `graph-algorithms` itself. A PostGIS MCP
+  server already exposes convex hull as one tool among many, further
+  weakening the case. Worth reconsidering only if a future cycle's search
+  finds a real, sharply-articulated source for this specific failure mode.
+
+Chose graph coloring instead: it's real (documented in the same 2025/2026
+graph-reasoning benchmark suite that motivated `graph-algorithms` itself),
+it extends rather than duplicates an existing tool (no saturation risk --
+it's this collection's own vocabulary, not a competing standalone MCP
+server), and the full design (DSATUR + forward-checking backtracking,
+`max_search_nodes` budget, clique-lower-bound minimality proof) was already
+sketched out in the previous cycle's `progress/quality-debt.md` entry, so
+it cleared TASKS.md's feasibility gate cleanly. See that file's now-"fixed"
+entry for what was built.
+
 ## 2026-09-19: this session's designated branch was already merged+deleted before work started
 
 The branch this run was told to develop on (`claude/happy-galileo-k8r2gx`)

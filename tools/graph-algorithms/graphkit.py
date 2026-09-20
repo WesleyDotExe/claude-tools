@@ -44,6 +44,24 @@ to its own problem shapes:
   the max-flow min-cut theorem itself as the optimality proof: any flow's
   value is <= any cut's capacity, so a cut with capacity equal to the flow
   proves both are optimal, regardless of how the flow was computed.
+- `graph_coloring` solves via backtracking search (DSATUR variable ordering
+  -- always branch on the uncolored node with the most differently-colored
+  neighbors -- plus forward checking, pruning a branch the instant some
+  uncolored node's remaining color domain empties out), capped by a
+  `max_search_nodes` budget the same way `strips-planner`'s BFS is capped by
+  `max_states`/`max_depth`: exhausting the whole search tree without a
+  colorable branch is a *proof* the graph isn't colorable with that many
+  colors, while running out of budget first is inconclusive and raises
+  rather than silently reporting "not colorable." `verify_coloring`
+  independently checks a claimed coloring against the direct definition
+  (every node has one color, no edge joins two same-colored nodes) -- no
+  search at all, a different code path from the solver's. `chromatic_number`
+  finds the *minimum* number of colors needed: it proves a lower bound by
+  exhibiting a clique (any `L` pairwise-adjacent nodes each need a distinct
+  color, so fewer than `L` colors can never work -- no search needed for
+  that half), then searches `graph_coloring`-style upward from that bound,
+  so every color count it rules out along the way is *proven* uncolorable
+  by a fully exhausted search, not merely unfound.
 
 `generate_random_graph` gives a seeded, reproducible random graph to
 experiment with, the same role `strips-planner`'s Blocksworld generator
@@ -190,6 +208,11 @@ def describe_graph_format() -> dict:
             "max_flow": "Directed, with a 'capacity' field instead of 'weight' (required, "
             "must be >= 0, no default). Parallel edges between the same ordered pair are "
             "rejected -- combine them into one edge with the summed capacity first.",
+            "graph_coloring / chromatic_number / verify_coloring": "Always undirected; "
+            "'weight'/'capacity'/'directed' are all ignored -- only which pairs of nodes are "
+            "adjacent matters. graph_coloring and chromatic_number always return color labels "
+            "as integers 0..k-1; a 'coloring' you pass to verify_coloring may label colors "
+            "with integers or strings, as long as it's consistent.",
         },
         "example_graph": {"nodes": example_nodes, "edges": example_edges},
     }
@@ -863,3 +886,273 @@ def generate_random_graph(
     edges.sort(key=lambda e: (e["from"], e["to"]))
 
     return {"nodes": nodes, "edges": edges, "seed": seed, "directed": directed, "weighted": weighted}
+
+
+# ---------------------------------------------------------------------------
+# Graph coloring: DSATUR + forward-checking backtracking (solve) + direct
+# definition check (verify) + clique-lower-bound search (chromatic number)
+# ---------------------------------------------------------------------------
+
+
+def _build_adjacency(nodes: list[str], edges: list) -> dict[str, set]:
+    """Coloring only cares about adjacency -- always undirected, weight/capacity/
+    directed are all ignored, and parallel edges collapse into one adjacency."""
+    parsed = _parse_weighted_edges(edges, nodes, allow_negative=True)
+    adj: dict[str, set] = {n: set() for n in nodes}
+    for u, v, _w in parsed:
+        adj[u].add(v)
+        adj[v].add(u)
+    return adj
+
+
+def _search_coloring(nodes: list[str], adj: dict, k: int, node_budget: int):
+    """Backtracking search for a proper coloring using colors 0..k-1: DSATUR variable
+    ordering (branch on the uncolored node with the most distinctly-colored neighbors,
+    tie-broken by smallest remaining domain then highest degree) plus forward checking
+    (tentatively coloring a node removes that color from its uncolored neighbors'
+    domains; a domain emptying out prunes the branch immediately, before recursing).
+    Returns (colorable, coloring_or_None, nodes_expanded, budget_exceeded)."""
+    domains = {v: set(range(k)) for v in nodes}
+    color: dict[str, int] = {}
+    expanded = 0
+    exceeded = False
+
+    def select_var() -> str:
+        uncolored = [v for v in nodes if v not in color]
+        return min(
+            uncolored,
+            key=lambda v: (
+                -len({color[u] for u in adj[v] if u in color}),
+                len(domains[v]),
+                -len(adj[v]),
+            ),
+        )
+
+    def backtrack() -> bool:
+        nonlocal expanded, exceeded
+        expanded += 1
+        if expanded > node_budget:
+            exceeded = True
+            return False
+        if len(color) == len(nodes):
+            return True
+        v = select_var()
+        for c in sorted(domains[v]):
+            color[v] = c
+            removed = []
+            dead = False
+            for u in adj[v]:
+                if u in color:
+                    continue
+                if c in domains[u]:
+                    domains[u].discard(c)
+                    removed.append(u)
+                    if not domains[u]:
+                        dead = True
+            if not dead and backtrack():
+                return True
+            for u in removed:
+                domains[u].add(c)
+            del color[v]
+            if exceeded:
+                return False
+        return False
+
+    ok = backtrack()
+    return ok, (dict(color) if ok else None), expanded, exceeded
+
+
+def _greedy_clique(nodes: list[str], adj: dict) -> list[str]:
+    """A clique found greedily (highest-degree node first, then keep any node adjacent
+    to every clique member so far). Not necessarily a MAXIMUM clique -- but any clique
+    it finds, of any size L, is still a mathematically valid proof that the chromatic
+    number is >= L (L pairwise-adjacent nodes each need a distinct color), which is all
+    chromatic_number needs from it."""
+    order = sorted(nodes, key=lambda n: (-len(adj[n]), n))
+    clique: list[str] = []
+    for v in order:
+        if all(v in adj[u] for u in clique):
+            clique.append(v)
+    return clique
+
+
+def _greedy_coloring(nodes: list[str], adj: dict) -> dict[str, int]:
+    """Welsh-Powell greedy coloring (highest-degree node first, each node takes the
+    smallest color its already-colored neighbors don't use) -- always produces *some*
+    valid coloring, giving chromatic_number a guaranteed-reachable upper bound to search
+    up to."""
+    order = sorted(nodes, key=lambda n: (-len(adj[n]), n))
+    color: dict[str, int] = {}
+    for v in order:
+        used = {color[u] for u in adj[v] if u in color}
+        c = 0
+        while c in used:
+            c += 1
+        color[v] = c
+    return color
+
+
+def verify_coloring(nodes: list, edges: list, coloring: dict) -> dict:
+    """Independently check a claimed coloring (the solver's own, or a hand-written/
+    model-proposed one) against the direct definition: every declared node has exactly
+    one assigned color, and no edge joins two same-colored nodes. No search at all --
+    a structurally different, much simpler code path than the backtracking solver."""
+    nodes = _validate_nodes(nodes)
+    nodes_set = set(nodes)
+    parsed = _parse_weighted_edges(edges, nodes, allow_negative=True)
+    if not isinstance(coloring, dict):
+        raise ValueError("coloring must be an object mapping each node to a color")
+
+    missing = sorted(nodes_set - set(coloring.keys()))
+    unexpected = sorted(set(coloring.keys()) - nodes_set)
+    if missing or unexpected:
+        return {
+            "valid": False,
+            "reason": "coloring must assign exactly one color to every declared node, no more, no less",
+            "missing_nodes": missing,
+            "unexpected_nodes": unexpected,
+        }
+    for n in nodes:
+        c = coloring[n]
+        if not isinstance(c, (int, str)) or isinstance(c, bool):
+            raise ValueError(f"coloring[{n!r}] must be an int or string color label, got {c!r}")
+
+    violations = [
+        {"from": u, "to": v, "shared_color": coloring[u]} for u, v, _w in parsed if coloring[u] == coloring[v]
+    ]
+    colors_used = sorted({coloring[n] for n in nodes}, key=str)
+    return {
+        "valid": not violations,
+        "violations": violations,
+        "num_colors_used": len(colors_used),
+        "colors_used": colors_used,
+        "proof_method": "directly checks every node has exactly one assigned color and no edge "
+        "connects two same-colored nodes -- the definition of a proper coloring.",
+    }
+
+
+def graph_coloring(nodes: list, edges: list, num_colors: int, max_search_nodes: int = 200_000) -> dict:
+    """Find a proper coloring using at most num_colors colors (labeled 0..num_colors-1)
+    via backtracking search (DSATUR ordering + forward checking), capped by
+    max_search_nodes. Always undirected; weight/capacity/directed are ignored -- only
+    adjacency matters. If no coloring exists, the *entire* search tree was exhausted --
+    that's a proof num_colors is too few, not an inconclusive result (an inconclusive
+    result -- the search budget ran out first -- raises instead, distinguishing "proven
+    impossible" from "couldn't tell"), the same contract strips-planner's solve() uses
+    for state-space search."""
+    nodes = _validate_nodes(nodes)
+    if not isinstance(num_colors, int) or isinstance(num_colors, bool) or num_colors < 1:
+        raise ValueError("num_colors must be an int >= 1")
+    if not isinstance(max_search_nodes, int) or isinstance(max_search_nodes, bool) or max_search_nodes < 1:
+        raise ValueError("max_search_nodes must be an int >= 1")
+    adj = _build_adjacency(nodes, edges)
+
+    colorable, coloring, expanded, exceeded = _search_coloring(nodes, adj, num_colors, max_search_nodes)
+    if colorable:
+        verification = verify_coloring(nodes, edges, coloring)
+        if not verification["valid"]:
+            raise AssertionError(  # pragma: no cover -- would indicate a solver bug
+                "internal error: solver's own coloring failed independent verification"
+            )
+        return {
+            "colorable": True,
+            "coloring": coloring,
+            "colors_used": sorted(set(coloring.values())),
+            "search_nodes_expanded": expanded,
+            "verification": verification,
+        }
+
+    if exceeded:
+        raise ValueError(
+            f"search exceeded max_search_nodes={max_search_nodes} without determining whether "
+            f"the graph is colorable with {num_colors} colors; colorability could not be "
+            "determined either way -- try raising max_search_nodes"
+        )
+    return {
+        "colorable": False,
+        "reason": f"the entire search tree was explored without finding a proper coloring using "
+        f"{num_colors} colors -- proven impossible with this many colors, not just unfound within "
+        "a search budget",
+        "search_nodes_expanded": expanded,
+    }
+
+
+def chromatic_number(nodes: list, edges: list, max_search_nodes: int = 200_000) -> dict:
+    """Find the chromatic number: the minimum number of colors a proper coloring needs.
+    Always undirected; weight/capacity/directed are ignored. Proceeds in two stages: (1)
+    a greedy clique gives a lower bound L for free (L pairwise-adjacent nodes each need a
+    distinct color -- no search required for that half of the proof), and a greedy
+    (Welsh-Powell) coloring gives a guaranteed-reachable upper bound G; (2) backtracking
+    search (the same DSATUR + forward-checking solver graph_coloring uses) tries k = L,
+    L+1, ... up to G, so the chromatic number is the first colorable k, and every k it
+    ruled out along the way was proven uncolorable by a fully exhausted search, not
+    merely unfound. max_search_nodes is a single TOTAL budget shared across every k
+    tried; running out before a k resolves raises (inconclusive), the same contract
+    graph_coloring itself uses."""
+    nodes = _validate_nodes(nodes)
+    if not isinstance(max_search_nodes, int) or isinstance(max_search_nodes, bool) or max_search_nodes < 1:
+        raise ValueError("max_search_nodes must be an int >= 1")
+    adj = _build_adjacency(nodes, edges)
+
+    clique = _greedy_clique(nodes, adj)
+    lower_bound = len(clique)
+    upper_bound = len(set(_greedy_coloring(nodes, adj).values()))
+
+    proven_uncolorable = []
+    remaining_budget = max_search_nodes
+    total_expanded = 0
+    chromatic = None
+    result_coloring = None
+    for k in range(lower_bound, upper_bound + 1):
+        colorable, coloring, expanded, exceeded = _search_coloring(nodes, adj, k, remaining_budget)
+        total_expanded += expanded
+        remaining_budget -= expanded
+        if colorable:
+            chromatic = k
+            result_coloring = coloring
+            break
+        if exceeded:
+            raise ValueError(
+                f"search exceeded max_search_nodes={max_search_nodes} (a single total budget "
+                f"shared across every color count tried) while trying k={k} colors; the "
+                "chromatic number could not be determined -- try raising max_search_nodes"
+            )
+        proven_uncolorable.append(k)
+
+    if chromatic is None:  # pragma: no cover -- guaranteed unreachable: k == upper_bound is
+        # always colorable by construction (it's exactly how many colors the greedy coloring
+        # used), so the loop above always finds a colorable k at or before upper_bound.
+        raise AssertionError("internal error: greedy upper bound was not itself colorable")
+
+    verification = verify_coloring(nodes, edges, result_coloring)
+    if not verification["valid"]:
+        raise AssertionError(  # pragma: no cover -- would indicate a solver bug
+            "internal error: solver's own coloring failed independent verification"
+        )
+
+    if proven_uncolorable:
+        proof_method = (
+            f"lower bound {lower_bound} is proven by lower_bound_clique ({lower_bound} pairwise-"
+            f"adjacent nodes each need a distinct color); k={proven_uncolorable} were each then "
+            "proven uncolorable by exhausting the entire backtracking search tree (not a budget "
+            f"cutoff) before k={chromatic} was found colorable."
+        )
+    else:
+        proof_method = (
+            f"lower bound {lower_bound} is proven by lower_bound_clique ({lower_bound} pairwise-"
+            f"adjacent nodes each need a distinct color), and a coloring using exactly that many "
+            "colors was found immediately -- no exhaustive search was needed for any smaller k."
+        )
+
+    return {
+        "chromatic_number": chromatic,
+        "coloring": result_coloring,
+        "colors_used": sorted(set(result_coloring.values())),
+        "lower_bound": lower_bound,
+        "lower_bound_clique": clique,
+        "upper_bound_greedy": upper_bound,
+        "k_values_proven_uncolorable": proven_uncolorable,
+        "search_nodes_expanded_total": total_expanded,
+        "proof_method": proof_method,
+        "verification": verification,
+    }

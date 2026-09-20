@@ -1,9 +1,10 @@
 # graph-algorithms
 
 An MCP server that exactly solves the classic graph algorithm problems --
-shortest path, topological order, minimum spanning tree, maximum flow --
-instead of asking a language model to track running distances, in-degrees,
-tree membership, or residual capacities across many nodes by itself.
+shortest path, topological order, minimum spanning tree, maximum flow,
+graph coloring -- instead of asking a language model to track running
+distances, in-degrees, tree membership, residual capacities, or color
+assignments across many nodes by itself.
 
 ## What it solves
 
@@ -43,6 +44,21 @@ independently**, so a bug in one isn't self-confirmed by the other:
 | Topological sort | Kahn's algorithm (repeated zero-in-degree removal) | The direct definition (every edge points forward); a cycle isn't just reported, a concrete one is extracted via DFS as a witness |
 | Minimum spanning tree | Kruskal's algorithm (union-find) | The cycle-property exchange argument -- the standard mathematical proof of MST optimality, not a second run of Kruskal's |
 | Max flow | Edmonds-Karp (BFS augmenting paths) | Flow conservation + capacity constraints, plus the max-flow min-cut theorem itself: a returned cut of equal capacity proves optimality, independent of how the flow was computed |
+| Graph coloring | Backtracking search (DSATUR variable ordering + forward checking, budgeted by `max_search_nodes`) | The direct definition -- every node has one color, no edge joins two same-colored nodes |
+
+`chromatic_number` goes one step further than a solve/verify pair: it finds
+the *minimum* number of colors a graph needs, and proves that number is
+minimal rather than just reporting a search result. A lower bound comes
+for free by exhibiting a clique (`L` pairwise-adjacent nodes each need a
+distinct color, so fewer than `L` colors can never work -- no search
+required for that half of the proof); a greedy (Welsh-Powell) coloring
+gives a guaranteed-reachable upper bound. The backtracking solver then
+tries color counts upward from the lower bound, so every count it rules
+out along the way was *proven* uncolorable by exhausting the entire search
+tree, not merely unfound within a budget -- this cycle's answer to the
+"real backtracking-search-with-a-budget story" `graph coloring` needed
+before it could be built fully (see `progress/quality-debt.md`'s prior
+entry, now resolved).
 
 `generate_random_graph` gives a seeded, reproducible random graph to
 experiment with -- the same role `strips-planner`'s Blocksworld generator
@@ -61,6 +77,9 @@ plays for planning.
 | `verify_minimum_spanning_tree` | Independently checks any claimed tree/forest: real edges, acyclic, fully spanning, and minimal. |
 | `max_flow` | Maximum flow from `source` to `sink` via Edmonds-Karp, always returned with a minimum cut whose capacity IS the optimality proof. |
 | `verify_max_flow` | Independently checks any claimed flow assignment (conservation + capacity), and, given a cut, whether it proves optimality. |
+| `graph_coloring` | A proper coloring using at most `num_colors` colors via backtracking search (DSATUR + forward checking), or `colorable: false` proven by exhausting the whole search tree. |
+| `verify_coloring` | Independently checks any claimed coloring against the direct definition (no search). |
+| `chromatic_number` | The minimum colors needed: a clique lower bound (no search) plus backtracking search upward, proving every smaller count impossible along the way. |
 | `generate_random_graph` | A seeded, reproducible random graph to experiment with. |
 
 ### The format, briefly
@@ -80,20 +99,28 @@ plays for planning.
 `weight` is optional (defaults to 1). Self-loops are always rejected. Most
 tools take a `directed` boolean read against the same edge list.
 `max_flow`/`verify_max_flow` use `capacity` instead of `weight` (required,
-no default, no duplicate `(from, to)` pairs). `minimum_spanning_tree` is
-always undirected; `topological_sort` is always directed. Call
+no default, no duplicate `(from, to)` pairs). `minimum_spanning_tree` and
+the graph-coloring tools (`graph_coloring`, `verify_coloring`,
+`chromatic_number`) are always undirected, ignoring `weight`/`directed`
+entirely; `topological_sort` is always directed. Call
 `describe_graph_format` for the exact rules.
 
 ## What it doesn't do
 
-No graph coloring, maximum matching, or general LP-style network
-optimization -- those are real, also-documented LLM failure shapes (this
-cycle's research found them too), but graph coloring in particular is
-NP-hard in a way that needs real backtracking-search infrastructure with
-its own budget/pruning story to build *fully*, and folding it in alongside
-four other algorithm families in one cycle would have meant doing it
-half-attentively. Left for a future cycle if a concrete need surfaces (see
-`progress/notes-for-owner.md`). `shortest_path` requires non-negative
+No maximum matching or general LP-style network optimization -- real,
+also-documented LLM failure shapes (this collection's research found them
+too), but out of scope for this cycle. Graph coloring itself -- the one gap
+explicitly left open in the previous cycle's README and
+`progress/quality-debt.md` -- is now built (`graph_coloring`,
+`verify_coloring`, `chromatic_number`), with its own backtracking-search
+budget (`max_search_nodes`, same contract as `strips-planner`'s
+`max_states`/`max_depth`: exhausting the search tree is a proof, running
+out of budget first raises rather than guessing). `chromatic_number`'s
+search is exponential in the worst case like any exact graph-coloring
+algorithm; the clique lower bound and greedy upper bound keep the typical
+case fast, but a dense, adversarially hard instance can still exhaust
+`max_search_nodes` -- raise it, or accept an inconclusive result staying
+inconclusive rather than silently wrong. `shortest_path` requires non-negative
 weights (Dijkstra's own requirement); negative-weight shortest paths need
 a different algorithm family (Bellman-Ford as the primary solver, plus
 negative-cycle handling) and aren't supported as the main entry point here
@@ -109,11 +136,14 @@ the same "correctness over raw throughput" tradeoff `secure-random`'s
 
 ## Files
 
-- `graphkit.py` -- the actual logic: input validation, the four
-  algorithm/verifier pairs, and the random graph generator. Stdlib only,
-  no dependency beyond `mcp` for the server wrapper. Usable standalone.
+- `graphkit.py` -- the actual logic: input validation, the five
+  algorithm/verifier pairs (shortest path, topological sort, minimum
+  spanning tree, max flow, graph coloring -- plus `chromatic_number`'s
+  clique-lower-bound-and-search minimality proof), and the random graph
+  generator. Stdlib only, no dependency beyond `mcp` for the server
+  wrapper. Usable standalone.
 - `server.py` -- a thin MCP server (stdio transport) wrapping `graphkit.py`.
-- `tests/test_graphkit.py` -- 44 unit tests: a known-by-hand shortest path
+- `tests/test_graphkit.py` -- 61 unit tests: a known-by-hand shortest path
   on a small directed weighted graph (cross-checked against a manual
   calculation), directed-vs-undirected edge traversal, unreachable targets
   proven rather than guessed, negative weights rejected; a diamond DAG's
@@ -126,22 +156,35 @@ the same "correctness over raw throughput" tradeoff `secure-random`'s
   network, flow conservation and capacity checked directly, a capacity
   violation and a conservation violation each caught, a flow's optimality
   correctly reported as unproven without a matching cut and correctly
-  rejected when given a mismatched one; the random generator's
-  reproducibility and composability with the other tools; and input
-  validation for every malformed-input path shared across all four
+  rejected when given a mismatched one; a triangle correctly colorable with
+  3 colors but proven uncolorable with 2, a bipartite 4-cycle colored with
+  2, weight/directedness confirmed ignored, a too-small search budget
+  raising instead of guessing; `verify_coloring` catching a shared color on
+  adjacent nodes, a missing node, an unexpected node, and a bad color
+  type, while accepting both integer and string color labels; a triangle's
+  chromatic number (3) proven by the clique bound alone with zero search,
+  a 4-cycle's (2) the same way, and a 5-cycle's (3) requiring real
+  exhaustive search at k=2 first since it's triangle-free (clique bound
+  only 2) -- the case that actually exercises the search, not just the
+  bound; a generated random graph's chromatic number cross-checked by
+  confirming one fewer color is genuinely uncolorable; the random
+  generator's reproducibility and composability with the other tools; and
+  input validation for every malformed-input path shared across all
   algorithms (duplicate nodes, self-loops, unknown node references,
   non-numeric weights).
-- `proof/run_2026-09-19.txt` -- the full test run plus a live MCP client
-  session over stdio: `list_tools`, `describe_graph_format`, the known
-  shortest path solved and independently verified, a deliberately wrong
-  distance claim caught, a diamond DAG ordered and a 3-cycle's concrete
+- `proof/run_2026-09-20.txt` -- the full test run plus a live MCP client
+  session over stdio: `list_tools`, the known shortest path solved and
+  independently verified, a diamond DAG ordered and a 3-cycle's concrete
   witness returned, the known MST found and a deliberately suboptimal one
   caught via the cycle-property check, the known max flow found with its
-  matching min cut (both proving each other optimal) and a deliberately
-  invalid flow assignment caught, a generated random graph fed straight
-  into `minimum_spanning_tree`, and a negative edge weight correctly
-  coming back as an MCP tool error (`is_error: true`) instead of a wrong
-  or silent answer.
+  matching min cut, a triangle colored with 3 colors and proven
+  uncolorable with 2, `verify_coloring` catching two adjacent nodes
+  sharing a color, a 5-cycle's chromatic number (3) found with real search
+  at k=2 first, a too-small `max_search_nodes` budget correctly coming
+  back as an MCP tool error instead of a wrong "not colorable" answer, a
+  generated random graph fed straight into `chromatic_number`, and
+  `shortest_path` confirmed still working unchanged alongside the new
+  tools.
 
 ## Try it without MCP
 

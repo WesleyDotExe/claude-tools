@@ -1,6 +1,6 @@
 {
   "name": "graph-algorithms",
-  "summary": "Exact classic graph algorithms (shortest path, topological sort, minimum spanning tree, max flow) exposed as an MCP server, each solved via one algorithm and independently checked via a second, structurally different one -- a Bellman-Ford recomputation for Dijkstra's shortest paths, the direct definition for Kahn's topological order (with a concrete cycle returned as proof when the graph isn't a DAG), the cycle-property exchange argument for Kruskal's minimum spanning tree, and the max-flow min-cut theorem (a returned cut of equal capacity) for Edmonds-Karp's max flow.",
+  "summary": "Exact classic graph algorithms (shortest path, topological sort, minimum spanning tree, max flow, graph coloring) exposed as an MCP server, each solved via one algorithm and independently checked via a second, structurally different one -- a Bellman-Ford recomputation for Dijkstra's shortest paths, the direct definition for Kahn's topological order (with a concrete cycle returned as proof when the graph isn't a DAG), the cycle-property exchange argument for Kruskal's minimum spanning tree, the max-flow min-cut theorem (a returned cut of equal capacity) for Edmonds-Karp's max flow, and the direct definition again for a DSATUR + forward-checking backtracking coloring solver, whose chromatic_number tool proves its minimum-colors answer with a clique lower bound plus exhaustive uncolorability at every smaller color count.",
   "problem": "Exact algorithmic reasoning over an explicit graph is a documented, actively-benchmarked LLM failure mode distinct from every other shape already in this collection: not sequential action search (strips-planner), not constraint satisfaction over a static assignment (logic-grid-solver), not a single calculation (secure-random/discrete-probability/time-arithmetic). Multiple 2025/2026 benchmarks built specifically to test this -- GraphArena, GraphOmni, GrAlgoBench, GTA, and 'Can Language Models Solve Graph Problems in Natural Language?' -- document accuracy dropping sharply on shortest-path, topological-sort, spanning-tree, and max-flow-style problems as graphs grow past a handful of nodes. No keyless MCP server was found exposing plain graph algorithms through a simple node/edge JSON vocabulary with an independent verifier; existing options found in this cycle's search require either full SMT-LIB/ASP formalization (mcp-solver) or a running Neo4j Graph Data Science instance (the GDS Agent paper), neither of which is a fixed-vocabulary, credential-free fit.",
   "keyless": true,
   "requires_network": false,
@@ -9,8 +9,9 @@
   "entry_point": "server.py",
   "cli_module": "graphkit.py",
   "tests": "tests/test_graphkit.py",
-  "proof": "proof/run_2026-09-19.txt",
+  "proof": "proof/run_2026-09-20.txt",
   "created": "2026-09-19",
+  "updated": "2026-09-20",
   "tools_exposed": [
     "describe_graph_format",
     "shortest_path",
@@ -21,6 +22,9 @@
     "verify_minimum_spanning_tree",
     "max_flow",
     "verify_max_flow",
+    "graph_coloring",
+    "verify_coloring",
+    "chromatic_number",
     "generate_random_graph"
   ]
 }

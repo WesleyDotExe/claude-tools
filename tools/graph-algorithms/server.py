@@ -31,8 +31,13 @@ server = MCPServer(
         "when the graph isn't a DAG; minimum_spanning_tree uses Kruskal's algorithm and "
         "is checked via the cycle-property exchange argument; max_flow uses Edmonds-Karp "
         "and always returns a minimum cut whose capacity equals the flow value, which IS "
-        "the optimality proof (max-flow min-cut theorem). generate_random_graph gives a "
-        "seeded, reproducible graph to experiment with."
+        "the optimality proof (max-flow min-cut theorem); graph_coloring uses backtracking "
+        "search (DSATUR ordering + forward checking, budgeted by max_search_nodes) and is "
+        "checked against the direct definition by verify_coloring, while chromatic_number "
+        "finds the minimum colors needed, proving its lower bound with an exhibited clique "
+        "and proving every smaller color count impossible by exhausting the search tree, "
+        "not just failing to find a coloring. generate_random_graph gives a seeded, "
+        "reproducible graph to experiment with."
     ),
 )
 
@@ -128,6 +133,38 @@ def verify_max_flow(
     min-cut theorem.
     """
     return graphkit.verify_max_flow(nodes, edges, source, sink, flow_edges, cut)
+
+
+@server.tool()
+def graph_coloring(nodes: list[str], edges: list[dict], num_colors: int, max_search_nodes: int = 200_000) -> dict:
+    """Find a proper coloring using at most num_colors colors (0..num_colors-1) via
+    backtracking search (DSATUR ordering + forward checking, budgeted by max_search_nodes).
+    Always undirected; weight/capacity/directed are ignored -- only adjacency matters. If
+    no coloring exists, the entire search tree was exhausted (a proof, not a guess); if
+    the budget runs out first, raises instead of guessing "not colorable".
+    """
+    return graphkit.graph_coloring(nodes, edges, num_colors, max_search_nodes)
+
+
+@server.tool()
+def verify_coloring(nodes: list[str], edges: list[dict], coloring: dict) -> dict:
+    """Independently check a claimed coloring (the solver's own, or a hand-written/
+    model-proposed one) against the direct definition: every node has exactly one color,
+    and no edge joins two same-colored nodes. No search at all -- a different, much
+    simpler code path than graph_coloring's backtracking solver.
+    """
+    return graphkit.verify_coloring(nodes, edges, coloring)
+
+
+@server.tool()
+def chromatic_number(nodes: list[str], edges: list[dict], max_search_nodes: int = 200_000) -> dict:
+    """Find the minimum number of colors a proper coloring needs. Proves its lower bound
+    by exhibiting a clique (no search needed for that half) and proves every smaller
+    color count impossible by exhausting graph_coloring's backtracking search, not just
+    failing to find a coloring -- max_search_nodes is a single total budget shared across
+    every color count tried.
+    """
+    return graphkit.chromatic_number(nodes, edges, max_search_nodes)
 
 
 @server.tool()
