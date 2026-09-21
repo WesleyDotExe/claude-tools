@@ -1,5 +1,61 @@
 # Notes for owner
 
+## 2026-09-21: `spaced-arrangement` built — ideas rejected this cycle, and a genuine multi-category subtlety worth knowing about
+
+Chased `special-projects/current.md`'s flagged-unexplored shape
+("combinatorial generation under a guaranteed invariant") this cycle.
+Rejected before landing on `spaced-arrangement`:
+
+- **Pairwise/covering-array test generation** (t-way combinatorial test
+  case generation, e.g. "all pairs of these 5 parameters covered in 6 rows
+  instead of 32"). Real and sharply documented — a Ministry of Testing
+  write-up shows ChatGPT asked for all combinations of 5 booleans giving
+  the full 32-row exhaustive list instead of a compact pairwise covering
+  array, a concrete "LLM doesn't do the combinatorial-optimization part"
+  failure. Not built: `PictMCP` (github.com/takeyaqa/PictMCP) already
+  wraps Microsoft's PICT algorithm (WebAssembly-compiled, runs fully
+  locally) for exactly this over MCP, with constraint support and
+  structured JSON output — no differentiated angle found.
+- **Regex generation / correctness**, revisited briefly. Same saturation
+  finding as the 2026-09-15 entry below (ReDoS-focused MCP servers already
+  exist); a 2026 partial-matching accuracy study confirms LLMs do fail at
+  this, but it doesn't change the saturation verdict.
+- **Synthetic dataset generation with a guaranteed exact correlation
+  structure** (e.g. Cholesky-decomposition-based "Generative Correlation
+  Manifolds" — provably preserving a full Pearson correlation matrix, not
+  just approximating it). A genuinely interesting instance of "generation
+  under a guaranteed invariant," but already served by multiple existing
+  MCP servers (marc-shade/synthetic-data-mcp, at least two Apify-hosted
+  synthetic-data-generator listings) offering correlated synthetic data
+  generation.
+
+Landed on **arranging a category-heavy list so no two same-category items
+are too close together** (`spaced-arrangement`): real and sharply
+documented (years of Spotify community-forum "shuffle keeps repeating the
+same artist" threads, Spotify's own 2026 engineering coverage of rebuilding
+shuffle by generating hundreds of candidates and picking the best-spread
+one, and a 2023 technical write-up arguing even Spotify's/Apple's published
+fixes aren't provably optimal), a classic *named* algorithmic problem
+(LeetCode 767/621/358) precisely because it's easy to get
+plausibly-random-looking but wrong, and — this cycle's search confirmed —
+not covered by any existing MCP server generically (existing Spotify-
+control MCP servers only toggle Spotify's own built-in shuffle, they don't
+implement the spacing algorithm themselves).
+
+**Worth flagging for whoever touches this tool next:** a per-category
+frequency check alone (`count <= ceil(n / min_distance)`) is *necessary*
+but demonstrably **not sufficient** once 3+ categories are involved. Built
+and tested a concrete counterexample: 7 items, categories A=3/B=3/C=1,
+`min_distance=3` — every category individually satisfies
+`count <= ceil(7/3) = 3`, yet no valid arrangement exists (only one
+length-7 slot pattern spaces 3 items exactly 3 apart, and A and B can't
+both have it). This is why `arrange_with_spacing` proves infeasibility by
+exhausting a real backtracking search rather than trusting any closed-form
+formula — a naive implementation using just the per-category bound would
+have been silently wrong on this exact kind of input. Confirmed via the
+tool's own test suite AND a live MCP session (both reproduce this
+counterexample), not just reasoned about in the abstract.
+
 ## 2026-09-20: ideas rejected this cycle before extending `graph-algorithms` with coloring
 
 Checked two fresh candidates before deciding to pay down the deferred
