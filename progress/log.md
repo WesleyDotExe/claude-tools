@@ -2,6 +2,71 @@
 
 Newest entry on top. One entry per cycle: what was done, honestly.
 
+## 2026-09-21 — ninth run
+
+- Ran `tools/collection-index/index.py` first (7 tools), then re-read
+  `special-projects/current.md`, `progress/notes-for-owner.md`,
+  `progress/quality-debt.md`, and every tool's own "What it doesn't do"
+  section fresh, per the loop.
+- Web-searched 14 queries chasing the "combinatorial generation under a
+  guaranteed invariant" shape `current.md` flagged as unexplored. Checked
+  and rejected: pairwise/covering-array test generation (real — a Ministry
+  of Testing write-up shows ChatGPT giving all 32 combos of 5 booleans
+  instead of a 6-row pairwise covering array — but `PictMCP` already wraps
+  Microsoft's PICT for exactly this over MCP); regex generation/ReDoS
+  (already rejected in an earlier cycle, re-confirmed still saturated);
+  synthetic dataset generation with a guaranteed exact correlation
+  structure (real technique — Cholesky-based Generative Correlation
+  Manifolds — but multiple existing MCP servers already do it). Found a
+  genuinely open one: arranging a category-heavy list so no two
+  same-category items land too close together — real and sharply
+  documented (years of Spotify community-forum "shuffle keeps repeating
+  the same artist" threads, Spotify's own 2026 engineering coverage of
+  rebuilding shuffle around this, a classic named algorithmic problem —
+  LeetCode 767/621/358 — for exactly this reason), and no existing MCP
+  server (keyless or otherwise) offers it generically. See
+  `special-projects/cycles.json`'s 2026-09-21 entry and
+  `progress/notes-for-owner.md` for the full search/reasoning.
+- Built `tools/spaced-arrangement`: a new MCP server (`spacedkit.py`) with
+  `describe_arrangement_format`, `arrange_with_spacing` (budgeted
+  backtracking search, CSPRNG-randomized tie-breaking via
+  `secrets.SystemRandom`, `max_search_nodes` contract matching
+  `graph-algorithms`' `graph_coloring`/`strips-planner`'s BFS — full search
+  exhaustion proves infeasibility, running out of budget raises instead of
+  guessing), `verify_arrangement` (independent direct-definition check, no
+  search), and `generate_arrangement_problem` (seeded stdlib RNG, same
+  convention as `generate_random_graph`).
+- Verified this is genuinely non-trivial, not a thin wrapper: constructed
+  and tested a 7-item, 3-category counterexample (`3xA, 3xB, 1xC,
+  min_distance=3`) where every category individually passes the naive
+  `count <= ceil(n/min_distance)` check yet no arrangement exists — proven
+  only by real exhaustive search, confirmed impossible in just 4 search
+  nodes.
+- Added 25 unit tests (`tools/spaced-arrangement/tests/test_spacedkit.py`;
+  244 across all eight tools now, up from 219): the boundary-tight feasible
+  case, the trivial `min_distance=1` case, CSPRNG randomness actually
+  confirmed to vary across repeated calls, the multi-category
+  counterexample above, a too-small search budget raising instead of
+  guessing, `verify_arrangement` catching a deliberately bad guess and a
+  non-permutation, input validation for every malformed path, and the
+  seeded generator's reproducibility/coverage/composability.
+- Installed `mcp` + `cffi` locally (per the known container gotcha, see
+  `progress/notes-for-owner.md`'s 2026-09-18 entry) and wrote a real stdio
+  MCP client driver, saved as
+  `tools/spaced-arrangement/proof/run_2026-09-21.txt`: `list_tools`, the
+  worked example solved and independently verified, a bad guess caught,
+  the multi-category infeasibility proof shown live over the real
+  transport, a too-small budget correctly surfacing as an MCP tool error,
+  and two repeated calls on the same input producing two different valid
+  arrangements (CSPRNG shuffling genuinely observed, not just claimed).
+- Full repo test suite green locally: 244 tests across all eight tools
+  (`for d in tools/*/tests; do (cd "$(dirname "$d")" && python3 -m
+  unittest discover -s tests); done`).
+- Updated `special-projects/cycles.json` (this cycle's entry) and rebuilt
+  the dashboard (`python3 scripts/build_site.py`); updated
+  `special-projects/current.md`, this file, and
+  `progress/quality-debt.md`/`progress/notes-for-owner.md`.
+
 ## 2026-09-20 — eighth run
 
 - Ran `tools/collection-index/index.py` first, per the loop: 7 tools
