@@ -511,5 +511,281 @@ class ValidationTests(unittest.TestCase):
             graphkit.shortest_path(["A", "B"], [{"from": "A", "to": "B", "weight": "far"}], "A", "B")
 
 
+# ---------------------------------------------------------------------------
+# Maximum bipartite matching
+# ---------------------------------------------------------------------------
+
+
+class BipartiteFormatTests(unittest.TestCase):
+    def test_bipartite_example_is_usable(self):
+        desc = graphkit.describe_graph_format()
+        bip = desc["bipartite_format"]
+        ex = bip["example_bipartite_graph"]
+        result = graphkit.maximum_bipartite_matching(ex["left_nodes"], ex["right_nodes"], ex["edges"])
+        self.assertTrue(result["verification"]["is_maximum"])
+
+    def test_describe_bipartite_format_standalone(self):
+        bip = graphkit.describe_bipartite_format()
+        self.assertIn("example_bipartite_graph", bip)
+
+
+class MaximumBipartiteMatchingTests(unittest.TestCase):
+    def test_known_maximum_matching_is_not_perfect(self):
+        # a-x, b-x, b-y, c-y: max matching size is 2 (e.g. a-x, b-y, or a-x, c-y), not 3
+        # (only two right nodes exist), and 'c' or 'a' is necessarily left unmatched.
+        left = ["a", "b", "c"]
+        right = ["x", "y"]
+        edges = [
+            {"from": "a", "to": "x"},
+            {"from": "b", "to": "x"},
+            {"from": "b", "to": "y"},
+            {"from": "c", "to": "y"},
+        ]
+        result = graphkit.maximum_bipartite_matching(left, right, edges)
+        self.assertEqual(result["matching_size"], 2)
+        self.assertTrue(result["verification"]["is_maximum"])
+        self.assertEqual(len(result["unmatched_left"]), 1)
+        self.assertEqual(result["unmatched_right"], [])
+
+    def test_perfect_matching_found_when_one_exists(self):
+        left = ["w1", "w2", "w3"]
+        right = ["t1", "t2", "t3"]
+        edges = [
+            {"from": "w1", "to": "t1"},
+            {"from": "w1", "to": "t2"},
+            {"from": "w2", "to": "t2"},
+            {"from": "w2", "to": "t3"},
+            {"from": "w3", "to": "t3"},
+            {"from": "w3", "to": "t1"},
+        ]
+        result = graphkit.maximum_bipartite_matching(left, right, edges)
+        self.assertEqual(result["matching_size"], 3)
+        self.assertEqual(result["unmatched_left"], [])
+        self.assertEqual(result["unmatched_right"], [])
+
+    def test_no_edges_gives_empty_matching(self):
+        result = graphkit.maximum_bipartite_matching(["a"], ["x"], [])
+        self.assertEqual(result["matching_size"], 0)
+        self.assertTrue(result["verification"]["is_maximum"])
+
+    def test_weight_field_is_ignored(self):
+        left, right = ["a"], ["x"]
+        edges = [{"from": "a", "to": "x", "weight": -999}]
+        result = graphkit.maximum_bipartite_matching(left, right, edges)
+        self.assertEqual(result["matching_size"], 1)
+
+
+class VerifyBipartiteMatchingTests(unittest.TestCase):
+    LEFT = ["a", "b", "c"]
+    RIGHT = ["x", "y"]
+    EDGES = [
+        {"from": "a", "to": "x"},
+        {"from": "b", "to": "x"},
+        {"from": "b", "to": "y"},
+        {"from": "c", "to": "y"},
+    ]
+
+    def test_accepts_solvers_own_matching(self):
+        solved = graphkit.maximum_bipartite_matching(self.LEFT, self.RIGHT, self.EDGES)
+        v = graphkit.verify_bipartite_matching(self.LEFT, self.RIGHT, self.EDGES, solved["matching"])
+        self.assertTrue(v["valid"])
+        self.assertTrue(v["is_maximum"])
+
+    def test_catches_non_maximum_matching_with_augmenting_path(self):
+        # only 'a-x' matched: 'a' and 'x' are used, but b-y (or c-y) is still available,
+        # and in fact b is free, y is free via c -- an augmenting path exists.
+        v = graphkit.verify_bipartite_matching(self.LEFT, self.RIGHT, self.EDGES, [{"left": "a", "right": "x"}])
+        self.assertTrue(v["valid"])
+        self.assertFalse(v["is_maximum"])
+        self.assertIn("augmenting_path", v)
+        # the witness path must alternate real edges and end on a free right node.
+        path = v["augmenting_path"]
+        self.assertEqual(path[0], "b")  # only free left node
+        self.assertIn(path[-1], {"x", "y"})
+
+    def test_catches_left_node_reused(self):
+        v = graphkit.verify_bipartite_matching(
+            self.LEFT, self.RIGHT, self.EDGES, [{"left": "b", "right": "x"}, {"left": "b", "right": "y"}]
+        )
+        self.assertFalse(v["valid"])
+        self.assertTrue(any("matched more than once" in e for e in v["errors"]))
+
+    def test_catches_edge_not_in_graph(self):
+        v = graphkit.verify_bipartite_matching(self.LEFT, self.RIGHT, self.EDGES, [{"left": "a", "right": "y"}])
+        self.assertFalse(v["valid"])
+
+    def test_empty_matching_on_empty_graph_is_trivially_maximum(self):
+        v = graphkit.verify_bipartite_matching(["a"], ["x"], [], [])
+        self.assertTrue(v["valid"])
+        self.assertTrue(v["is_maximum"])
+        self.assertEqual(v["minimum_vertex_cover"], {"left": [], "right": []})
+
+
+class BipartiteValidationTests(unittest.TestCase):
+    def test_left_right_overlap_rejected(self):
+        with self.assertRaises(ValueError):
+            graphkit.maximum_bipartite_matching(["a", "b"], ["b", "c"], [])
+
+    def test_edge_from_must_be_a_left_node(self):
+        with self.assertRaises(ValueError):
+            graphkit.maximum_bipartite_matching(["a"], ["x"], [{"from": "x", "to": "a"}])
+
+    def test_edge_to_must_be_a_right_node(self):
+        with self.assertRaises(ValueError):
+            graphkit.maximum_bipartite_matching(["a"], ["x"], [{"from": "a", "to": "a"}])
+
+    def test_duplicate_bipartite_edge_rejected(self):
+        edges = [{"from": "a", "to": "x"}, {"from": "a", "to": "x"}]
+        with self.assertRaises(ValueError):
+            graphkit.maximum_bipartite_matching(["a"], ["x"], edges)
+
+
+# ---------------------------------------------------------------------------
+# Assignment problem
+# ---------------------------------------------------------------------------
+
+
+def _cost_matrix_edges(left, right, matrix):
+    return [
+        {"from": left[i], "to": right[j], "weight": matrix[i][j]}
+        for i in range(len(left))
+        for j in range(len(right))
+    ]
+
+
+class AssignmentProblemTests(unittest.TestCase):
+    # Textbook 3x3 cost matrix (brute-forced by hand over all 6 permutations):
+    # min total = 9 (r0->c1, r1->c0, r2->c2); max total = 21 (r0->c2, r1->c1, r2->c0).
+    LEFT = ["r0", "r1", "r2"]
+    RIGHT = ["c0", "c1", "c2"]
+    COSTS = [[9, 2, 7], [6, 4, 3], [5, 8, 1]]
+
+    def test_known_minimum_assignment(self):
+        edges = _cost_matrix_edges(self.LEFT, self.RIGHT, self.COSTS)
+        result = graphkit.assignment_problem(self.LEFT, self.RIGHT, edges, maximize=False)
+        self.assertTrue(result["feasible"])
+        self.assertAlmostEqual(result["total_weight"], 9.0)
+        self.assertTrue(result["verification"]["optimality_proven"])
+        self.assertEqual({(a["left"], a["right"]) for a in result["assignment"]}, {("r0", "c1"), ("r1", "c0"), ("r2", "c2")})
+
+    def test_known_maximum_assignment(self):
+        edges = _cost_matrix_edges(self.LEFT, self.RIGHT, self.COSTS)
+        result = graphkit.assignment_problem(self.LEFT, self.RIGHT, edges, maximize=True)
+        self.assertTrue(result["feasible"])
+        self.assertAlmostEqual(result["total_weight"], 21.0)
+        self.assertTrue(result["verification"]["optimality_proven"])
+
+    def test_infeasible_when_no_perfect_assignment_possible(self):
+        # both left nodes can only reach the same single right node -- no bijection exists.
+        left, right = ["a", "b"], ["x", "y"]
+        edges = [{"from": "a", "to": "x", "weight": 1}, {"from": "b", "to": "x", "weight": 2}]
+        result = graphkit.assignment_problem(left, right, edges)
+        self.assertFalse(result["feasible"])
+        self.assertEqual(result["max_real_matching_size"], 1)
+        self.assertEqual(result["required_size"], 2)
+
+    def test_unequal_sizes_rejected(self):
+        with self.assertRaises(ValueError):
+            graphkit.assignment_problem(["a", "b"], ["x"], [{"from": "a", "to": "x", "weight": 1}])
+
+    def test_weight_magnitude_cap_enforced(self):
+        edges = [{"from": "a", "to": "x", "weight": 1_000_001}]
+        with self.assertRaises(ValueError):
+            graphkit.assignment_problem(["a"], ["x"], edges)
+
+    def test_missing_weight_rejected(self):
+        with self.assertRaises(ValueError):
+            graphkit.assignment_problem(["a"], ["x"], [{"from": "a", "to": "x"}])
+
+    def test_single_pair_trivial_assignment(self):
+        result = graphkit.assignment_problem(["a"], ["x"], [{"from": "a", "to": "x", "weight": 42}])
+        self.assertTrue(result["feasible"])
+        self.assertAlmostEqual(result["total_weight"], 42.0)
+
+    def test_greedy_smallest_edge_first_is_provably_suboptimal(self):
+        # Concrete counterexample (the same shape documented in real assignment-problem
+        # write-ups): greedily taking the globally cheapest edge first, then being forced
+        # into whatever's left, gives a WORSE total than the true optimum.
+        left, right = ["alice", "george"], ["task1", "task2"]
+        # alice-task1=1 (the global minimum -- greedy grabs this first), forcing
+        # george-task2=8 -> greedy total 9. The other pairing (alice-task2=4,
+        # george-task1=3) totals 7 -- strictly better, and what assignment_problem finds.
+        edges = [
+            {"from": "alice", "to": "task1", "weight": 1},
+            {"from": "alice", "to": "task2", "weight": 4},
+            {"from": "george", "to": "task1", "weight": 3},
+            {"from": "george", "to": "task2", "weight": 8},
+        ]
+        # Reproduce the naive greedy heuristic directly to show it really is worse.
+        by_weight = sorted(edges, key=lambda e: e["weight"])
+        greedy_total = 0
+        used_left, used_right = set(), set()
+        for e in by_weight:
+            if e["from"] in used_left or e["to"] in used_right:
+                continue
+            greedy_total += e["weight"]
+            used_left.add(e["from"])
+            used_right.add(e["to"])
+        self.assertEqual(greedy_total, 9)
+
+        result = graphkit.assignment_problem(left, right, edges, maximize=False)
+        self.assertAlmostEqual(result["total_weight"], 7.0)
+        self.assertLess(result["total_weight"], greedy_total)
+        self.assertTrue(result["verification"]["optimality_proven"])
+
+
+class VerifyAssignmentTests(unittest.TestCase):
+    LEFT = ["r0", "r1", "r2"]
+    RIGHT = ["c0", "c1", "c2"]
+    COSTS = [[9, 2, 7], [6, 4, 3], [5, 8, 1]]
+
+    def test_accepts_solvers_own_certificate(self):
+        edges = _cost_matrix_edges(self.LEFT, self.RIGHT, self.COSTS)
+        solved = graphkit.assignment_problem(self.LEFT, self.RIGHT, edges, maximize=False)
+        v = graphkit.verify_assignment(self.LEFT, self.RIGHT, edges, solved["assignment"], maximize=False)
+        # (re-check without potentials: still structurally valid, optimality just unproven)
+        self.assertTrue(v["valid"])
+        self.assertFalse(v["optimality_proven"])
+
+    def test_bad_potentials_fail_optimality_proof(self):
+        edges = _cost_matrix_edges(self.LEFT, self.RIGHT, self.COSTS)
+        solved = graphkit.assignment_problem(self.LEFT, self.RIGHT, edges, maximize=False)
+        zero_potentials = {"left": {n: 0 for n in self.LEFT}, "right": {n: 0 for n in self.RIGHT}}
+        v = graphkit.verify_assignment(
+            self.LEFT, self.RIGHT, edges, solved["assignment"], maximize=False, potentials=zero_potentials
+        )
+        self.assertFalse(v["optimality_proven"])
+
+    def test_suboptimal_assignment_cannot_be_proven_optimal_by_any_valid_certificate(self):
+        # A deliberately suboptimal (but structurally valid) assignment: r0-c0, r1-c1,
+        # r2-c2 costs 9+4+1=14, worse than the true optimum of 9. Even feeding it the
+        # solver's own genuine dual potentials (correct FOR THE OPTIMAL assignment, not
+        # this one) must fail the check, since the equality (complementary slackness)
+        # condition can't hold for a non-optimal matching's pairs.
+        edges = _cost_matrix_edges(self.LEFT, self.RIGHT, self.COSTS)
+        solved = graphkit.assignment_problem(self.LEFT, self.RIGHT, edges, maximize=False)
+        suboptimal = [{"left": "r0", "right": "c0"}, {"left": "r1", "right": "c1"}, {"left": "r2", "right": "c2"}]
+        v = graphkit.verify_assignment(
+            self.LEFT, self.RIGHT, edges, suboptimal, maximize=False, potentials=solved["potentials"]
+        )
+        self.assertFalse(v["optimality_proven"])
+
+    def test_catches_non_bijection(self):
+        edges = _cost_matrix_edges(self.LEFT, self.RIGHT, self.COSTS)
+        v = graphkit.verify_assignment(self.LEFT, self.RIGHT, edges, [{"left": "r0", "right": "c0"}])
+        self.assertFalse(v["valid"])
+
+    def test_catches_edge_not_in_graph(self):
+        left, right = ["r0", "r1"], ["c0", "c1"]
+        edges = [
+            {"from": "r0", "to": "c0", "weight": 1},
+            {"from": "r0", "to": "c1", "weight": 2},
+            {"from": "r1", "to": "c0", "weight": 3},
+            # r1-c1 deliberately missing
+        ]
+        v = graphkit.verify_assignment(left, right, edges, [{"left": "r0", "right": "c1"}, {"left": "r1", "right": "c1"}])
+        self.assertFalse(v["valid"])
+
+
 if __name__ == "__main__":
     unittest.main()
