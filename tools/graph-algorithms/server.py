@@ -36,8 +36,16 @@ server = MCPServer(
         "checked against the direct definition by verify_coloring, while chromatic_number "
         "finds the minimum colors needed, proving its lower bound with an exhibited clique "
         "and proving every smaller color count impossible by exhausting the search tree, "
-        "not just failing to find a coloring. generate_random_graph gives a seeded, "
-        "reproducible graph to experiment with."
+        "not just failing to find a coloring. maximum_bipartite_matching uses Kuhn's "
+        "algorithm and is checked via a structurally different BFS alternating-path "
+        "search proving maximality by Koenig's theorem (an equal-size vertex cover), or "
+        "returning a concrete augmenting path when the matching is NOT maximum. "
+        "assignment_problem (the weighted n-worker/n-task assignment problem) uses the "
+        "Hungarian algorithm and is checked via LP duality / complementary slackness -- "
+        "real-world use documents LLMs handed an assignment problem in context reliably "
+        "returning a sorted/greedy answer instead of the true maximum-weight matching, "
+        "the same shape of failure the other verifiers here catch for other algorithms. "
+        "generate_random_graph gives a seeded, reproducible graph to experiment with."
     ),
 )
 
@@ -165,6 +173,71 @@ def chromatic_number(nodes: list[str], edges: list[dict], max_search_nodes: int 
     every color count tried.
     """
     return graphkit.chromatic_number(nodes, edges, max_search_nodes)
+
+
+@server.tool()
+def describe_bipartite_format() -> dict:
+    """Describe the fixed JSON vocabulary for the bipartite-matching tools
+    (left_nodes/right_nodes/edges -- different from describe_graph_format's single
+    nodes list), plus a tiny worked example. Call this before maximum_bipartite_matching/
+    assignment_problem if you're building a bipartite graph from scratch."""
+    return graphkit.describe_bipartite_format()
+
+
+@server.tool()
+def maximum_bipartite_matching(left_nodes: list[str], right_nodes: list[str], edges: list[dict]) -> dict:
+    """Find a maximum matching between left_nodes and right_nodes via Kuhn's algorithm
+    (does a pairing of the largest possible size exist -- unweighted; for the weighted
+    n-to-n assignment problem use assignment_problem instead). 'weight' on edges, if
+    present, is ignored. Returns the matching plus an embedded independent verification
+    proving maximality (Koenig's theorem).
+    """
+    return graphkit.maximum_bipartite_matching(left_nodes, right_nodes, edges)
+
+
+@server.tool()
+def verify_bipartite_matching(left_nodes: list[str], right_nodes: list[str], edges: list[dict], matching: list[dict]) -> dict:
+    """Independently check a claimed matching (the solver's own, a hand-written one, or a
+    model's guess): it's structurally valid (real edges, no node reused), then whether
+    it's maximum, via a BFS alternating-path search (Berge's theorem) -- a structurally
+    different algorithm than the DFS-based Kuhn's algorithm the solver uses. Returns a
+    concrete augmenting path if the matching is NOT maximum, or a same-size minimum vertex
+    cover (Koenig's theorem) as the optimality proof if it is.
+    """
+    return graphkit.verify_bipartite_matching(left_nodes, right_nodes, edges, matching)
+
+
+@server.tool()
+def assignment_problem(left_nodes: list[str], right_nodes: list[str], edges: list[dict], maximize: bool = False) -> dict:
+    """Solve the assignment problem (n workers, n tasks -- len(left_nodes) must equal
+    len(right_nodes)): match every left node to exactly one right node minimizing (or, if
+    maximize=true, maximizing) total edge weight, via the Hungarian algorithm. Every edge
+    needs a numeric 'weight' (no default); a missing left-right pair is simply never
+    allowed. Returns feasible: false (independently confirmed via
+    maximum_bipartite_matching over the real edges alone) if no full assignment exists, or
+    the assignment plus an embedded independent verification (LP duality) proving
+    optimality.
+    """
+    return graphkit.assignment_problem(left_nodes, right_nodes, edges, maximize)
+
+
+@server.tool()
+def verify_assignment(
+    left_nodes: list[str],
+    right_nodes: list[str],
+    edges: list[dict],
+    assignment: list[dict],
+    maximize: bool = False,
+    potentials: dict | None = None,
+) -> dict:
+    """Independently check a claimed assignment (the solver's own, a hand-written one, or
+    a model's guess): it's a genuine bijection using only real edges, then -- if
+    `potentials` ({"left": {...}, "right": {...}}, e.g. assignment_problem's own) is given
+    -- whether it proves optimality via LP duality / complementary slackness. Never
+    re-runs the Hungarian algorithm; a pure certificate check, the same role max_flow's
+    min-cut proof plays for a different problem.
+    """
+    return graphkit.verify_assignment(left_nodes, right_nodes, edges, assignment, maximize, potentials)
 
 
 @server.tool()

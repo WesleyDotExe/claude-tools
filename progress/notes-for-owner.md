@@ -1,5 +1,60 @@
 # Notes for owner
 
+## 2026-09-22: extended `graph-algorithms` with bipartite matching/assignment — ideas rejected this cycle, and a missing-from-README tool found
+
+No obviously-unexplored new problem *shape* was flagged going into this
+cycle (per the previous cycle's own `current.md`), so this cycle searched
+for a real, sharply-documented gap within an existing shape instead.
+Rejected before landing on the assignment problem:
+
+- **Bill-splitting / debt simplification** ("who owes whom," minimizing
+  the number of settle-up payments in a group expense). Real and
+  well-documented (the classic rounding-cents problem, plus Splitwise's
+  own published greedy debt-simplification algorithm). Not built: multiple
+  existing MCP servers (`expense-splitter-mcp`, several Splitwise
+  wrappers) already implement exactly this algorithm — no differentiated
+  angle found.
+- **Apportionment / seat-allocation methods** (D'Hondt, Sainte-Laguë,
+  Hamilton — how legislative seats get divided among parties/states).
+  Real methods with real documented edge cases (quota-rule violations,
+  house-size paradoxes), but no sharply-articulated "LLMs get this wrong"
+  complaint turned up in search — only reference/educational material and
+  academic papers about the methods themselves, not about model failures
+  on them. Didn't clear the "actually expressed need" bar.
+- **Stable matching / Gale-Shapley** (residency matching, roommate
+  assignment). Same issue: a real, well-known algorithm, but no sharp
+  real-world "LLM fails at this" source found this cycle. Worth
+  reconsidering if a future cycle's search turns up a real complaint.
+
+Landed on the **weighted bipartite assignment problem** (extending
+`graph-algorithms` rather than a new tool): `jeremylach2/fantasyFootballMCP`'s
+own README is the source — it states plainly that handing a model 16
+players, their projections, and the league's slot-eligibility rules, and
+asking it to solve the assignment problem in context, costs ~31,900 tokens
+and gets the answer wrong, because the correct answer is a maximum-weight
+bipartite matching, not a sort; its own worked example shows a naive/
+greedy lineup scoring 20 points against the true optimum's 29. This is a
+domain-specific (fantasy-football-only) tool, not a generic assignment-
+problem solver — search confirmed no generic, keyless MCP server for
+bipartite matching or the assignment problem exists (the only other
+candidate, `mcp-solver`, needs SMT-LIB/CP formalization first, the same
+"LLM-as-formalizer is also unreliable" problem this collection's other
+tools already sidestep). It also closes a gap `tools/graph-algorithms/
+README.md` had explicitly named open ("No maximum matching or general
+LP-style network optimization") since the graph-coloring cycle
+(2026-09-20) — extending that tool rather than building a seventh was the
+right move per TASKS.md rule 1.
+
+**Also worth flagging:** while updating the root `README.md`'s tool list,
+found it was missing `spaced-arrangement` entirely — built in cycle nine
+(2026-09-21), documented in its own README and in `cycles.json`, but never
+added to the root index. Fixed this cycle. Not caught by any automated
+test (it's documentation, not code) — a reminder that "update the root
+README's tool list" (TASKS.md's own housekeeping instruction) needs an
+actual diff against `tools/*/manifest.json` each cycle, not just a skim,
+since a tool can be fully built and proven yet still silently drop out of
+the top-level index if a cycle's dashboard/README pass isn't exhaustive.
+
 ## 2026-09-21: `spaced-arrangement` built — ideas rejected this cycle, and a genuine multi-category subtlety worth knowing about
 
 Chased `special-projects/current.md`'s flagged-unexplored shape

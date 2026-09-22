@@ -1,7 +1,7 @@
 {
   "name": "graph-algorithms",
-  "summary": "Exact classic graph algorithms (shortest path, topological sort, minimum spanning tree, max flow, graph coloring) exposed as an MCP server, each solved via one algorithm and independently checked via a second, structurally different one -- a Bellman-Ford recomputation for Dijkstra's shortest paths, the direct definition for Kahn's topological order (with a concrete cycle returned as proof when the graph isn't a DAG), the cycle-property exchange argument for Kruskal's minimum spanning tree, the max-flow min-cut theorem (a returned cut of equal capacity) for Edmonds-Karp's max flow, and the direct definition again for a DSATUR + forward-checking backtracking coloring solver, whose chromatic_number tool proves its minimum-colors answer with a clique lower bound plus exhaustive uncolorability at every smaller color count.",
-  "problem": "Exact algorithmic reasoning over an explicit graph is a documented, actively-benchmarked LLM failure mode distinct from every other shape already in this collection: not sequential action search (strips-planner), not constraint satisfaction over a static assignment (logic-grid-solver), not a single calculation (secure-random/discrete-probability/time-arithmetic). Multiple 2025/2026 benchmarks built specifically to test this -- GraphArena, GraphOmni, GrAlgoBench, GTA, and 'Can Language Models Solve Graph Problems in Natural Language?' -- document accuracy dropping sharply on shortest-path, topological-sort, spanning-tree, and max-flow-style problems as graphs grow past a handful of nodes. No keyless MCP server was found exposing plain graph algorithms through a simple node/edge JSON vocabulary with an independent verifier; existing options found in this cycle's search require either full SMT-LIB/ASP formalization (mcp-solver) or a running Neo4j Graph Data Science instance (the GDS Agent paper), neither of which is a fixed-vocabulary, credential-free fit.",
+  "summary": "Exact classic graph algorithms (shortest path, topological sort, minimum spanning tree, max flow, graph coloring, maximum bipartite matching, the weighted assignment problem) exposed as an MCP server, each solved via one algorithm and independently checked via a second, structurally different one -- a Bellman-Ford recomputation for Dijkstra's shortest paths, the direct definition for Kahn's topological order (with a concrete cycle returned as proof when the graph isn't a DAG), the cycle-property exchange argument for Kruskal's minimum spanning tree, the max-flow min-cut theorem (a returned cut of equal capacity) for Edmonds-Karp's max flow, the direct definition again for a DSATUR + forward-checking backtracking coloring solver (whose chromatic_number tool proves its minimum-colors answer with a clique lower bound plus exhaustive uncolorability at every smaller color count), Koenig's theorem (an equal-size vertex cover, or a concrete augmenting-path counterexample) for Kuhn's-algorithm bipartite matching, and LP duality / complementary slackness for the Hungarian algorithm's weighted assignment problem.",
+  "problem": "Exact algorithmic reasoning over an explicit graph is a documented, actively-benchmarked LLM failure mode distinct from every other shape already in this collection: not sequential action search (strips-planner), not constraint satisfaction over a static assignment (logic-grid-solver), not a single calculation (secure-random/discrete-probability/time-arithmetic). Multiple 2025/2026 benchmarks built specifically to test this -- GraphArena, GraphOmni, GrAlgoBench, GTA, and 'Can Language Models Solve Graph Problems in Natural Language?' -- document accuracy dropping sharply on shortest-path, topological-sort, spanning-tree, and max-flow-style problems as graphs grow past a handful of nodes. No keyless MCP server was found exposing plain graph algorithms through a simple node/edge JSON vocabulary with an independent verifier; existing options found in this cycle's search require either full SMT-LIB/ASP formalization (mcp-solver) or a running Neo4j Graph Data Science instance (the GDS Agent paper), neither of which is a fixed-vocabulary, credential-free fit. As of this cycle: the assignment problem specifically (n workers/n tasks, minimize or maximize total cost/value) is documented concretely in a real MCP server's own README (jeremylach2/fantasyFootballMCP) -- handing an LLM the raw data and asking it to solve the assignment problem in context costs ~31,900 tokens and gets the answer wrong, because the correct answer is a maximum-weight bipartite matching, not a sort/greedy pick. No generic (non-domain-specific), keyless MCP server for bipartite matching or the assignment problem was found -- this tool's own README previously flagged 'no maximum matching or general LP-style network optimization' as its next open gap.",
   "keyless": true,
   "requires_network": false,
   "language": "python",
@@ -9,9 +9,9 @@
   "entry_point": "server.py",
   "cli_module": "graphkit.py",
   "tests": "tests/test_graphkit.py",
-  "proof": "proof/run_2026-09-20.txt",
+  "proof": "proof/run_2026-09-22.txt",
   "created": "2026-09-19",
-  "updated": "2026-09-20",
+  "updated": "2026-09-22",
   "tools_exposed": [
     "describe_graph_format",
     "shortest_path",
@@ -25,6 +25,11 @@
     "graph_coloring",
     "verify_coloring",
     "chromatic_number",
+    "describe_bipartite_format",
+    "maximum_bipartite_matching",
+    "verify_bipartite_matching",
+    "assignment_problem",
+    "verify_assignment",
     "generate_random_graph"
   ]
 }

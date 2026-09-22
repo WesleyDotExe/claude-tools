@@ -2,6 +2,103 @@
 
 Newest entry on top. One entry per cycle: what was done, honestly.
 
+## 2026-09-22 — tenth run
+
+- Ran `tools/collection-index/index.py` first (8 tools), then re-read
+  `special-projects/current.md`, `progress/notes-for-owner.md`,
+  `progress/quality-debt.md`, and every tool's own "What it doesn't do"
+  section fresh, per the loop. `current.md` flagged no obviously-unexplored
+  new problem shape this cycle, so this cycle searched for a real gap
+  within an existing shape rather than forcing a new one.
+- Web-searched 12 queries. Checked and rejected: bill-splitting / debt
+  simplification (real, well-documented need, but `expense-splitter-mcp`
+  and several Splitwise-wrapper MCP servers already implement the standard
+  greedy debt-simplification algorithm — saturated); apportionment/
+  seat-allocation methods (D'Hondt, Sainte-Laguë, Hamilton — real methods,
+  but no sharply-articulated "LLMs get this wrong" source found, only
+  reference material); stable matching / Gale-Shapley (same — no sharp
+  real-complaint source found this cycle). Found a genuinely strong one:
+  the weighted bipartite assignment problem. `jeremylach2/fantasyFootballMCP`'s
+  own README states plainly that handing a model 16 players and slot-
+  eligibility rules and asking it to solve the assignment problem in
+  context costs ~31,900 tokens and still gets it wrong, because the
+  correct answer is a maximum-weight bipartite matching, not a sort — its
+  own worked example shows a naive/greedy lineup scoring 20 points against
+  the optimum's 29. No generic (non-domain-specific), keyless MCP server
+  for bipartite matching or the assignment problem was found (only that
+  one fantasy-football-specific tool, and `mcp-solver`, which needs
+  SMT-LIB/CP formalization — the same "LLM-as-formalizer is also
+  unreliable" problem this collection's other tools already sidestep).
+  This also directly closes a gap `tools/graph-algorithms/README.md`
+  already named explicitly as open ("No maximum matching or general
+  LP-style network optimization") since the graph-coloring cycle. See
+  `special-projects/cycles.json`'s 2026-09-22 entry and
+  `progress/notes-for-owner.md` for the full search/reasoning.
+- Extended `tools/graph-algorithms` (per TASKS.md rule 1's "extend rather
+  than duplicate" guidance, and the tool's own already-flagged gap) rather
+  than building a seventh tool: added `maximum_bipartite_matching` (Kuhn's
+  algorithm: DFS augmenting-path search) and `verify_bipartite_matching`
+  (a structurally different BFS alternating-path search — Berge's theorem
+  — returning a concrete augmenting path when the matching is NOT maximum,
+  or constructing a same-size minimum vertex cover via Koenig's theorem,
+  independently rechecked edge-by-edge, when it is); `assignment_problem`
+  (the classic O(n^3) Hungarian algorithm for the square n-to-n weighted
+  assignment problem, minimize or maximize, missing edges simply
+  disallowed — infeasibility, when no full assignment avoiding them
+  exists, is independently confirmed by reusing `maximum_bipartite_matching`
+  over the real edges alone, the collection building on itself per
+  TASKS.md step 6) and `verify_assignment` (a pure LP-duality /
+  complementary-slackness certificate check — given `potentials`, never
+  re-runs the Hungarian algorithm at all, the same role `max_flow`'s
+  min-cut proof already plays for a different problem). Added
+  `describe_bipartite_format` for the new `left_nodes`/`right_nodes`/
+  `edges` vocabulary (deliberately different from `describe_graph_format`'s
+  single `nodes` list, since left and right are different roles, not a
+  symmetric undirected graph).
+- Added 28 unit tests (`tools/graph-algorithms/tests/test_graphkit.py`; 89
+  in this tool now, up from 61; 272 across all eight tools now, up from
+  244): a known non-perfect maximum matching and a known perfect matching
+  when one exists; `verify_bipartite_matching` catching a reused node and
+  a fake edge, and returning a concrete augmenting-path witness for a
+  deliberately non-maximum guess; a known textbook 3x3 assignment-problem
+  cost matrix brute-forced BY HAND over all 6 permutations for both
+  minimize (9) and maximize (21), matching the solver exactly; an
+  infeasible case independently confirmed via `maximum_bipartite_matching`'s
+  own matching size; `verify_assignment` rejecting an all-zero-potentials
+  certificate AND rejecting the solver's own genuine potentials applied to
+  a different, deliberately suboptimal assignment; a hand-built
+  counterexample proving the naive "greedily take the globally cheapest
+  edge first" heuristic totals 9 while the true optimum is 7 — reproducing
+  the exact shape of failure `fantasyFootballMCP`'s README documents for
+  real; input validation for every new malformed-input path.
+- Installed `mcp` + `cffi` locally (per the known container gotcha) and
+  wrote a real stdio MCP client driver, saved as
+  `tools/graph-algorithms/proof/run_2026-09-22.txt`: `list_tools`
+  (confirming the five new tools), `describe_bipartite_format`, the known
+  bipartite matching solved and proven maximum via Koenig's theorem live,
+  a deliberately non-maximum guess caught with its augmenting-path
+  witness, the known 3x3 assignment problem solved for both minimize and
+  maximize with their LP-duality proofs shown, the greedy-vs-optimal
+  counterexample solved live, an infeasible assignment case correctly
+  reported, `verify_assignment` correctly rejecting a bad certificate and
+  accepting the solver's own genuine one, a deliberately invalid input
+  (unequal left/right sizes) correctly coming back as a real MCP tool
+  error instead of a wrong answer, and `shortest_path` confirmed still
+  working unchanged alongside the five new tools.
+- Full repo test suite green locally: 272 tests across all eight tools
+  (`for d in tools/*/tests; do (cd "$(dirname "$d")" && python3 -m
+  unittest discover -s tests); done`).
+- Found and fixed a small pre-existing gap while updating the root
+  `README.md`: `spaced-arrangement` (built cycle nine) was missing from
+  its tool list entirely — added it alongside this cycle's
+  `graph-algorithms` update. Not caught by any test (it's documentation,
+  not code) — caught only by actually re-reading the file this cycle
+  rather than assuming it was current.
+- Updated `special-projects/cycles.json` (this cycle's entry) and rebuilt
+  the dashboard (`python3 scripts/build_site.py`); updated
+  `special-projects/current.md`, this file, and
+  `progress/quality-debt.md`/`progress/notes-for-owner.md`.
+
 ## 2026-09-21 — ninth run
 
 - Ran `tools/collection-index/index.py` first (7 tools), then re-read

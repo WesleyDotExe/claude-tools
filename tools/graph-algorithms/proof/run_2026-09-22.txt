@@ -1,0 +1,438 @@
+=== unit tests ===
+test_greedy_smallest_edge_first_is_provably_suboptimal (test_graphkit.AssignmentProblemTests.test_greedy_smallest_edge_first_is_provably_suboptimal) ... ok
+test_infeasible_when_no_perfect_assignment_possible (test_graphkit.AssignmentProblemTests.test_infeasible_when_no_perfect_assignment_possible) ... ok
+test_known_maximum_assignment (test_graphkit.AssignmentProblemTests.test_known_maximum_assignment) ... ok
+test_known_minimum_assignment (test_graphkit.AssignmentProblemTests.test_known_minimum_assignment) ... ok
+test_missing_weight_rejected (test_graphkit.AssignmentProblemTests.test_missing_weight_rejected) ... ok
+test_single_pair_trivial_assignment (test_graphkit.AssignmentProblemTests.test_single_pair_trivial_assignment) ... ok
+test_unequal_sizes_rejected (test_graphkit.AssignmentProblemTests.test_unequal_sizes_rejected) ... ok
+test_weight_magnitude_cap_enforced (test_graphkit.AssignmentProblemTests.test_weight_magnitude_cap_enforced) ... ok
+test_bipartite_example_is_usable (test_graphkit.BipartiteFormatTests.test_bipartite_example_is_usable) ... ok
+test_describe_bipartite_format_standalone (test_graphkit.BipartiteFormatTests.test_describe_bipartite_format_standalone) ... ok
+test_duplicate_bipartite_edge_rejected (test_graphkit.BipartiteValidationTests.test_duplicate_bipartite_edge_rejected) ... ok
+test_edge_from_must_be_a_left_node (test_graphkit.BipartiteValidationTests.test_edge_from_must_be_a_left_node) ... ok
+test_edge_to_must_be_a_right_node (test_graphkit.BipartiteValidationTests.test_edge_to_must_be_a_right_node) ... ok
+test_left_right_overlap_rejected (test_graphkit.BipartiteValidationTests.test_left_right_overlap_rejected) ... ok
+test_budget_exceeded_raises (test_graphkit.ChromaticNumberTests.test_budget_exceeded_raises) ... ok
+test_generated_graph_coloring_is_self_consistent (test_graphkit.ChromaticNumberTests.test_generated_graph_coloring_is_self_consistent) ... ok
+test_pentagon_chromatic_number_three_needs_real_search (test_graphkit.ChromaticNumberTests.test_pentagon_chromatic_number_three_needs_real_search) ... ok
+test_single_node_no_edges_chromatic_number_one (test_graphkit.ChromaticNumberTests.test_single_node_no_edges_chromatic_number_one) ... ok
+test_square_chromatic_number_two (test_graphkit.ChromaticNumberTests.test_square_chromatic_number_two) ... ok
+test_triangle_chromatic_number_three_proven_by_clique_alone (test_graphkit.ChromaticNumberTests.test_triangle_chromatic_number_three_proven_by_clique_alone) ... ok
+test_returns_worked_example (test_graphkit.DescribeFormatTests.test_returns_worked_example) ... ok
+test_different_seed_usually_differs (test_graphkit.GenerateRandomGraphTests.test_different_seed_usually_differs) ... ok
+test_generated_graph_feeds_mst_and_shortest_path (test_graphkit.GenerateRandomGraphTests.test_generated_graph_feeds_mst_and_shortest_path) ... ok
+test_num_edges_out_of_range_rejected (test_graphkit.GenerateRandomGraphTests.test_num_edges_out_of_range_rejected) ... ok
+test_num_nodes_out_of_range_rejected (test_graphkit.GenerateRandomGraphTests.test_num_nodes_out_of_range_rejected) ... ok
+test_reproducible_with_same_seed (test_graphkit.GenerateRandomGraphTests.test_reproducible_with_same_seed) ... ok
+test_budget_exceeded_raises_instead_of_guessing (test_graphkit.GraphColoringTests.test_budget_exceeded_raises_instead_of_guessing) ... ok
+test_num_colors_directed_and_weight_ignored (test_graphkit.GraphColoringTests.test_num_colors_directed_and_weight_ignored) ... ok
+test_num_colors_validation (test_graphkit.GraphColoringTests.test_num_colors_validation) ... ok
+test_square_colorable_with_two (test_graphkit.GraphColoringTests.test_square_colorable_with_two) ... ok
+test_triangle_colorable_with_three_not_two (test_graphkit.GraphColoringTests.test_triangle_colorable_with_three_not_two) ... ok
+test_duplicate_edge_rejected (test_graphkit.MaxFlowTests.test_duplicate_edge_rejected) ... ok
+test_flow_respects_conservation_and_capacity (test_graphkit.MaxFlowTests.test_flow_respects_conservation_and_capacity) ... ok
+test_known_max_flow_value (test_graphkit.MaxFlowTests.test_known_max_flow_value) ... ok
+test_missing_capacity_rejected (test_graphkit.MaxFlowTests.test_missing_capacity_rejected) ... ok
+test_source_equals_sink_rejected (test_graphkit.MaxFlowTests.test_source_equals_sink_rejected) ... ok
+test_verify_catches_capacity_violation (test_graphkit.MaxFlowTests.test_verify_catches_capacity_violation) ... ok
+test_verify_catches_conservation_violation (test_graphkit.MaxFlowTests.test_verify_catches_conservation_violation) ... ok
+test_verify_rejects_mismatched_cut_as_non_optimal (test_graphkit.MaxFlowTests.test_verify_rejects_mismatched_cut_as_non_optimal) ... ok
+test_verify_without_cut_only_proves_feasibility (test_graphkit.MaxFlowTests.test_verify_without_cut_only_proves_feasibility) ... ok
+test_known_maximum_matching_is_not_perfect (test_graphkit.MaximumBipartiteMatchingTests.test_known_maximum_matching_is_not_perfect) ... ok
+test_no_edges_gives_empty_matching (test_graphkit.MaximumBipartiteMatchingTests.test_no_edges_gives_empty_matching) ... ok
+test_perfect_matching_found_when_one_exists (test_graphkit.MaximumBipartiteMatchingTests.test_perfect_matching_found_when_one_exists) ... ok
+test_weight_field_is_ignored (test_graphkit.MaximumBipartiteMatchingTests.test_weight_field_is_ignored) ... ok
+test_disconnected_graph_returns_forest (test_graphkit.MinimumSpanningTreeTests.test_disconnected_graph_returns_forest) ... ok
+test_known_minimum_weight (test_graphkit.MinimumSpanningTreeTests.test_known_minimum_weight) ... ok
+test_negative_weight_allowed (test_graphkit.MinimumSpanningTreeTests.test_negative_weight_allowed) ... ok
+test_verify_catches_cycle_in_claimed_tree (test_graphkit.MinimumSpanningTreeTests.test_verify_catches_cycle_in_claimed_tree) ... ok
+test_verify_catches_edge_not_in_graph (test_graphkit.MinimumSpanningTreeTests.test_verify_catches_edge_not_in_graph) ... ok
+test_verify_catches_incomplete_spanning (test_graphkit.MinimumSpanningTreeTests.test_verify_catches_incomplete_spanning) ... ok
+test_verify_catches_suboptimal_tree_via_cycle_property (test_graphkit.MinimumSpanningTreeTests.test_verify_catches_suboptimal_tree_via_cycle_property) ... ok
+test_directed_edge_cannot_be_used_backwards (test_graphkit.ShortestPathTests.test_directed_edge_cannot_be_used_backwards) ... ok
+test_known_shortest_path (test_graphkit.ShortestPathTests.test_known_shortest_path) ... ok
+test_negative_weight_rejected (test_graphkit.ShortestPathTests.test_negative_weight_rejected) ... ok
+test_undirected_allows_backwards_traversal (test_graphkit.ShortestPathTests.test_undirected_allows_backwards_traversal) ... ok
+test_unknown_source_rejected (test_graphkit.ShortestPathTests.test_unknown_source_rejected) ... ok
+test_unreachable_target_gives_proof_not_guess (test_graphkit.ShortestPathTests.test_unreachable_target_gives_proof_not_guess) ... ok
+test_unweighted_defaults_to_bfs_shortest_hop_count (test_graphkit.ShortestPathTests.test_unweighted_defaults_to_bfs_shortest_hop_count) ... ok
+test_verify_accepts_correct_standalone_claim (test_graphkit.ShortestPathTests.test_verify_accepts_correct_standalone_claim) ... ok
+test_verify_catches_nonexistent_edge_in_path (test_graphkit.ShortestPathTests.test_verify_catches_nonexistent_edge_in_path) ... ok
+test_verify_catches_path_not_ending_at_target (test_graphkit.ShortestPathTests.test_verify_catches_path_not_ending_at_target) ... ok
+test_verify_catches_wrong_distance_claim (test_graphkit.ShortestPathTests.test_verify_catches_wrong_distance_claim) ... ok
+test_cycle_detected_with_concrete_witness (test_graphkit.TopologicalSortTests.test_cycle_detected_with_concrete_witness) ... ok
+test_known_order_on_diamond_dag (test_graphkit.TopologicalSortTests.test_known_order_on_diamond_dag) ... ok
+test_partial_cycle_still_orders_the_acyclic_part (test_graphkit.TopologicalSortTests.test_partial_cycle_still_orders_the_acyclic_part) ... ok
+test_verify_accepts_valid_order (test_graphkit.TopologicalSortTests.test_verify_accepts_valid_order) ... ok
+test_verify_catches_backwards_edge (test_graphkit.TopologicalSortTests.test_verify_catches_backwards_edge) ... ok
+test_verify_catches_non_permutation (test_graphkit.TopologicalSortTests.test_verify_catches_non_permutation) ... ok
+test_duplicate_nodes_rejected (test_graphkit.ValidationTests.test_duplicate_nodes_rejected) ... ok
+test_empty_nodes_rejected (test_graphkit.ValidationTests.test_empty_nodes_rejected) ... ok
+test_non_number_weight_rejected (test_graphkit.ValidationTests.test_non_number_weight_rejected) ... ok
+test_self_loop_rejected (test_graphkit.ValidationTests.test_self_loop_rejected) ... ok
+test_unknown_edge_endpoint_rejected (test_graphkit.ValidationTests.test_unknown_edge_endpoint_rejected) ... ok
+test_accepts_solvers_own_certificate (test_graphkit.VerifyAssignmentTests.test_accepts_solvers_own_certificate) ... ok
+test_bad_potentials_fail_optimality_proof (test_graphkit.VerifyAssignmentTests.test_bad_potentials_fail_optimality_proof) ... ok
+test_catches_edge_not_in_graph (test_graphkit.VerifyAssignmentTests.test_catches_edge_not_in_graph) ... ok
+test_catches_non_bijection (test_graphkit.VerifyAssignmentTests.test_catches_non_bijection) ... ok
+test_suboptimal_assignment_cannot_be_proven_optimal_by_any_valid_certificate (test_graphkit.VerifyAssignmentTests.test_suboptimal_assignment_cannot_be_proven_optimal_by_any_valid_certificate) ... ok
+test_accepts_solvers_own_matching (test_graphkit.VerifyBipartiteMatchingTests.test_accepts_solvers_own_matching) ... ok
+test_catches_edge_not_in_graph (test_graphkit.VerifyBipartiteMatchingTests.test_catches_edge_not_in_graph) ... ok
+test_catches_left_node_reused (test_graphkit.VerifyBipartiteMatchingTests.test_catches_left_node_reused) ... ok
+test_catches_non_maximum_matching_with_augmenting_path (test_graphkit.VerifyBipartiteMatchingTests.test_catches_non_maximum_matching_with_augmenting_path) ... ok
+test_empty_matching_on_empty_graph_is_trivially_maximum (test_graphkit.VerifyBipartiteMatchingTests.test_empty_matching_on_empty_graph_is_trivially_maximum) ... ok
+test_bad_color_type_rejected (test_graphkit.VerifyColoringTests.test_bad_color_type_rejected) ... ok
+test_catches_missing_node (test_graphkit.VerifyColoringTests.test_catches_missing_node) ... ok
+test_catches_shared_color_on_adjacent_nodes (test_graphkit.VerifyColoringTests.test_catches_shared_color_on_adjacent_nodes) ... ok
+test_catches_unexpected_node (test_graphkit.VerifyColoringTests.test_catches_unexpected_node) ... ok
+test_string_color_labels_allowed (test_graphkit.VerifyColoringTests.test_string_color_labels_allowed) ... ok
+test_valid_coloring_accepted (test_graphkit.VerifyColoringTests.test_valid_coloring_accepted) ... ok
+
+----------------------------------------------------------------------
+Ran 89 tests in 0.006s
+
+OK
+
+=== live MCP server session (stdio transport) ===
+Tools exposed: ['describe_graph_format', 'shortest_path', 'verify_shortest_path', 'topological_sort', 'verify_topological_order', 'minimum_spanning_tree', 'verify_minimum_spanning_tree', 'max_flow', 'verify_max_flow', 'graph_coloring', 'verify_coloring', 'chromatic_number', 'describe_bipartite_format', 'maximum_bipartite_matching', 'verify_bipartite_matching', 'assignment_problem', 'verify_assignment', 'generate_random_graph']
+
+-- describe_bipartite_format() --
+{
+  "left_nodes": "A non-empty list of unique strings -- one 'side' of the bipartite graph (e.g. workers, players, rows).",
+  "right_nodes": "A non-empty list of unique strings, disjoint from left_nodes -- the other side (e.g. tasks, slots, columns).",
+  "edge": "An object {\"from\": a left_node, \"to\": a right_node}. 'from' must be a declared left node and 'to' a declared right node -- this is a directed left->right edge list, not a symmetric undirected one. Not every left-right pair needs an edge; a missing pair simply means that assignment is never allowed.",
+  "per_tool_notes": {
+    "maximum_bipartite_matching / verify_bipartite_matching": "'weight' is ignored if present -- this is unweighted matching (does a valid pairing of this SIZE exist), not the assignment problem.",
+    "assignment_problem / verify_assignment": "Requires len(left_nodes) == len(right_nodes) (a true n-to-n assignment; pad with dummy zero-weight nodes/edges yourself for an unequal-size problem -- not supported directly). Every edge must include a numeric 'weight' (no default), magnitude <= 1000. 'maximize' (default false) picks whether the total is minimized (e.g. cost) or maximized (e.g. value/score)."
+  },
+  "example_bipartite_graph": {
+    "left_nodes": [
+      "alice",
+      "bob",
+      "carol"
+    ],
+    "right_nodes": [
+      "task1",
+      "task2",
+      "task3"
+    ],
+    "edges": [
+      {
+        "from": "alice",
+        "to": "task1",
+        "weight": 3
+      },
+      {
+        "from": "alice",
+        "to": "task2",
+        "weight": 1
+      },
+      {
+        "from": "bob",
+        "to": "task1",
+        "weight": 2
+      },
+      {
+        "from": "bob",
+        "to": "task2",
+        "weight": 4
+      },
+      {
+        "from": "bob",
+        "to": "task3",
+        "weight": 2
+      },
+      {
+        "from": "carol",
+        "to": "task2",
+        "weight": 3
+      },
+      {
+        "from": "carol",
+        "to": "task3",
+        "weight": 5
+      }
+    ]
+  }
+}
+
+-- maximum_bipartite_matching(left_nodes=['a', 'b', 'c'], right_nodes=['x', 'y'], edges=[{'from': 'a', 'to': 'x'}, {'from': 'b', 'to': 'x'}, {'from': 'b', 'to': 'y'}, {'from': 'c', 'to': 'y'}]) --
+{
+  "matching_size": 2,
+  "matching": [
+    {
+      "left": "a",
+      "right": "x"
+    },
+    {
+      "left": "b",
+      "right": "y"
+    }
+  ],
+  "unmatched_left": [
+    "c"
+  ],
+  "unmatched_right": [],
+  "verification": {
+    "valid": true,
+    "matching_size": 2,
+    "is_maximum": true,
+    "minimum_vertex_cover": {
+      "left": [],
+      "right": [
+        "x",
+        "y"
+      ]
+    },
+    "vertex_cover_size": 2,
+    "vertex_cover_uncovered_edges": [],
+    "proof_method": "Koenig's theorem: a vertex cover was constructed (via alternating-path BFS reachability from every unmatched left node) and independently rechecked edge-by-edge (every edge has at least one endpoint in it). A matching can never exceed the size of ANY vertex cover of the same graph (each matched edge is disjoint and needs its own cover vertex), so a cover of EQUAL size to the matching proves the matching is maximum -- independent of how it was computed."
+  }
+}
+
+-- verify_bipartite_matching(left_nodes=['a', 'b', 'c'], right_nodes=['x', 'y'], edges=[{'from': 'a', 'to': 'x'}, {'from': 'b', 'to': 'x'}, {'from': 'b', 'to': 'y'}, {'from': 'c', 'to': 'y'}], matching=[{'left': 'a', 'right': 'x') --
+{
+  "valid": true,
+  "matching_size": 1,
+  "is_maximum": false,
+  "reason": "an augmenting path exists starting from an unmatched left node and ending at an unmatched right node, so this matching is NOT maximum -- flipping every edge along the path (unmatched edges become matched, matched edges become unmatched) produces a matching one edge larger.",
+  "augmenting_path": [
+    "b",
+    "y"
+  ],
+  "proof_method": "alternating-path BFS from every unmatched left node (Berge's theorem), a structurally different search than the DFS-based Kuhn's algorithm maximum_bipartite_matching uses to solve."
+}
+
+-- assignment_problem(left_nodes=['r0', 'r1', 'r2'], right_nodes=['c0', 'c1', 'c2'], edges=[{'from': 'r0', 'to': 'c0', 'weight': 9}, {'from': 'r0', 'to': 'c1', 'weight': 2}, {'from': 'r0', 'to': 'c2', 'weight': 7}, {'from') --
+{
+  "feasible": true,
+  "assignment": [
+    {
+      "left": "r0",
+      "right": "c1"
+    },
+    {
+      "left": "r1",
+      "right": "c0"
+    },
+    {
+      "left": "r2",
+      "right": "c2"
+    }
+  ],
+  "total_weight": 9.0,
+  "potentials": {
+    "left": {
+      "r0": 4.0,
+      "r1": 6.0,
+      "r2": 4.0
+    },
+    "right": {
+      "c0": 0.0,
+      "c1": -2.0,
+      "c2": -3.0
+    }
+  },
+  "verification": {
+    "valid": true,
+    "total_weight": 9.0,
+    "optimality_proven": true,
+    "dual_total": 9.0,
+    "inequality_violations": [],
+    "equality_violations_on_assigned_pairs": [],
+    "proof_method": "LP duality / complementary slackness: potentials.left[l] + potentials.right[r] must be <=/>= (minimize/maximize) weight(l, r) for EVERY real edge, with equality on every pair actually assigned, and the total potentials must equal the assignment's total weight. The assignment polytope is integral (Birkhoff-von Neumann), so this is an exact optimality proof: any possible assignment's total weight is bounded by the dual total in the optimal direction, and this assignment achieves it exactly -- independent of how it was computed."
+  }
+}
+
+-- assignment_problem(left_nodes=['r0', 'r1', 'r2'], right_nodes=['c0', 'c1', 'c2'], edges=[{'from': 'r0', 'to': 'c0', 'weight': 9}, {'from': 'r0', 'to': 'c1', 'weight': 2}, {'from': 'r0', 'to': 'c2', 'weight': 7}, {'from') --
+{
+  "feasible": true,
+  "assignment": [
+    {
+      "left": "r0",
+      "right": "c2"
+    },
+    {
+      "left": "r1",
+      "right": "c0"
+    },
+    {
+      "left": "r2",
+      "right": "c1"
+    }
+  ],
+  "total_weight": 21.0,
+  "potentials": {
+    "left": {
+      "r0": 7.0,
+      "r1": 4.0,
+      "r2": 8.0
+    },
+    "right": {
+      "c0": 2.0,
+      "c1": -0.0,
+      "c2": -0.0
+    }
+  },
+  "verification": {
+    "valid": true,
+    "total_weight": 21.0,
+    "optimality_proven": true,
+    "dual_total": 21.0,
+    "inequality_violations": [],
+    "equality_violations_on_assigned_pairs": [],
+    "proof_method": "LP duality / complementary slackness: potentials.left[l] + potentials.right[r] must be <=/>= (minimize/maximize) weight(l, r) for EVERY real edge, with equality on every pair actually assigned, and the total potentials must equal the assignment's total weight. The assignment polytope is integral (Birkhoff-von Neumann), so this is an exact optimality proof: any possible assignment's total weight is bounded by the dual total in the optimal direction, and this assignment achieves it exactly -- independent of how it was computed."
+  }
+}
+
+-- assignment_problem(left_nodes=['alice', 'george'], right_nodes=['task1', 'task2'], edges=[{'from': 'alice', 'to': 'task1', 'weight': 1}, {'from': 'alice', 'to': 'task2', 'weight': 4}, {'from': 'george', 'to': 'task1', ') --
+{
+  "feasible": true,
+  "assignment": [
+    {
+      "left": "alice",
+      "right": "task2"
+    },
+    {
+      "left": "george",
+      "right": "task1"
+    }
+  ],
+  "total_weight": 7.0,
+  "potentials": {
+    "left": {
+      "alice": 4.0,
+      "george": 6.0
+    },
+    "right": {
+      "task1": -3.0,
+      "task2": 0.0
+    }
+  },
+  "verification": {
+    "valid": true,
+    "total_weight": 7.0,
+    "optimality_proven": true,
+    "dual_total": 7.0,
+    "inequality_violations": [],
+    "equality_violations_on_assigned_pairs": [],
+    "proof_method": "LP duality / complementary slackness: potentials.left[l] + potentials.right[r] must be <=/>= (minimize/maximize) weight(l, r) for EVERY real edge, with equality on every pair actually assigned, and the total potentials must equal the assignment's total weight. The assignment polytope is integral (Birkhoff-von Neumann), so this is an exact optimality proof: any possible assignment's total weight is bounded by the dual total in the optimal direction, and this assignment achieves it exactly -- independent of how it was computed."
+  }
+}
+
+-- assignment_problem(left_nodes=['p', 'q'], right_nodes=['m', 'n'], edges=[{'from': 'p', 'to': 'm', 'weight': 1}, {'from': 'q', 'to': 'm', 'weight': 2}]) --
+{
+  "feasible": false,
+  "reason": "no perfect assignment exists using only the given edges -- confirmed independently via maximum_bipartite_matching over the real edges alone: its maximum matching size is 1, less than the required 2.",
+  "max_real_matching_size": 1,
+  "required_size": 2
+}
+
+-- verify_assignment(left_nodes=['r0', 'r1', 'r2'], right_nodes=['c0', 'c1', 'c2'], edges=[{'from': 'r0', 'to': 'c0', 'weight': 9}, {'from': 'r0', 'to': 'c1', 'weight': 2}, {'from': 'r0', 'to': 'c2', 'weight': 7}, {'from') --
+{
+  "valid": true,
+  "total_weight": 9.0,
+  "optimality_proven": false,
+  "dual_total": 0,
+  "inequality_violations": [],
+  "equality_violations_on_assigned_pairs": [
+    {
+      "from": "r0",
+      "to": "c1",
+      "weight": 2.0,
+      "dual_value": 0
+    },
+    {
+      "from": "r1",
+      "to": "c0",
+      "weight": 6.0,
+      "dual_value": 0
+    },
+    {
+      "from": "r2",
+      "to": "c2",
+      "weight": 1.0,
+      "dual_value": 0
+    }
+  ],
+  "proof_method": "LP duality / complementary slackness: potentials.left[l] + potentials.right[r] must be <=/>= (minimize/maximize) weight(l, r) for EVERY real edge, with equality on every pair actually assigned, and the total potentials must equal the assignment's total weight. The assignment polytope is integral (Birkhoff-von Neumann), so this is an exact optimality proof: any possible assignment's total weight is bounded by the dual total in the optimal direction, and this assignment achieves it exactly -- independent of how it was computed."
+}
+
+-- verify_assignment(left_nodes=['r0', 'r1', 'r2'], right_nodes=['c0', 'c1', 'c2'], edges=[{'from': 'r0', 'to': 'c0', 'weight': 9}, {'from': 'r0', 'to': 'c1', 'weight': 2}, {'from': 'r0', 'to': 'c2', 'weight': 7}, {'from') --
+{
+  "valid": true,
+  "total_weight": 9.0,
+  "optimality_proven": true,
+  "dual_total": 9.0,
+  "inequality_violations": [],
+  "equality_violations_on_assigned_pairs": [],
+  "proof_method": "LP duality / complementary slackness: potentials.left[l] + potentials.right[r] must be <=/>= (minimize/maximize) weight(l, r) for EVERY real edge, with equality on every pair actually assigned, and the total potentials must equal the assignment's total weight. The assignment polytope is integral (Birkhoff-von Neumann), so this is an exact optimality proof: any possible assignment's total weight is bounded by the dual total in the optimal direction, and this assignment achieves it exactly -- independent of how it was computed."
+}
+
+-- assignment_problem with unequal left/right sizes (expect MCP tool error) --
+Tool 'assignment_problem' raised an unexpected exception
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/base.py", line 176, in run
+    result = await self.fn_metadata.call_fn(self.fn, self.is_async, validated, pass_directly)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/utilities/func_metadata.py", line 164, in call_fn
+    return await anyio.to_thread.run_sync(functools.partial(fn, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/.claude/worktrees/agent-a92a4ded2e8295236/tools/graph-algorithms/server.py", line 221, in assignment_problem
+    return graphkit.assignment_problem(left_nodes, right_nodes, edges, maximize)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/.claude/worktrees/agent-a92a4ded2e8295236/tools/graph-algorithms/graphkit.py", line 1572, in assignment_problem
+    raise ValueError(
+ValueError: assignment_problem requires len(left_nodes) == len(right_nodes) (a true n-to-n assignment); pad with dummy zero-weight nodes/edges yourself for an unequal-size problem
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/server.py", line 433, in _handle_call_tool
+    return await self.call_tool(params.name, params.arguments or {}, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/server.py", line 539, in call_tool
+    return await self._tool_manager.call_tool(name, arguments, context, convert_result=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/tool_manager.py", line 87, in call_tool
+    return await tool.run(arguments, context, convert_result=convert_result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/base.py", line 210, in run
+    raise UnexpectedToolError(f"Error executing tool {self.name}") from exc
+mcp.server.mcpserver.exceptions.UnexpectedToolError: Error executing tool assignment_problem
+is_error: True
+Error executing tool assignment_problem
+
+-- shortest_path(nodes=['A', 'B', 'C'], edges=[{'from': 'A', 'to': 'B', 'weight': 1}, {'from': 'B', 'to': 'C', 'weight': 2}], source='A', target='C', directed=True) --
+{
+  "reachable": true,
+  "path": [
+    "A",
+    "B",
+    "C"
+  ],
+  "distance": 3.0,
+  "nodes_expanded": 3,
+  "verification": {
+    "valid": true,
+    "path_is_real_walk": true,
+    "path_errors": [],
+    "path_weight": 3.0,
+    "claimed_distance": 3.0,
+    "independently_computed_shortest_distance": 3.0,
+    "optimality_conditions_hold": true,
+    "proof_method": "Bellman-Ford relaxation (a different algorithm than the Dijkstra's algorithm shortest_path uses), independently confirming the shortest-path optimality conditions rather than re-running the same code."
+  }
+}
+
+ALL LIVE-SESSION ASSERTIONS PASSED

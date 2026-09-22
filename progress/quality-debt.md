@@ -3,6 +3,33 @@
 Honest list of known gaps and shortcuts. Not urgent by default — surfaced
 so a future cycle (or the owner) can decide whether to pay them down.
 
+## `graph-algorithms`' `assignment_problem` only handles the square (n-to-n) case, and general (non-bipartite) matching isn't supported at all
+
+Added this cycle (2026-09-22): `maximum_bipartite_matching` and
+`assignment_problem` only work on **bipartite** graphs (two distinct
+sides, `left_nodes`/`right_nodes`) — general matching within a single set
+of nodes (e.g. "pair up these 10 people, some pairs incompatible, to
+maximize total compatibility," which needs Edmonds' blossom algorithm, a
+structurally harder algorithm that has to handle odd cycles) isn't built.
+`assignment_problem` also requires `len(left_nodes) == len(right_nodes)`
+exactly — no rectangular (unequal-size) or partial-assignment mode (e.g.
+"5 workers, 8 tasks, assign as many as profitable"); a caller has to pad
+with dummy zero-weight nodes themselves. Not fixed because both are
+genuinely separate, harder problems (blossom algorithm's odd-cycle
+handling is a different beast entirely from augmenting-path search over a
+bipartite graph; rectangular assignment needs the LP-duality proof to
+handle "free" unmatched potentials correctly, more design work than fit in
+one cycle) and no real need for either has surfaced yet — worth a future
+cycle's dedicated attention if one does. Also: `assignment_problem`'s
+solver uses a large internal sentinel cost (`_ASSIGNMENT_BIG_M = 1e9`) to
+steer the Hungarian algorithm away from missing (disallowed) edges, which
+is why edge weights are capped at magnitude 1000 and node count at 60 per
+side — comfortably separated numerically, but a caller who genuinely needs
+larger weights or more nodes will hit these caps; they're sanity bounds
+(the same stance every other search/optimization cap in this collection
+takes), not tuned performance limits, and could be raised (along with
+`_ASSIGNMENT_BIG_M`) if a real need for bigger instances surfaces.
+
 ## `spaced-arrangement`'s `min_distance` is a hard constraint only, with no soft "spread evenly" mode or per-category priority
 
 `arrange_with_spacing` guarantees every pair of same-category items is at
