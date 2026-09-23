@@ -2,6 +2,81 @@
 
 Newest entry on top. One entry per cycle: what was done, honestly.
 
+## 2026-09-23 — eleventh run
+
+- Ran `tools/collection-index/index.py` first (still 8 tools, output
+  matches `tools/*/manifest.json` exactly), then re-read
+  `special-projects/current.md`, `progress/notes-for-owner.md`,
+  `progress/quality-debt.md`, and every tool's own "What it doesn't do"
+  section fresh, per the loop. Root README's tool list already matched
+  `tools/*/manifest.json` (confirmed by diff, not just a skim).
+- Web-searched 13 queries across several candidate directions. Checked and
+  rejected: general non-bipartite graph matching / Edmonds' blossom
+  algorithm (real applications exist -- stable roommates, non-bipartite
+  observational-study matching -- but still no sharp "LLMs/tools get this
+  wrong" source, same verdict as the existing `quality-debt.md` entry);
+  rectangular/partial assignment for unequal worker/task counts (same —
+  real OR problem, no fresh LLM-failure source); Secret Santa / derangement-
+  with-exclusions generation (real need, but the documented AI pain point
+  is privacy — a volunteer sees all pairings — not correctness, and it's
+  already solvable as a special case of `graph-algorithms`' own
+  `maximum_bipartite_matching`); OR-Tools-style bin-packing/knapsack/job-
+  shop (re-confirmed still saturated + a poor stdlib-only fit, per prior
+  cycles' verdicts).
+- The most promising NEW-tool candidate this cycle was cross-timezone
+  meeting/availability finding (intersecting several people's busy
+  intervals across timezones and DST from structured JSON, no calendar
+  credentials). Found a genuinely sharp, concrete source: a MindStudio
+  write-up documenting Claude Code's *own* `check_availability` tool
+  computing "end of day" in UTC instead of the user's Central-time zone,
+  silently returning one slot instead of seven. But further search found
+  the underlying free/busy-interval-intersection *algorithm* already
+  implemented by several existing MCP servers even among keyless-input
+  ones (`mcp-calendar`, `when2meet-mcp`, `mcp-office-suite`'s `free_busy`,
+  `pim-agents`' `findFreeSlots`) — saturated, not rejected for lack of a
+  source.
+- Per TASKS.md rule 9, deepened `spaced-arrangement` instead: added
+  `maximize_min_distance`, which finds the LARGEST `min_distance` achievable
+  for a given items list (no caller-chosen value needed) via binary search
+  over the tool's own existing exhaustive feasibility proof, and proves the
+  answer optimal — structurally (hits the `n-1` positional ceiling) or via
+  one more exhaustive search. This closes a gap the tool's own README and
+  `progress/quality-debt.md` had explicitly flagged since it was built
+  ("no soft spread-evenly-beyond-the-minimum mode"), using the exact
+  source already cited for the tool (Spotify's 2026 rebuilt-shuffle
+  write-up: generate many candidates, pick the best-spread one) — this
+  finds the best-spread one directly via proof, instead of by sampling.
+- 9 new unit tests (34 total in `spaced-arrangement`, up from 25; 281
+  across all eight tools, up from 272). While writing them, caught and
+  fixed a real bug before committing: the initial `min_distance=1`
+  feasibility check wasn't distinguishing "budget genuinely exhausted"
+  from "structurally infeasible" (which `min_distance=1` never can be) —
+  an undersized `max_search_nodes` was raising the wrong internal
+  assertion instead of the intended budget error.
+- Ran the full repo test suite locally (`python3 -m unittest discover -s
+  tests` per `tools/*/tests`, matching `.github/workflows/test.yml`): 281
+  tests, all green.
+- Installed `mcp`+`cffi` locally (`pip install --user mcp cffi`), wrote a
+  real stdio MCP client driver, and drove the live server: `list_tools`,
+  the unconstrained case, the structural optimality proof, the exhaustive-
+  search optimality proof (with the returned arrangement independently
+  re-verified via `verify_arrangement` AND the "one more is infeasible"
+  claim independently re-confirmed via a direct, separate
+  `arrange_with_spacing` call), a 20-item/5-category generated instance end
+  to end, and a too-small `max_search_nodes` budget coming back as a
+  genuine MCP tool error. Saved as
+  `tools/spaced-arrangement/proof/run_2026-09-23.txt`.
+- Updated: `tools/spaced-arrangement/{spacedkit.py,server.py,README.md,
+  manifest.json,tests/test_spacedkit.py}`, `progress/quality-debt.md`
+  (marked the "spread evenly" gap fixed, documented what's still open),
+  `README.md` (root tool list), `special-projects/cycles.json` (new
+  eleventh-run entry), `special-projects/current.md`,
+  `progress/notes-for-owner.md`. No CI workflow changes needed —
+  `.github/workflows/test.yml` already auto-discovers `tools/*/tests`, and
+  this cycle extended an existing tool rather than adding a new one.
+- Rebuilt `_site/dashboard.html` via `scripts/build_site.py` — runs
+  cleanly, confirmed gitignored and not staged.
+
 ## 2026-09-22 — tenth run
 
 - Ran `tools/collection-index/index.py` first (8 tools), then re-read

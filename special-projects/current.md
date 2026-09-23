@@ -1,12 +1,13 @@
 # Current state
 
-**Last cycle:** 2026-09-22 (tenth run)
+**Last cycle:** 2026-09-23 (eleventh run)
 
 ## Where things stand
 
-Eight tools in the collection (no new tool this cycle -- extended an
-existing one instead, per TASKS.md rule 9/step 1's "extend rather than
-duplicate" guidance):
+Still eight tools in the collection (no new tool this cycle -- extended an
+existing one instead, per TASKS.md rule 9's "extend rather than duplicate/
+deepen if nothing new clears the bar" guidance, same outcome shape as
+cycles four and ten):
 
 - `tools/collection-index` — reads `tools/*/manifest.json`, the source of
   truth the dashboard (and future runs) read from instead of re-scanning
@@ -38,70 +39,43 @@ duplicate" guidance):
   any candidate plan step by step. `generate_blocks_world_problem` gives a
   seeded, reproducible Blocksworld instance.
 - `tools/graph-algorithms` — MCP server for the classic graph algorithms:
-  `shortest_path` (Dijkstra, verified via an independent Bellman-Ford
-  recomputation against the formal optimality conditions), `topological_sort`
-  (Kahn's algorithm, returning a concrete cycle as proof when the graph
-  isn't a DAG), `minimum_spanning_tree` (Kruskal's algorithm, verified via
-  the cycle-property exchange argument), `max_flow` (Edmonds-Karp,
-  always paired with a minimum cut whose equal capacity IS the optimality
-  proof via the max-flow min-cut theorem), `graph_coloring` (DSATUR +
-  forward-checking backtracking, budgeted by `max_search_nodes`, verified
-  via `verify_coloring`'s direct-definition check) plus `chromatic_number`
-  (the minimum colors needed: a clique gives a lower bound for free, no
-  search required, then backtracking search upward proves every smaller
-  count impossible by full exhaustion, not just unfound), and, as of this
-  cycle, `maximum_bipartite_matching` (Kuhn's algorithm, verified via a
-  structurally different BFS alternating-path search proving maximality
-  through Koenig's theorem -- an equal-size vertex cover -- or returning a
-  concrete augmenting path when the matching is NOT maximum) plus
-  `assignment_problem` (the weighted n-to-n assignment problem via the
-  Hungarian algorithm, verified via LP duality / complementary slackness --
-  a pure certificate check, never re-running the solver, the same role
-  `max_flow`'s min-cut proof plays for a different problem; infeasibility,
-  when the given edges admit no full assignment, is independently
-  confirmed by reusing `maximum_bipartite_matching` itself).
-  `generate_random_graph` gives a seeded, reproducible graph. This is a
-  fourth genuinely different problem shape in the collection: structural
-  traversal/optimization over an explicit graph, not sequential action
-  search (`strips-planner`), constraint satisfaction over a static
-  assignment (`logic-grid-solver`), or a single calculation (the other
-  three). Built this cycle because a real, non-domain-specific source
-  (`jeremylach2/fantasyFootballMCP`'s own README) documents concretely
-  that handing an LLM an assignment problem in context reliably produces a
-  sorted/greedy answer instead of the true maximum-weight matching (costs
-  ~31,900 tokens and still gets it wrong), and this tool's own README had
-  explicitly flagged "no maximum matching or general LP-style network
-  optimization" as its next open gap since the graph-coloring cycle.
+  `shortest_path`, `topological_sort`, `minimum_spanning_tree`, `max_flow`,
+  `graph_coloring` + `chromatic_number`, `maximum_bipartite_matching`, and
+  `assignment_problem` -- each solved via one algorithm and independently
+  checked via a second, structurally different one (Bellman-Ford,
+  direct-definition, cycle-property exchange, max-flow min-cut, DSATUR +
+  backtracking exhaustion, Koenig's theorem, LP duality respectively).
+  `generate_random_graph` gives a seeded, reproducible graph. Unchanged
+  this cycle -- see cycle ten's entry in `special-projects/cycles.json` for
+  the bipartite-matching/assignment-problem build.
 - `tools/spaced-arrangement` — MCP server that constructs an ordering of
   items so no two items of the same category land within `min_distance`
   positions of each other, and proves it (budgeted backtracking search,
-  CSPRNG-randomized tie-breaking via `secrets.SystemRandom` so repeated
-  calls give different valid orderings, `max_search_nodes` contract
-  matching `graph-algorithms`' `graph_coloring`/`strips-planner`'s BFS:
-  full search-tree exhaustion proves infeasibility, running out of budget
-  raises instead of guessing). `verify_arrangement` independently
-  re-checks any claimed arrangement against the direct definition, no
-  search. `generate_arrangement_problem` gives a seeded, reproducible
-  instance. This is a **sixth** genuinely different problem shape:
-  combinatorial *generation* under a guaranteed invariant — constructing an
-  object proven to satisfy a property, not calculating one answer
-  (`secure-random`/`discrete-probability`/`time-arithmetic`), checking a
-  static assignment (`logic-grid-solver`), searching sequential actions
-  (`strips-planner`), or traversing/optimizing an explicit graph
-  (`graph-algorithms`). Built because a uniformly random shuffle of a
-  category-heavy list clusters same-category items together far more than
-  people expect (documented for years in Spotify's own community forums
-  and 2026 engineering coverage of Spotify rebuilding shuffle around this
-  exact complaint) — and because a per-category frequency check alone is
-  *necessary but not sufficient* once 3+ categories are involved (a
-  concrete counterexample is in the test suite), so real exhaustive search,
-  not a formula, is what actually proves infeasibility correctly.
+  CSPRNG-randomized tie-breaking, `max_search_nodes` contract matching
+  `graph-algorithms`/`strips-planner`: full search-tree exhaustion proves
+  infeasibility, running out of budget raises instead of guessing).
+  `verify_arrangement` independently re-checks any claimed arrangement.
+  `generate_arrangement_problem` gives a seeded, reproducible instance.
+  **New this cycle:** `maximize_min_distance` -- given only the items (no
+  caller-chosen `min_distance`), finds the LARGEST `min_distance` for which
+  a valid arrangement exists and proves it's the largest, via binary
+  search over the existing exhaustive feasibility proof (feasibility is
+  monotonic in `min_distance`, so this is sound: O(log n) feasibility
+  checks, each one still a genuine budgeted exhaustive search). The final
+  answer's optimality is itself proven -- structurally when it hits the
+  `n-1` ceiling (the farthest two of `n` positions can ever be), or by one
+  more exhaustive search one distance higher that comes back impossible.
+  This is the rigorous formalization of "spread categories as evenly as
+  possible" that this tool's own README had flagged as a gap since it was
+  built -- and it directly completes the technique its own cited source
+  (Spotify's 2026 engineering write-up: generate many candidate shuffles,
+  pick the best-spread one) already described, by finding the best-spread
+  one directly via proof instead of by sampling.
 
 CI runs each tool's test suite on every PR (`.github/workflows/test.yml`,
-272 tests total across all eight tools as of this cycle: 244 from before
-plus 28 new ones for `graph-algorithms`' `maximum_bipartite_matching`/
-`assignment_problem` extension) and `auto-merge.yml` waits for it
-genuinely.
+281 tests total across all eight tools as of this cycle: 272 from before
+plus 9 new ones for `spaced-arrangement`'s `maximize_min_distance`) and
+`auto-merge.yml` waits for it genuinely.
 
 `special-projects/cycles.json` has the full story (searches, source links,
 why each tool was picked, proof) for all cycles so far.
@@ -110,86 +84,100 @@ and `collection-index`'s scan — gitignored, rebuild it, don't commit it.
 
 ## Next step
 
-Options for cycle 11, roughly in order of how promising they looked during
+Options for cycle 12, roughly in order of how promising they looked during
 this cycle's research:
 
 1. **Re-run the TASKS.md loop step 1 first, every cycle** (dogfood
    `collection-index`, re-read each tool's own "what it doesn't do"
-   section fresh) before searching for new candidates.
-2. **`maximum_bipartite_matching`/`assignment_problem` are now built**
-   (this cycle, in `tools/graph-algorithms`) — don't re-propose the
-   assignment problem / Hungarian algorithm / bipartite matching as an
-   unbuilt gap. If a future cycle wants to go further on the same tool,
-   real remaining gaps (see its README's "What it doesn't do"): general
-   (non-bipartite) matching (Edmonds' blossom algorithm, matching within a
-   single set of nodes rather than between two sides) isn't supported;
-   `assignment_problem` requires a true square (n-to-n) assignment, with
-   no rectangular/unequal-size or partial-assignment mode; no general
-   LP-style optimization beyond these specific exactly-solvable problems
-   (max flow, matching, assignment) -- a real LP solver is a different
-   tool shape entirely.
-3. **`spaced-arrangement`'s real remaining gaps** (see its README's "What
-   it doesn't do", unchanged this cycle): `min_distance` is a hard
-   constraint only, no "spread as evenly as possible beyond the minimum"
-   soft-optimization mode, no per-category priority/weighting, and no
+   section fresh) before searching for new candidates -- this cycle
+   confirmed the collection-index output still matches `tools/*/manifest.json`
+   exactly, and the root README's tool list was already in sync (last
+   cycle's fix held).
+2. **This cycle again found its win by extending an existing tool, not by
+   finding a new problem shape.** Two extend-candidates were checked and
+   explicitly deferred again for lack of a *fresh, sourced* "LLMs get this
+   wrong" complaint (not lack of a real underlying problem):
+   - **General (non-bipartite) graph matching** (Edmonds' blossom
+     algorithm) in `graph-algorithms` -- real applications exist (stable
+     roommates, non-bipartite observational-study matching), but still no
+     sharp real-world "an LLM/tool failed at this" source, same verdict as
+     `progress/quality-debt.md`'s existing entry. Worth building only if a
+     future cycle's search finds one.
+   - **Rectangular/partial assignment** (unequal left/right sizes) in
+     `graph-algorithms`'s `assignment_problem` -- same verdict: real OR
+     problem, no fresh LLM-failure source found this cycle either.
+3. **A promising-looking NEW tool idea was checked and rejected for
+   saturation, not lack of a source:** cross-timezone meeting/availability
+   finding (intersect N people's busy-interval lists across timezones and
+   DST, entirely from structured JSON input, no calendar credentials).
+   This cycle found a genuinely sharp, concrete source -- a MindStudio
+   write-up documenting Claude Code's OWN `check_availability` tool
+   computing "end of day" in UTC instead of the user's local timezone,
+   silently returning one slot instead of seven -- but the underlying
+   free/busy-interval-intersection *algorithm* turned out to be
+   implemented by several existing MCP servers already (`mcp-calendar`,
+   `when2meet-mcp`, `mcp-office-suite`'s `free_busy`, `pim-agents`'
+   `findFreeSlots`), even setting aside the ones that need real calendar
+   credentials. **Do not re-propose this without a genuinely differentiated
+   angle** (e.g. a proof/verification angle none of those offer, the way
+   this collection differentiates elsewhere) -- the plain "intersect busy
+   intervals across timezones" shape itself is not unclaimed.
+4. **`spaced-arrangement`'s remaining real gaps** (see its README's "What
+   it doesn't do", updated this cycle): per-category priority/weighting
+   (no way to say a category should appear earlier or matter more), and
    multi-dimensional spacing (e.g. avoid both same-artist AND same-genre
-   too close at once).
-4. **Keep looking for genuinely different problem shapes** before reaching
-   for another instance of a shape already covered: calculation
-   (`secure-random`/`discrete-probability`/`time-arithmetic`), static CSP
-   (`logic-grid-solver`), sequential action search (`strips-planner`),
+   too close at once, as two invariants enforced together). The "spread
+   evenly" gap itself is now closed (`maximize_min_distance`, this cycle).
+5. **`graph-algorithms`'s real remaining gaps** (see its README's "What it
+   doesn't do", unchanged): general (non-bipartite) matching and
+   rectangular/partial assignment -- see item 2 above, same verdict.
+6. **Keep looking for genuinely different problem shapes** before reaching
+   for another instance of a shape already covered: calculation, static
+   CSP (`logic-grid-solver`), sequential action search (`strips-planner`),
    structural graph algorithms (`graph-algorithms`), and combinatorial
-   generation under a guaranteed invariant (`spaced-arrangement`). No
-   obviously-unexplored seventh shape has been identified across the last
-   two cycles now -- this cycle again found its win by extending an
-   existing shape (graph algorithms) rather than finding a new one; the
-   next cycle may need to search harder for a genuinely new shape, or
-   accept another extend/harden cycle per TASKS.md rule 9. Exact symbolic/
-   algebraic manipulation (checked 2026-09-20, saturated + poor stdlib
-   fit) and computational geometry (checked 2026-09-20, no sharp source
-   found) — don't re-propose without a genuinely new angle or source.
-5. **Do not re-propose bill-splitting / debt simplification** (Splitwise-
-   style "who owes whom, minimize the number of payments") — real,
-   well-documented need, but checked 2026-09-22 and saturated by multiple
-   existing MCP servers (expense-splitter-mcp and several Splitwise
-   wrappers) already implementing the standard greedy debt-simplification
-   algorithm. Same verdict for pairwise/covering-array test generation
-   (saturated by `PictMCP`, checked 2026-09-21), regex generation/ReDoS
-   (saturated, checked 2026-09-15 and 2026-09-21), and synthetic-data
-   generation with guaranteed correlation structure (saturated, checked
-   2026-09-21).
-6. **Apportionment/seat-allocation methods (D'Hondt, Sainte-Laguë,
-   Hamilton) and stable matching (Gale-Shapley)** — checked 2026-09-22,
-   both plausible candidate shapes, but neither had a sharply-articulated
-   real "LLMs get this wrong" complaint turn up in search (mostly
-   reference/educational material). Worth revisiting only if a future
-   cycle's search finds a real source for either.
-7. **Do not re-propose sudoku/latin-square/maze *generation*** as an
-   unbuilt gap without a genuinely differentiated angle — checked again as
-   recently as 2026-09-19 and still overlaps `logic-grid-solver`'s
-   existing CSP shape while being heavily saturated by non-MCP generators.
-   See `progress/notes-for-owner.md`'s 2026-09-19 entry.
-8. **When next building a live-session proof for any tool**, check
-   `result.content[0].text` (parsed as JSON) if `structured_content` is
-   `None` rather than assuming it's populated, and use `result.is_error`
-   (snake_case), not `result.isError`; the local container also needs
-   `pip install --user mcp cffi` before an MCP server will even import
-   (the `cryptography` package needs `cffi` or it PanicExceptions on
-   import) — see `progress/notes-for-owner.md`'s 2026-09-18 and 2026-09-19
-   entries.
-9. **Do not re-propose OR-Tools-based combinatorial optimization**, round-
-   robin tournament scheduling, or cryptarithmetic solving as unbuilt gaps
-   — all checked and rejected in earlier cycles, see
-   `progress/notes-for-owner.md` and `special-projects/cycles.json`'s
-   2026-09-17/18 entries.
-10. **If nothing clears the bar:** read all eight tools' "what it doesn't
-    do" sections fresh rather than assume a past cycle's suggestions still
-    apply, per rule 9. Before checking the root `README.md`'s tool list
-    against `tools/`, note it was found *missing* `spaced-arrangement`
-    entirely this cycle (fixed 2026-09-22) — a reminder to actually diff
-    the list against `tools/*/manifest.json`, not just skim it, since a
-    tool can be built and documented in its own README/`cycles.json` entry
-    yet still fall out of the root index.
+   generation under a guaranteed invariant (`spaced-arrangement`, now also
+   covering an *optimization* variant of that same shape via
+   `maximize_min_distance`). No new seventh shape was identified this
+   cycle either -- three cycles running now. A future cycle may need to
+   search substantially harder or more laterally (e.g. non-English-language
+   sources, non-Reddit/non-GitHub complaint venues, or a deliberately
+   different search strategy) before accepting a fourth straight
+   extend/harden cycle, OR treat "extend/harden is a fully legitimate,
+   repeatable outcome" (which TASKS.md rule 9 explicitly allows) as simply
+   the collection's steady state once seven-ish tools deep.
+7. **Do not re-propose Secret Santa / derangement-with-exclusions
+   generation** as a new tool -- checked 2026-09-23; real and commonly
+   requested, but the documented AI pain point found was privacy (a
+   volunteer sees all pairings), not a correctness failure, and the
+   underlying problem is already solvable as a special case of
+   `graph-algorithms`' own `maximum_bipartite_matching` (bipartite perfect
+   matching between givers/receivers with excluded edges removed) -- no
+   differentiated new-tool angle.
+8. **Do not re-propose bill-splitting/debt-simplification** (saturated),
+   pairwise/covering-array test generation (saturated by PictMCP), regex
+   generation/ReDoS (saturated), synthetic-data generation with guaranteed
+   correlation (saturated), OR-Tools-based optimization / bin-packing /
+   knapsack / job-shop scheduling (checked again 2026-09-23, same verdict:
+   real but saturated by OR-Tools-based MCP servers, and a poor fit for
+   this collection's stdlib-only discipline), round-robin scheduling, or
+   cryptarithmetic (all checked and rejected in earlier cycles).
+9. **Apportionment/seat-allocation (D'Hondt, Sainte-Laguë, Hamilton) and
+   stable matching (Gale-Shapley)** — plausible shapes, checked again as
+   recently as 2026-09-22, still no sharp real "LLMs get this wrong"
+   complaint found. Worth revisiting only with a real source.
+10. **Do not re-propose sudoku/latin-square/maze generation** (overlaps
+    logic-grid-solver, saturated elsewhere).
+11. **MCP mechanics notes for live-session proofs:** use
+    `result.content[0].text` parsed as JSON if `structured_content` is
+    `None`; use `result.is_error` (snake_case), not `result.isError`; the
+    local container needs `pip install --user mcp cffi` first. This
+    cycle's `mcp` version was still 2.2.0, same behavior as documented
+    previously.
+12. **If nothing clears the bar:** re-read all eight tools' "what it
+    doesn't do" sections fresh, and diff the root README's tool list
+    against `tools/*/manifest.json` -- both checked and confirmed in sync
+    this cycle (no repeat of the cycle-ten `spaced-arrangement`-missing
+    incident).
 
 Do NOT re-propose natural-language date parsing for `time-arithmetic` — its
 README frames the absence as a deliberate design boundary, not a gap
