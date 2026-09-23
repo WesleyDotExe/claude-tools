@@ -90,6 +90,31 @@ determine and prove, not something the generator decides in advance), the
 same role `graph-algorithms`' `generate_random_graph` and
 `strips-planner`'s Blocksworld generator play for their own tools.
 
+`maximize_min_distance` (added 2026-09-23) answers the question
+`arrange_with_spacing` deliberately leaves open: given only the items, no
+caller-chosen `min_distance`, find the **largest** `min_distance` for which
+a valid arrangement exists, and prove it's the largest. This is the
+rigorous version of "spread categories as evenly as possible" this README
+used to flag as a gap -- and it's the same idea Spotify's own rebuilt
+shuffle uses (generating many candidate orderings and picking the one with
+the best spread), except here the "best" one is found directly by search
+and *proven* best, not sampled and hoped for. It works by **binary search**
+over `arrange_with_spacing`'s own exhaustive feasibility proof: feasibility
+at a given `min_distance` is monotonic (any arrangement valid at distance
+`d` is automatically valid at every smaller `d'`, since the same gaps are
+still `>= d'`), so the largest feasible value can be found in
+O(log n) feasibility checks rather than trying every value from 1 upward.
+Each individual check is still a genuine, budgeted exhaustive search --
+this is a search *over* that proof, not a relaxation of it. The final
+answer's optimality is itself proven, not just found: either **structurally**
+(the answer already equals `n - 1`, the absolute ceiling for the distance
+between any two of `n` positions -- no arrangement could ever do better,
+so no more searching is needed), or by one more **exhaustive search** one
+distance higher that comes back impossible. If every category appears at
+most once, there are no same-category pairs to space at all -- every
+ordering already satisfies any `min_distance` -- and this is reported as
+`unconstrained` explicitly rather than returning a meaningless number.
+
 ## Tools exposed
 
 | Tool | Purpose |
@@ -97,6 +122,7 @@ same role `graph-algorithms`' `generate_random_graph` and
 | `describe_arrangement_format` | The fixed JSON vocabulary for `items`/`min_distance`, plus a worked example. Call this first. |
 | `arrange_with_spacing` | Construct a spaced ordering via budgeted backtracking search (CSPRNG tie-breaking). Returns the ordering with an embedded independent verification, or `arrangable: false` proven by full search exhaustion. |
 | `verify_arrangement` | Independently check any claimed ordering (the solver's own, hand-written, or model-proposed) against the direct definition -- no search. |
+| `maximize_min_distance` | Find the LARGEST `min_distance` achievable (no caller-chosen value needed) and prove it's the largest, via binary search over the same exhaustive feasibility proof. The rigorous "spread as evenly as possible" mode. |
 | `generate_arrangement_problem` | A seeded, reproducible items list to experiment with. |
 
 ### The format, briefly
@@ -125,11 +151,14 @@ testing sequence). Call `describe_arrangement_format` for the exact rules.
 It doesn't parse a prose request ("shuffle my playlist but not the same
 artist twice in a row") into this JSON vocabulary -- like the rest of this
 collection, it computes once the input is already unambiguous, not from
-prose. It doesn't optimize for anything beyond the minimum-distance
-invariant itself (e.g. "spread categories as evenly as possible" beyond
-just respecting `min_distance`, or weighting some categories to appear
-earlier) -- `min_distance` is a hard constraint, not a soft preference to
-balance against others. Items are capped at 300 (a sanity bound for
+prose. `maximize_min_distance` (added 2026-09-23) covers "spread as evenly
+as possible" in the specific sense of maximizing the *worst-case* (minimum)
+gap between same-category items -- but it still doesn't support weighting
+some categories to appear earlier or mattering more than others (every
+category is treated identically), and it doesn't do multi-dimensional
+spacing (e.g. "no two items within `min_distance` of the same artist AND
+no two within a *different* `min_distance` of the same genre, at once" --
+one invariant at a time only). Items are capped at 300 (a sanity bound for
 exhaustive backtracking search, not a tuned performance limit, the same
 stance `logic-grid-solver`'s 12-position cap and `strips-planner`'s
 `max_states`/`max_depth` take on their own search spaces) -- comfortably
@@ -146,37 +175,54 @@ silently wrong.
 
 - `spacedkit.py` -- the actual logic: input validation, the budgeted
   backtracking solver and its CSPRNG-randomized tie-breaking, the
-  independent direct-definition verifier, and the seeded instance
-  generator. Stdlib only, no dependency beyond `mcp` for the server
-  wrapper. Usable standalone.
+  independent direct-definition verifier, the binary-search-based
+  `maximize_min_distance` optimizer, and the seeded instance generator.
+  Stdlib only, no dependency beyond `mcp` for the server wrapper. Usable
+  standalone.
 - `server.py` -- a thin MCP server (stdio transport) wrapping `spacedkit.py`.
-- `tests/test_spacedkit.py` -- 25 unit tests: a tight-but-feasible 3-A/1-B/
-  1-C case at the `min_distance=2` boundary; a 3-category, 3-each,
-  `min_distance=3` case using the classic `a,b,c,a,b,c,a,b,c` spread; the
-  trivial `min_distance=1` case; CSPRNG randomness confirmed to actually
-  vary across repeated calls (not just claimed to); a simple infeasible
-  case (one category too frequent) proven by full search exhaustion; **the
-  multi-category counterexample** where every category individually passes
-  the naive `count <= ceil(n/min_distance)` check yet no arrangement exists
-  -- proven only by real search, not formula; a too-small `max_search_nodes`
-  budget raising instead of guessing; `verify_arrangement` accepting the
-  solver's own output, catching a deliberately bad guess (with the exact
-  violating pair and distance named), catching a non-permutation (missing/
-  extra ids), and checked at the exact `min_distance` boundary (valid) and
-  one short of it (invalid); input validation for every malformed-input
-  path; and the seeded generator's reproducibility, category coverage,
-  and composability with `arrange_with_spacing`/`verify_arrangement`.
-- `proof/run_2026-09-21.txt` -- the full test run plus a live MCP client
-  session over stdio: `list_tools`, the worked example solved and
+- `tests/test_spacedkit.py` -- 34 unit tests (25 from before, 9 new for
+  `maximize_min_distance`): a tight-but-feasible 3-A/1-B/1-C case at the
+  `min_distance=2` boundary; a 3-category, 3-each, `min_distance=3` case
+  using the classic `a,b,c,a,b,c,a,b,c` spread; the trivial `min_distance=1`
+  case; CSPRNG randomness confirmed to actually vary across repeated calls
+  (not just claimed to); a simple infeasible case (one category too
+  frequent) proven by full search exhaustion; **the multi-category
+  counterexample** where every category individually passes the naive
+  `count <= ceil(n/min_distance)` check yet no arrangement exists -- proven
+  only by real search, not formula; a too-small `max_search_nodes` budget
+  raising instead of guessing; `verify_arrangement` accepting the solver's
+  own output, catching a deliberately bad guess (with the exact violating
+  pair and distance named), catching a non-permutation (missing/extra ids),
+  and checked at the exact `min_distance` boundary (valid) and one short of
+  it (invalid); input validation for every malformed-input path; the seeded
+  generator's reproducibility, category coverage, and composability with
+  `arrange_with_spacing`/`verify_arrangement`; and for
+  `maximize_min_distance`: the `unconstrained` case (every category appears
+  once, including a mixed single-item-category case), the **structural**
+  optimality proof (2 same-category items among 4 total hits the `n-1`
+  ceiling exactly), the **exhaustive-search** optimality proof (the
+  3-category/3-each case, where `min_distance+1` is genuinely re-checked and
+  found infeasible), a direct comparison confirming it never does worse than
+  a plain `arrange_with_spacing` call on the same input, an end-to-end run on
+  a generated instance, and a too-small `max_search_nodes` budget raising
+  instead of guessing.
+- `proof/run_2026-09-21.txt` -- the original tool's proof: the full test run
+  plus a live MCP client session over stdio (worked example solved and
   independently verified, a deliberately bad guess caught by
-  `verify_arrangement` with the violating pair named, a generated 18-item/
-  4-category instance solved and independently verified, the same
-  multi-category infeasibility proof shown live (proven impossible despite
-  every category individually passing the naive frequency check), a
-  too-small `max_search_nodes` budget coming back as a genuine MCP tool
-  error instead of a wrong "infeasible" answer, and two repeated calls on
-  the same generated instance producing two *different* valid arrangements
-  (the CSPRNG shuffling actually happening, not just documented).
+  `verify_arrangement`, a generated instance solved and independently
+  verified, the multi-category infeasibility proof shown live, a too-small
+  `max_search_nodes` budget coming back as a genuine MCP tool error, and two
+  repeated calls producing two different valid arrangements).
+- `proof/run_2026-09-23.txt` -- this cycle's proof for `maximize_min_distance`:
+  the full (34-test) test run, plus a live MCP client session over stdio
+  covering all five cases above -- the unconstrained case, the structural
+  optimality proof, the exhaustive-search optimality proof (with the
+  returned arrangement independently re-verified via `verify_arrangement`
+  AND the claimed-infeasible-at-one-more distance independently re-confirmed
+  via a direct `arrange_with_spacing` call, not just trusting
+  `maximize_min_distance`'s own internal proof step), a 20-item/5-category
+  generated instance solved end to end, and a too-small `max_search_nodes`
+  budget coming back as a genuine MCP tool error.
 
 ## Try it without MCP
 

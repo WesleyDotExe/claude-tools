@@ -44,6 +44,17 @@ solver's own, or a hand-written/model-proposed one) against the direct
 definition: no search at all, a structurally different, much simpler code
 path than the backtracking solver.
 
+`maximize_min_distance` answers the question `arrange_with_spacing` deliberately
+leaves open: given only the items (no caller-chosen min_distance), find the LARGEST
+min_distance for which a valid arrangement exists, and prove it's the largest --
+the rigorous formalization of "spread categories as evenly as possible" that this
+tool's own README flagged as a gap, done by binary search over the same exhaustive
+feasibility proof `arrange_with_spacing` already makes for one fixed min_distance
+(feasibility is monotonic in min_distance, so binary search is sound), with the
+final answer proven optimal either structurally (min_distance already hit the
+n-1 ceiling) or by exhausting the search tree one distance higher and finding
+nothing.
+
 Tie-breaking during search uses a CSPRNG (`secrets.SystemRandom`, the same
 primitive `secure-random` is built on) rather than a fixed heuristic order,
 so repeated calls on the same input return different, independently-valid
@@ -303,6 +314,139 @@ def verify_arrangement(items: list, min_distance: int, arrangement: list) -> dic
         "at least min_distance apart -- the definition of a valid spaced arrangement, "
         "independent of however the arrangement was produced.",
     }
+
+
+# ---------------------------------------------------------------------------
+# Optimal ("spread as evenly as possible") mode: the largest min_distance for
+# which a valid arrangement still exists, found by binary search over
+# arrange_with_spacing's own exhaustive feasibility proof.
+# ---------------------------------------------------------------------------
+
+
+def maximize_min_distance(items: list, max_search_nodes: int = 200_000) -> dict:
+    """Find the LARGEST min_distance for which a valid arrangement of `items` exists,
+    and return that arrangement plus a proof that no larger value is achievable. This is
+    the rigorous formalization of "spread categories as evenly as possible" that
+    `arrange_with_spacing` deliberately doesn't attempt on its own (it only checks a
+    single caller-given min_distance): Spotify's own published shuffle fix works by
+    generating many candidate orderings and picking the one with the best spread -- this
+    finds the best-spread one directly and PROVES it's the best, rather than sampling and
+    hoping.
+
+    Feasibility at a given min_distance is monotonic: any arrangement valid at distance d
+    is automatically valid at every smaller d' too (the same gaps are still >= d'), so the
+    largest feasible d can be found by binary search over arrange_with_spacing's own
+    budgeted-exhaustive-search feasibility check, each call still genuinely proving
+    feasibility or infeasibility at that one value exactly as arrange_with_spacing does
+    standalone -- this is a search *over* that proof, not a relaxation of it. The final
+    answer is proven optimal by then exhausting the search tree one distance higher (or,
+    when the found distance already equals n-1, by the trivial structural fact that no two
+    of n positions can ever be more than n-1 apart, regardless of arrangement).
+
+    If every category appears at most once, there are no same-category pairs at all, so
+    every ordering already satisfies any min_distance -- reported as `unconstrained` rather
+    than a made-up finite number.
+    """
+    ids, categories = _validate_items(items)
+    _validate_budget(max_search_nodes)
+
+    n = len(ids)
+    counts = Counter(categories.values())
+    rng = secrets.SystemRandom()
+
+    if max(counts.values()) <= 1:
+        arrangement = list(ids)
+        rng.shuffle(arrangement)
+        verification = verify_arrangement(items, 1, arrangement)
+        return {
+            "unconstrained": True,
+            "reason": "every category appears at most once -- there are no same-category "
+            "pairs at all, so every ordering already satisfies any min_distance. 'Maximum "
+            "spacing' has no meaningful finite answer here; any arrangement (this one "
+            "included) is already optimal.",
+            "arrangement": arrangement,
+            "max_min_distance": None,
+            "verification": verification,
+        }
+
+    # min_distance=1 is always feasible (see arrange_with_spacing) -- start the search there.
+    ok1, best_arrangement, expanded1, exceeded1 = _search_arrangement(ids, categories, 1, max_search_nodes, rng)
+    if exceeded1:
+        raise ValueError(
+            f"search exceeded max_search_nodes={max_search_nodes} while testing "
+            "min_distance=1, the smallest possible value -- try raising max_search_nodes"
+        )
+    if not ok1:  # pragma: no cover -- min_distance=1 is always feasible by construction
+        raise AssertionError("internal error: min_distance=1 must always be feasible")
+    best_d = 1
+    total_nodes = expanded1
+
+    low, high = 1, n - 1
+    while low < high:
+        mid = (low + high + 1) // 2
+        ok, arrangement, expanded, exceeded = _search_arrangement(ids, categories, mid, max_search_nodes, rng)
+        total_nodes += expanded
+        if exceeded:
+            raise ValueError(
+                f"search exceeded max_search_nodes={max_search_nodes} while testing "
+                f"min_distance={mid} during the binary search for the maximum feasible "
+                "spacing; feasibility at that value could not be determined either way -- "
+                "try raising max_search_nodes"
+            )
+        if ok:
+            low = mid
+            best_d, best_arrangement = mid, arrangement
+        else:
+            high = mid - 1
+
+    verification = verify_arrangement(items, best_d, best_arrangement)
+    if not verification["valid"]:  # pragma: no cover -- would indicate a solver bug
+        raise AssertionError(
+            "internal error: maximize_min_distance's own arrangement failed independent verification"
+        )
+
+    result = {
+        "unconstrained": False,
+        "max_min_distance": best_d,
+        "arrangement": best_arrangement,
+        "verification": verification,
+        "total_search_nodes_expanded": total_nodes,
+    }
+
+    if best_d >= n - 1:
+        result["proof_of_optimality"] = {
+            "method": "structural",
+            "reason": f"max_min_distance={best_d} already equals n-1={n - 1}, the absolute "
+            "ceiling for the distance between any two positions among n items (the two "
+            "farthest-apart positions in any ordering are index 0 and index n-1). No "
+            "arrangement of these items could ever do better, so no further search is "
+            "needed to prove optimality.",
+        }
+    else:
+        ok_next, _, expanded_next, exceeded_next = _search_arrangement(
+            ids, categories, best_d + 1, max_search_nodes, rng
+        )
+        total_nodes += expanded_next
+        result["total_search_nodes_expanded"] = total_nodes
+        if exceeded_next:
+            raise ValueError(
+                f"search exceeded max_search_nodes={max_search_nodes} while proving "
+                f"min_distance={best_d + 1} is infeasible (the optimality proof for "
+                f"max_min_distance={best_d}); try raising max_search_nodes"
+            )
+        if ok_next:  # pragma: no cover -- would indicate a binary-search bug
+            raise AssertionError("internal error: binary search returned a non-maximal min_distance")
+        result["proof_of_optimality"] = {
+            "method": "exhaustive_search",
+            "checked_min_distance": best_d + 1,
+            "reason": f"min_distance={best_d + 1} was proven infeasible by exhausting its entire "
+            "search tree -- the same exhaustion-is-proof discipline arrange_with_spacing uses "
+            "directly -- so max_min_distance is genuinely the largest achievable value, not just "
+            "the largest one this search happened to try.",
+            "search_nodes_expanded": expanded_next,
+        }
+
+    return result
 
 
 # ---------------------------------------------------------------------------

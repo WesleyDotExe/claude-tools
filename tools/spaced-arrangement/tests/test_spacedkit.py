@@ -163,6 +163,90 @@ class ValidationTests(unittest.TestCase):
             spacedkit.verify_arrangement(items, 1, "ab")
 
 
+class MaximizeMinDistanceTests(unittest.TestCase):
+    def test_unconstrained_when_every_category_appears_once(self):
+        items = [{"id": f"i{i}", "category": f"cat{i}"} for i in range(5)]
+        result = spacedkit.maximize_min_distance(items)
+        self.assertTrue(result["unconstrained"])
+        self.assertIsNone(result["max_min_distance"])
+        self.assertEqual(sorted(result["arrangement"]), sorted(it["id"] for it in items))
+        self.assertTrue(result["verification"]["valid"])
+
+    def test_unconstrained_includes_single_item_category(self):
+        # 1 A-item mixed with all-distinct categories -- still no same-category pairs.
+        items = [{"id": "a0", "category": "A"}]
+        items += [{"id": f"i{i}", "category": f"cat{i}"} for i in range(4)]
+        result = spacedkit.maximize_min_distance(items)
+        self.assertTrue(result["unconstrained"])
+
+    def test_two_items_same_category_reaches_structural_ceiling(self):
+        # 2 items, both category A, plus 2 filler singletons -- n=4, ceiling is n-1=3,
+        # and putting the two A's at the two ends achieves exactly that.
+        items = [{"id": "a0", "category": "A"}, {"id": "a1", "category": "A"}]
+        items += [{"id": "b0", "category": "B"}, {"id": "c0", "category": "C"}]
+        result = spacedkit.maximize_min_distance(items)
+        self.assertFalse(result["unconstrained"])
+        self.assertEqual(result["max_min_distance"], 3)
+        self.assertEqual(result["proof_of_optimality"]["method"], "structural")
+        self.assertTrue(result["verification"]["valid"])
+
+    def test_three_equal_categories_of_three_maximizes_at_three(self):
+        # A=3,B=3,C=3, n=9 -- the classic a,b,c,a,b,c,a,b,c layout achieves min_distance=3,
+        # and min_distance=4 is infeasible (9 items can't all clear a 4-gap in 9 slots for
+        # 3 different categories of 3).
+        items = []
+        for cat in ("A", "B", "C"):
+            items += [{"id": f"{cat}{i}", "category": cat} for i in range(3)]
+        result = spacedkit.maximize_min_distance(items)
+        self.assertFalse(result["unconstrained"])
+        self.assertEqual(result["max_min_distance"], 3)
+        self.assertEqual(result["proof_of_optimality"]["method"], "exhaustive_search")
+        self.assertEqual(result["proof_of_optimality"]["checked_min_distance"], 4)
+        v = spacedkit.verify_arrangement(items, 3, result["arrangement"])
+        self.assertTrue(v["valid"])
+
+    def test_result_beats_or_equals_naive_min_distance_2_attempt(self):
+        # maximize_min_distance should never do WORSE than a plain min_distance=2 solve --
+        # it should find at least as large a value on the same input.
+        items = []
+        for cat in ("A", "B"):
+            items += [{"id": f"{cat}{i}", "category": cat} for i in range(3)]
+        items += [{"id": "c0", "category": "C"}]
+        baseline = spacedkit.arrange_with_spacing(items, min_distance=2)
+        self.assertTrue(baseline["arrangable"])
+        result = spacedkit.maximize_min_distance(items)
+        self.assertGreaterEqual(result["max_min_distance"], 2)
+
+    def test_one_more_than_max_min_distance_is_genuinely_infeasible(self):
+        items = []
+        for cat in ("A", "B", "C"):
+            items += [{"id": f"{cat}{i}", "category": cat} for i in range(3)]
+        result = spacedkit.maximize_min_distance(items)
+        d = result["max_min_distance"]
+        too_far = spacedkit.arrange_with_spacing(items, min_distance=d + 1, max_search_nodes=50_000)
+        self.assertFalse(too_far["arrangable"])
+
+    def test_search_budget_exceeded_raises_instead_of_guessing(self):
+        items = []
+        for cat in ("A", "B", "C"):
+            items += [{"id": f"{cat}{i}", "category": cat} for i in range(3)]
+        with self.assertRaises(ValueError) as ctx:
+            spacedkit.maximize_min_distance(items, max_search_nodes=1)
+        self.assertIn("max_search_nodes", str(ctx.exception))
+
+    def test_generated_instance_end_to_end(self):
+        g = spacedkit.generate_arrangement_problem(16, 4, seed=42)
+        result = spacedkit.maximize_min_distance(g["items"])
+        self.assertFalse(result["unconstrained"])
+        self.assertGreaterEqual(result["max_min_distance"], 1)
+        self.assertTrue(result["verification"]["valid"])
+
+    def test_rejects_bad_max_search_nodes(self):
+        items = [{"id": "a0", "category": "A"}, {"id": "a1", "category": "A"}]
+        with self.assertRaises(ValueError):
+            spacedkit.maximize_min_distance(items, max_search_nodes=0)
+
+
 class GenerateArrangementProblemTests(unittest.TestCase):
     def test_reproducible_with_same_seed(self):
         g1 = spacedkit.generate_arrangement_problem(20, 4, seed=7)

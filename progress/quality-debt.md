@@ -30,23 +30,46 @@ larger weights or more nodes will hit these caps; they're sanity bounds
 takes), not tuned performance limits, and could be raised (along with
 `_ASSIGNMENT_BIG_M`) if a real need for bigger instances surfaces.
 
-## `spaced-arrangement`'s `min_distance` is a hard constraint only, with no soft "spread evenly" mode or per-category priority
+## Fixed this cycle (2026-09-23): `spaced-arrangement` had no soft "spread evenly" mode
 
-`arrange_with_spacing` guarantees every pair of same-category items is at
-least `min_distance` apart, and nothing more — it doesn't try to spread
+Was: `arrange_with_spacing` guaranteed every pair of same-category items is
+at least `min_distance` apart, and nothing more — it didn't try to spread
 categories as evenly as possible *beyond* that minimum (e.g. preferring a
 perfectly uniform interleave over a merely-valid one when both satisfy the
-constraint), and it has no way to say "this category should appear earlier"
-or weight categories against each other. Real playlist-shuffle systems
-(Spotify's rebuilt shuffle, per this cycle's research) optimize a softer
-"feels well-distributed" objective on top of the hard non-adjacency
-constraint, generating many candidates and picking the best-spread one.
-Not fixed because it's a genuinely different, harder problem (an
-optimization over valid arrangements, not just find-one-that's-valid) and
-the exhaustive-proof discipline this collection uses for feasibility
-doesn't obviously extend to "provably most even" without a lot more design
-work — worth a future cycle's dedicated attention if a real need for it
-surfaces, not a quick add-on.
+constraint). Real playlist-shuffle systems (Spotify's rebuilt shuffle, per
+the previous cycle's research, already cited in this tool's own README)
+optimize a softer "feels well-distributed" objective on top of the hard
+non-adjacency constraint, generating many candidates and picking the
+best-spread one.
+
+Fixed by adding `maximize_min_distance`: given only the items (no
+caller-chosen `min_distance`), it finds the LARGEST `min_distance` for
+which a valid arrangement exists — the rigorous formalization of "spread as
+evenly as possible" as maximizing the *worst-case* (minimum) same-category
+gap — via binary search over `arrange_with_spacing`'s own exhaustive
+feasibility proof (feasibility is monotonic in `min_distance`, so this is
+sound: found in O(log n) feasibility checks, each one still a genuine
+budgeted exhaustive search, not a relaxation of the proof discipline). The
+final answer's optimality is itself proven: either **structurally** (the
+found value already equals `n - 1`, the absolute ceiling for the distance
+between any two of `n` positions) or by one more **exhaustive search** one
+distance higher, confirmed infeasible. 9 new unit tests (34 total, up from
+25) plus a live MCP session (`proof/run_2026-09-23.txt`) covering the
+unconstrained case (every category appears once, so there's no meaningful
+finite answer), both optimality-proof paths, and an independent
+re-confirmation of the "one more is infeasible" claim via a direct
+`arrange_with_spacing` call rather than trusting `maximize_min_distance`'s
+own internal proof step.
+
+**Still not fixed, deliberately out of scope this cycle:** per-category
+priority/weighting (every category is still treated identically — there's
+no way to say "this category should appear earlier" or matter more than
+another), and multi-dimensional spacing (avoiding both same-artist AND
+same-genre clustering at once, as two separate invariants enforced
+together). Both are genuinely separate design problems from "maximize a
+single scalar objective over the existing single-invariant search," and no
+real need for either has surfaced yet — worth a future cycle's attention if
+one does.
 
 ## Fixed this cycle (2026-09-20): `graph-algorithms` had no graph coloring, despite being documented in the same benchmarks that motivated the tool
 

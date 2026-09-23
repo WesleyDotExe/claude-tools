@@ -30,7 +30,14 @@ server = MCPServer(
         "involved -- see the README), while running out of budget first raises instead of "
         "guessing. verify_arrangement independently re-checks any claimed arrangement against "
         "the direct definition -- no search, a different code path than the solver. "
-        "generate_arrangement_problem gives a seeded, reproducible instance to experiment with."
+        "maximize_min_distance answers the question arrange_with_spacing leaves open: given "
+        "just the items (no chosen min_distance), find the LARGEST min_distance achievable "
+        "and prove it's the largest -- the rigorous version of 'spread as evenly as possible' "
+        "(the same idea behind Spotify's own rebuilt shuffle generating many candidates and "
+        "picking the best-spread one), via binary search over the same exhaustive feasibility "
+        "proof, plus a final proof step (structural, or one more exhaustive search) that no "
+        "larger value is achievable. generate_arrangement_problem gives a seeded, reproducible "
+        "instance to experiment with."
     ),
 )
 
@@ -65,6 +72,22 @@ def verify_arrangement(items: list[dict], min_distance: int, arrangement: list[s
     backtracking solver.
     """
     return spacedkit.verify_arrangement(items, min_distance, arrangement)
+
+
+@server.tool()
+def maximize_min_distance(items: list[dict], max_search_nodes: int = 200_000) -> dict:
+    """Find the LARGEST min_distance for which a valid arrangement of items exists (no
+    min_distance is given -- this searches for the best one), and prove no larger value is
+    achievable. This is the rigorous formalization of "spread categories as evenly as
+    possible" beyond just satisfying some minimum: binary search over the same exhaustive
+    feasibility proof arrange_with_spacing makes for one fixed min_distance (feasibility is
+    monotonic, so this is sound), with the final answer proven optimal either structurally
+    (min_distance already hit the n-1 ceiling -- the farthest two positions can ever be) or
+    by exhausting the search tree one distance higher and finding nothing. If every category
+    appears at most once, spacing is unconstrained (there are no same-category pairs to
+    space at all) and this is reported explicitly rather than returning a meaningless number.
+    """
+    return spacedkit.maximize_min_distance(items, max_search_nodes)
 
 
 @server.tool()

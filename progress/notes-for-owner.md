@@ -1,5 +1,73 @@
 # Notes for owner
 
+## 2026-09-23: extended `spaced-arrangement` with a "spread evenly" optimizer — ideas rejected this cycle, and a saturation finding worth flagging
+
+No new problem shape was identified again this cycle (the third cycle
+running now without one) — see `special-projects/current.md`'s own next-
+step list for the full reasoning. Rejected before landing on
+`maximize_min_distance`:
+
+- **General (non-bipartite) graph matching** (Edmonds' blossom algorithm)
+  and **rectangular/partial assignment** (unequal worker/task counts), both
+  already-flagged gaps in `graph-algorithms`' own `progress/quality-debt.md`
+  entry. Checked again this cycle specifically for a fresh source — real
+  applications exist (stable roommates, non-bipartite observational-study
+  matching, unequal-size worker/task assignment), but still no sharp,
+  real-world "an LLM or tool actually failed at this" complaint turned up,
+  only algorithm/OR reference material. Still worth building if a future
+  cycle's search finds one; not rejected for infeasibility or saturation,
+  just for not clearing the "actually expressed need" bar (TASKS.md step
+  2/3) yet.
+- **Secret Santa / derangement-with-exclusions generation.** Real and
+  commonly requested, but the actual documented AI pain point found in
+  search is privacy (an AI-assisted draw means some volunteer sees every
+  pairing), not a correctness failure — doesn't fit this collection's
+  "LLMs get the *answer* wrong" pattern. Also, structurally, it's already a
+  special case of `graph-algorithms`' own `maximum_bipartite_matching`
+  (bipartite perfect matching between givers and receivers, with excluded
+  pairs simply removed as edges) — no differentiated new-tool angle even
+  setting the source issue aside.
+- **OR-Tools-style bin-packing/knapsack/job-shop scheduling.** Re-checked
+  and re-rejected for the same reasons as the 2026-09-17 entry below (real
+  problem, but saturated by MCP Optimizer/Opti-MCP, and a poor fit for this
+  collection's stdlib-only-where-possible discipline).
+
+**The interesting near-miss this cycle: cross-timezone meeting/availability
+finding.** This is worth flagging in detail because it's a different kind
+of rejection than most of the ones in this file — not "no real source,"
+but "real source, saturated shape anyway." Found a genuinely sharp,
+concrete complaint: a MindStudio write-up documents Claude Code's *own*
+`check_availability` tool computing "end of day" in UTC instead of the
+user's actual (Central) timezone, so a request for "what's available from
+now until end of day" silently came back with one slot (6:30pm) instead of
+the seven that should have been there. That's about as sharp an "LLM
+tooling gets timezone-aware availability wrong" source as this collection
+has ever found — genuinely stronger evidence than some of the sources
+earlier cycles built tools from. But the underlying algorithm (merge/
+intersect several people's busy-interval lists, timezone-aware) turned out
+to already be implemented by multiple existing MCP servers even among
+keyless-input ones: `mcp-calendar` (theluckystrike), `when2meet-mcp`,
+`mcp-office-suite`'s `free_busy` tool, and `pim-agents`' `findFreeSlots` all
+already do busy-interval merging/intersection as their core logic (most
+also read real calendars via credentials, but the algorithmic contribution
+this repo would make — the actual interval math — isn't new). **Worth
+reconsidering only with a genuinely differentiated angle** (e.g. this
+collection's usual proof/verification framing, which none of those existing
+servers appear to offer, or a sub-problem those tools don't cover, like
+proving a *given* proposed meeting time is definitely wrong/right with a
+counterexample) rather than a plain "find common free time" tool, which
+would just be one more entrant in an already-crowded shape.
+
+Landed on extending `spaced-arrangement` with `maximize_min_distance`
+instead, per TASKS.md rule 9 — see `progress/quality-debt.md`'s newly-fixed
+entry and `special-projects/cycles.json`'s eleventh-run entry for the full
+build description. Worth noting for whoever reads this next: this was a
+genuinely sourced extension, not a filler one — it directly completes a gap
+both this tool's own README and `progress/quality-debt.md` had explicitly
+named as open since the tool was built, using the exact same source
+(Spotify's rebuilt-shuffle write-up) already cited for the tool's original
+build.
+
 ## 2026-09-22: extended `graph-algorithms` with bipartite matching/assignment — ideas rejected this cycle, and a missing-from-README tool found
 
 No obviously-unexplored new problem *shape* was flagged going into this
