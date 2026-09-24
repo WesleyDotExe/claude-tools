@@ -1,0 +1,262 @@
+--- list_tools ---
+- birthday_collision
+- dice_sum_distribution
+- hypergeometric_probability
+- binomial_probability
+- bayes_update
+- monty_hall
+- compare_two_proportions
+
+--- compare_two_proportions: 186/300 vs 165/300 (the balance-stats example) ---
+{
+  "group_a": {
+    "successes": 186,
+    "trials": 300,
+    "proportion": 0.62,
+    "wilson_ci": [
+      0.563884,
+      0.673081
+    ]
+  },
+  "group_b": {
+    "successes": 165,
+    "trials": 300,
+    "proportion": 0.55,
+    "wilson_ci": [
+      0.493426,
+      0.60531
+    ]
+  },
+  "confidence_level": 0.95,
+  "difference_a_minus_b": 0.07,
+  "difference_ci_newcombe": [
+    -0.008792,
+    0.147578
+  ],
+  "z_statistic": 1.73997,
+  "p_value": 0.081864,
+  "significant": false,
+  "verdict": "The observed gap (62.0% vs 55.0%, n=300/300) is NOT statistically significant at the 95% confidence level (p=0.08186, difference CI [-0.9%, 14.8%] includes 0) -- plausibly noise given the sample sizes."
+}
+
+--- same call, verify=true (permutation test cross-check) ---
+{
+  "group_a": {
+    "successes": 186,
+    "trials": 300,
+    "proportion": 0.62,
+    "wilson_ci": [
+      0.563884,
+      0.673081
+    ]
+  },
+  "group_b": {
+    "successes": 165,
+    "trials": 300,
+    "proportion": 0.55,
+    "wilson_ci": [
+      0.493426,
+      0.60531
+    ]
+  },
+  "confidence_level": 0.95,
+  "difference_a_minus_b": 0.07,
+  "difference_ci_newcombe": [
+    -0.008792,
+    0.147578
+  ],
+  "z_statistic": 1.73997,
+  "p_value": 0.081864,
+  "significant": false,
+  "verdict": "The observed gap (62.0% vs 55.0%, n=300/300) is NOT statistically significant at the 95% confidence level (p=0.08186, difference CI [-0.9%, 14.8%] includes 0) -- plausibly noise given the sample sizes.",
+  "simulation": {
+    "method": "permutation test: pool both groups' outcomes, reshuffle group labels via CSPRNG verify_trials times, count how often the relabeled gap is >= the one actually observed (makes no normal-theory assumption)",
+    "trials": 20000,
+    "empirical_p_value": 0.0956,
+    "empirical_p_value_95_ci": [
+      0.091602,
+      0.099753
+    ],
+    "analytic_p_value": 0.081864,
+    "agrees_on_significance_call": true,
+    "note": "analytic_p_value is the pooled-variance z-test's large-sample normal approximation; empirical_p_value is a Monte Carlo estimate of the exact permutation-test p-value (confirmed against an exact hypergeometric-tail calculation during development), which makes no normal-theory assumption. The two are expected to be close but are not the same quantity, and can differ by a few points of p especially at moderate sample sizes -- what matters in practice is whether they agree on the significance call (agrees_on_significance_call), not exact numeric equality."
+  }
+}
+
+--- clear real gap: 90/100 vs 40/100, verify=true ---
+{
+  "group_a": {
+    "successes": 90,
+    "trials": 100,
+    "proportion": 0.9,
+    "wilson_ci": [
+      0.825634,
+      0.944771
+    ]
+  },
+  "group_b": {
+    "successes": 40,
+    "trials": 100,
+    "proportion": 0.4,
+    "wilson_ci": [
+      0.309401,
+      0.497997
+    ]
+  },
+  "confidence_level": 0.95,
+  "difference_a_minus_b": 0.5,
+  "difference_ci_newcombe": [
+    0.376981,
+    0.601057
+  ],
+  "z_statistic": 7.412493,
+  "p_value": 0.0,
+  "significant": true,
+  "verdict": "The observed gap (90.0% vs 40.0%, n=100/100) is statistically significant at the 95% confidence level (p=1.239e-13, difference CI [37.7%, 60.1%] excludes 0) -- unlikely to be due to chance alone.",
+  "simulation": {
+    "method": "permutation test: pool both groups' outcomes, reshuffle group labels via CSPRNG verify_trials times, count how often the relabeled gap is >= the one actually observed (makes no normal-theory assumption)",
+    "trials": 20000,
+    "empirical_p_value": 0.0,
+    "empirical_p_value_95_ci": [
+      0.0,
+      0.000192
+    ],
+    "analytic_p_value": 0.0,
+    "agrees_on_significance_call": true,
+    "note": "analytic_p_value is the pooled-variance z-test's large-sample normal approximation; empirical_p_value is a Monte Carlo estimate of the exact permutation-test p-value (confirmed against an exact hypergeometric-tail calculation during development), which makes no normal-theory assumption. The two are expected to be close but are not the same quantity, and can differ by a few points of p especially at moderate sample sizes -- what matters in practice is whether they agree on the significance call (agrees_on_significance_call), not exact numeric equality."
+  }
+}
+
+--- identical proportions: 50/100 vs 50/100 ---
+{
+  "group_a": {
+    "successes": 50,
+    "trials": 100,
+    "proportion": 0.5,
+    "wilson_ci": [
+      0.403832,
+      0.596168
+    ]
+  },
+  "group_b": {
+    "successes": 50,
+    "trials": 100,
+    "proportion": 0.5,
+    "wilson_ci": [
+      0.403832,
+      0.596168
+    ]
+  },
+  "confidence_level": 0.95,
+  "difference_a_minus_b": 0.0,
+  "difference_ci_newcombe": [
+    -0.136003,
+    0.136003
+  ],
+  "z_statistic": 0.0,
+  "p_value": 1.0,
+  "significant": false,
+  "verdict": "The observed gap (50.0% vs 50.0%, n=100/100) is NOT statistically significant at the 95% confidence level (p=1, difference CI [-13.6%, 13.6%] includes 0) -- plausibly noise given the sample sizes."
+}
+
+Tool 'compare_two_proportions' raised an unexpected exception
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/base.py", line 176, in run
+    result = await self.fn_metadata.call_fn(self.fn, self.is_async, validated, pass_directly)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/utilities/func_metadata.py", line 164, in call_fn
+    return await anyio.to_thread.run_sync(functools.partial(fn, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/discrete-probability/server.py", line 150, in compare_two_proportions
+    return probkit.compare_two_proportions(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/discrete-probability/probkit.py", line 621, in compare_two_proportions
+    raise ValueError("successes_a must be between 0 and trials_a")
+ValueError: successes_a must be between 0 and trials_a
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/server.py", line 433, in _handle_call_tool
+    return await self.call_tool(params.name, params.arguments or {}, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/server.py", line 539, in call_tool
+    return await self._tool_manager.call_tool(name, arguments, context, convert_result=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/tool_manager.py", line 87, in call_tool
+    return await tool.run(arguments, context, convert_result=convert_result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/base.py", line 210, in run
+    raise UnexpectedToolError(f"Error executing tool {self.name}") from exc
+mcp.server.mcpserver.exceptions.UnexpectedToolError: Error executing tool compare_two_proportions
+--- invalid input: successes_a > trials_a (expect MCP tool error) ---
+ERROR: Error executing tool compare_two_proportions
+
+Tool 'compare_two_proportions' raised an unexpected exception
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/base.py", line 176, in run
+    result = await self.fn_metadata.call_fn(self.fn, self.is_async, validated, pass_directly)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/utilities/func_metadata.py", line 164, in call_fn
+    return await anyio.to_thread.run_sync(functools.partial(fn, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/discrete-probability/server.py", line 150, in compare_two_proportions
+    return probkit.compare_two_proportions(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/discrete-probability/probkit.py", line 685, in compare_two_proportions
+    raise ValueError(
+ValueError: verify_trials * min(trials_a, trials_b) (500000000) exceeds the permutation-test budget of 10000000; use a smaller verify_trials for samples this large
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/server.py", line 433, in _handle_call_tool
+    return await self.call_tool(params.name, params.arguments or {}, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/server.py", line 539, in call_tool
+    return await self._tool_manager.call_tool(name, arguments, context, convert_result=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/tool_manager.py", line 87, in call_tool
+    return await tool.run(arguments, context, convert_result=convert_result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/base.py", line 210, in run
+    raise UnexpectedToolError(f"Error executing tool {self.name}") from exc
+mcp.server.mcpserver.exceptions.UnexpectedToolError: Error executing tool compare_two_proportions
+--- oversized permutation-test budget (expect MCP tool error) ---
+ERROR: Error executing tool compare_two_proportions
+
+--- monty_hall (pre-existing tool, unchanged) ---
+{
+  "doors": 3,
+  "cars": 1,
+  "reveal": 1,
+  "win_probability_if_stay": {
+    "fraction": "1/3",
+    "decimal": 0.3333333333
+  },
+  "win_probability_if_switch": {
+    "fraction": "2/3",
+    "decimal": 0.6666666667
+  },
+  "switching_is_better": true
+}
+
+All checks passed.

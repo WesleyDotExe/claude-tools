@@ -3,6 +3,33 @@
 Honest list of known gaps and shortcuts. Not urgent by default — surfaced
 so a future cycle (or the owner) can decide whether to pay them down.
 
+## `discrete-probability`'s `compare_two_proportions` only handles independent (unpaired) samples, and its permutation test has a size-dependent budget
+
+Added this cycle (2026-09-24): `compare_two_proportions` assumes the two
+groups are independent (two different cohorts/strategies/variants) — it is
+not the right test for paired/matched data (the same subjects measured
+twice, e.g. before/after), which needs McNemar's test, not built. Also, the
+`verify=true` permutation test's cost scales with `verify_trials *
+min(trials_a, trials_b)`, capped at 10,000,000 (roughly a few seconds to
+~10s at the cap, benchmarked locally at ~1.3M `secrets.randbelow` calls/sec
+in this container) — a caller with both very large sample sizes and a large
+`verify_trials` will need to lower `verify_trials`, the same "budget raises
+instead of running unboundedly long" contract the rest of this collection's
+search/simulation budgets already follow. Not fixed because no real need for
+either has surfaced yet (the sourcing wishlist item was specifically about
+independent win-rate comparisons); worth a future cycle's attention if one
+does. Separately, worth knowing for anyone extending this: the z-test's
+p-value and the permutation test's are legitimately different quantities
+(a large-sample normal approximation vs. an exact permutation-null
+estimate) and can diverge by several points of p even when both are
+computed correctly — confirmed by hand-deriving the exact permutation
+p-value via the hypergeometric distribution for a 300-vs-300 case. The
+`verify=true` response reports whether the two *agree on the significance
+call*, not whether they're numerically equal — see
+`special-projects/wishlist.md`'s `[stats-normal-vs-exact-pvalue]` entry for
+the general lesson for any future significance-test tool in this
+collection.
+
 ## `graph-algorithms`' `assignment_problem` only handles the square (n-to-n) case, and general (non-bipartite) matching isn't supported at all
 
 Added this cycle (2026-09-22): `maximum_bipartite_matching` and

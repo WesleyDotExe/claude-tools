@@ -33,6 +33,7 @@ from fractions import Fraction
 MAX_VERIFY_TRIALS = 500_000
 MIN_VERIFY_TRIALS = 100
 MAX_DICE_SPACE = 10**8  # cap on sides ** num_dice so results stay exact and printable
+MAX_PERMUTATION_WORK = 10_000_000  # verify_trials * min(trials_a, trials_b) cap for compare_two_proportions
 
 
 def _fraction_to_dict(f: Fraction) -> dict:
@@ -54,6 +55,44 @@ def _wilson_interval(successes: int, trials: int, z: float = 1.96) -> tuple[floa
     centre = (p + z * z / (2 * trials)) / denom
     half_width = (z * math.sqrt(p * (1 - p) / trials + z * z / (4 * trials * trials))) / denom
     return max(0.0, centre - half_width), min(1.0, centre + half_width)
+
+
+def _norm_cdf(x: float) -> float:
+    """Standard normal CDF via the stdlib error function -- no scipy needed."""
+    return 0.5 * (1 + math.erf(x / math.sqrt(2)))
+
+
+def _norm_ppf(p: float) -> float:
+    """Inverse standard normal CDF (the z-score for a given cumulative
+    probability), via Peter Acklam's rational approximation -- accurate to
+    about 1.15e-9, stdlib only (no scipy). Used to turn a caller-chosen
+    confidence level (e.g. 0.95) into the z used by `_wilson_interval` and
+    the two-proportion z-test below.
+    """
+    if not (0 < p < 1):
+        raise ValueError("p must be strictly between 0 and 1")
+    a = [-3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02,
+         1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00]
+    b = [-5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02,
+         6.680131188771972e+01, -1.328068155288572e+01]
+    c = [-7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00,
+         -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00]
+    d = [7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00,
+         3.754408661907416e+00]
+    p_low = 0.02425
+    p_high = 1 - p_low
+    if p < p_low:
+        q = math.sqrt(-2 * math.log(p))
+        return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / \
+            ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1)
+    if p <= p_high:
+        q = p - 0.5
+        r = q * q
+        return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / \
+            (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1)
+    q = math.sqrt(-2 * math.log(1 - p))
+    return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / \
+        ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1)
 
 
 def _check_verify_trials(verify_trials: int) -> None:
@@ -510,6 +549,183 @@ def monty_hall(doors: int = 3, cars: int = 1, reveal: int = 1, verify: bool = Fa
             "trials": verify_trials,
             "stay": _simulation_report(stay_wins, verify_trials, p_stay),
             "switch": _simulation_report(switch_wins, verify_trials, p_switch),
+        }
+
+    return result
+
+
+# --------------------------------------------------------------------------
+# 7. Two-proportion comparison (is a win-rate/conversion-rate gap real?)
+# --------------------------------------------------------------------------
+
+def _partial_sample_sum(pool: list[int], n_pick: int) -> int:
+    """Sum of a uniformly-random `n_pick`-element subset of `pool`, drawn via a
+    CSPRNG partial Fisher-Yates (the first `n_pick` positions after a partial
+    shuffle) and then undone in place -- so the caller's list comes back
+    unmodified and no O(len(pool)) copy is needed per call. Used by
+    `compare_two_proportions`'s permutation test, which calls this once per
+    simulated trial.
+    """
+    n_total = len(pool)
+    swaps = []
+    picked = 0
+    for i in range(n_pick):
+        j = i + secrets.randbelow(n_total - i)
+        pool[i], pool[j] = pool[j], pool[i]
+        swaps.append((i, j))
+        picked += pool[i]
+    for i, j in reversed(swaps):
+        pool[i], pool[j] = pool[j], pool[i]
+    return picked
+
+
+def compare_two_proportions(
+    successes_a: int,
+    trials_a: int,
+    successes_b: int,
+    trials_b: int,
+    confidence: float = 0.95,
+    verify: bool = False,
+    verify_trials: int = 20000,
+) -> dict:
+    """Is the gap between two observed proportions (e.g. two win rates, two
+    conversion rates) real, or could it plausibly be noise given the sample
+    sizes? Runs a two-proportion z-test (pooled-variance, for the p-value)
+    and reports a Wilson score confidence interval for each group's own
+    proportion plus a Newcombe (1998) hybrid-score interval for their
+    *difference* -- built directly from the two groups' own Wilson intervals,
+    which stays well-behaved near 0%/100% where a naive pooled-standard-error
+    interval for the difference would not.
+
+    `successes_a`/`trials_a` and `successes_b`/`trials_b` are e.g. wins and
+    games played for two strategies/variants/cohorts. `confidence` is the
+    two-sided confidence level (default 0.95).
+
+    With `verify=true`, also runs an independent permutation (randomization)
+    test: pool every outcome from both groups, repeatedly reshuffle which
+    outcomes "belong" to which group under CSPRNG draws, and see how often a
+    random relabeling produces a gap at least as large as the one actually
+    observed. This makes no normal-theory assumption at all -- a structurally
+    different check from the z-test above, in the same "second, independent
+    method" role `verify_uniformity`/`verify_weighted_distribution` play for
+    randomness elsewhere in this collection. Note the two p-values are not
+    expected to match exactly even when both are computed correctly: the
+    z-test's is a large-sample normal approximation and the permutation
+    test's is a Monte Carlo estimate of the exact permutation-null p-value,
+    so what the simulation reports is whether they *agree on the
+    significance call*, not bit-for-bit numeric equality.
+    """
+    if trials_a < 1 or trials_b < 1:
+        raise ValueError("trials_a and trials_b must each be >= 1")
+    if not (0 <= successes_a <= trials_a):
+        raise ValueError("successes_a must be between 0 and trials_a")
+    if not (0 <= successes_b <= trials_b):
+        raise ValueError("successes_b must be between 0 and trials_b")
+    if not (0 < confidence < 1):
+        raise ValueError("confidence must be strictly between 0 and 1")
+
+    z = _norm_ppf(1 - (1 - confidence) / 2)
+
+    p_a = successes_a / trials_a
+    p_b = successes_b / trials_b
+    lo_a, hi_a = _wilson_interval(successes_a, trials_a, z)
+    lo_b, hi_b = _wilson_interval(successes_b, trials_b, z)
+
+    diff = p_a - p_b
+    diff_lo = diff - math.sqrt((p_a - lo_a) ** 2 + (hi_b - p_b) ** 2)
+    diff_hi = diff + math.sqrt((hi_a - p_a) ** 2 + (p_b - lo_b) ** 2)
+
+    pooled = (successes_a + successes_b) / (trials_a + trials_b)
+    se_pooled = math.sqrt(pooled * (1 - pooled) * (1 / trials_a + 1 / trials_b))
+    if se_pooled == 0:
+        z_stat = 0.0
+        p_value = 1.0
+    else:
+        z_stat = diff / se_pooled
+        p_value = 2 * (1 - _norm_cdf(abs(z_stat)))
+
+    alpha = 1 - confidence
+    significant = p_value < alpha
+
+    verdict = (
+        f"The observed gap ({p_a:.1%} vs {p_b:.1%}, n={trials_a}/{trials_b}) is "
+        f"statistically significant at the {confidence:.0%} confidence level "
+        f"(p={p_value:.4g}, difference CI [{diff_lo:.1%}, {diff_hi:.1%}] excludes 0) -- "
+        "unlikely to be due to chance alone."
+        if significant else
+        f"The observed gap ({p_a:.1%} vs {p_b:.1%}, n={trials_a}/{trials_b}) is NOT "
+        f"statistically significant at the {confidence:.0%} confidence level "
+        f"(p={p_value:.4g}, difference CI [{diff_lo:.1%}, {diff_hi:.1%}] includes 0) -- "
+        "plausibly noise given the sample sizes."
+    )
+
+    result = {
+        "group_a": {
+            "successes": successes_a, "trials": trials_a, "proportion": round(p_a, 6),
+            "wilson_ci": [round(lo_a, 6), round(hi_a, 6)],
+        },
+        "group_b": {
+            "successes": successes_b, "trials": trials_b, "proportion": round(p_b, 6),
+            "wilson_ci": [round(lo_b, 6), round(hi_b, 6)],
+        },
+        "confidence_level": confidence,
+        "difference_a_minus_b": round(diff, 6),
+        "difference_ci_newcombe": [round(diff_lo, 6), round(diff_hi, 6)],
+        "z_statistic": round(z_stat, 6),
+        "p_value": round(p_value, 6),
+        "significant": significant,
+        "verdict": verdict,
+    }
+
+    if verify:
+        _check_verify_trials(verify_trials)
+        n_small = min(trials_a, trials_b)
+        work = verify_trials * n_small
+        if work > MAX_PERMUTATION_WORK:
+            raise ValueError(
+                f"verify_trials * min(trials_a, trials_b) ({work}) exceeds the permutation-test "
+                f"budget of {MAX_PERMUTATION_WORK}; use a smaller verify_trials for samples this large"
+            )
+
+        total_successes = successes_a + successes_b
+        n_total = trials_a + trials_b
+        pool = [1] * total_successes + [0] * (n_total - total_successes)
+        observed_abs_diff = abs(diff)
+        a_is_smaller = trials_a <= trials_b
+        n_pick = trials_a if a_is_smaller else trials_b
+
+        as_extreme = 0
+        for _ in range(verify_trials):
+            picked_successes = _partial_sample_sum(pool, n_pick)
+            if a_is_smaller:
+                perm_succ_a, perm_succ_b = picked_successes, total_successes - picked_successes
+            else:
+                perm_succ_b, perm_succ_a = picked_successes, total_successes - picked_successes
+            perm_diff = abs(perm_succ_a / trials_a - perm_succ_b / trials_b)
+            if perm_diff >= observed_abs_diff - 1e-9:
+                as_extreme += 1
+
+        empirical_p_value = as_extreme / verify_trials
+        emp_lo, emp_hi = _wilson_interval(as_extreme, verify_trials, 1.96)
+        result["simulation"] = {
+            "method": "permutation test: pool both groups' outcomes, reshuffle group "
+            "labels via CSPRNG verify_trials times, count how often the relabeled gap "
+            "is >= the one actually observed (makes no normal-theory assumption)",
+            "trials": verify_trials,
+            "empirical_p_value": round(empirical_p_value, 6),
+            "empirical_p_value_95_ci": [round(emp_lo, 6), round(emp_hi, 6)],
+            "analytic_p_value": round(p_value, 6),
+            "agrees_on_significance_call": (empirical_p_value < alpha) == significant,
+            "note": (
+                "analytic_p_value is the pooled-variance z-test's large-sample normal "
+                "approximation; empirical_p_value is a Monte Carlo estimate of the exact "
+                "permutation-test p-value (confirmed against an exact hypergeometric-tail "
+                "calculation during development), which makes no normal-theory assumption. "
+                "The two are expected to be close but are not the same quantity, and can "
+                "differ by a few points of p especially at moderate sample sizes -- what "
+                "matters in practice is whether they agree on the significance call "
+                "(agrees_on_significance_call), not exact numeric equality."
+            ),
         }
 
     return result

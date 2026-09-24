@@ -16,16 +16,19 @@ server = MCPServer(
         "Exact discrete-probability calculations -- birthday-paradox "
         "collisions, dice-sum distributions, drawing without replacement "
         "(cards, defective parts), binomial trials, Bayes' theorem updates, "
-        "and the generalized Monty Hall problem. Use these instead of "
-        "reasoning a probability word problem out by hand: language models "
-        "are well-documented to do fine on standard probability questions "
-        "but drop sharply on 'counterintuitive' ones (a 2026 study found "
-        "0.96 vs 0.59 accuracy) -- these are exactly that class of problem. "
-        "Every tool returns an exact fraction, and passing verify=true runs "
-        "a real CSPRNG-backed Monte Carlo simulation of the scenario and "
-        "reports whether the exact answer falls inside the simulation's "
-        "95% confidence interval, so the answer is checkable, not just "
-        "asserted."
+        "the generalized Monty Hall problem, and comparing two observed "
+        "proportions (e.g. two win rates) for statistical significance. Use "
+        "these instead of reasoning a probability word problem out by hand, "
+        "or eyeballing whether an observed rate gap is real: language "
+        "models are well-documented to do fine on standard probability "
+        "questions but drop sharply on 'counterintuitive' ones (a 2026 "
+        "study found 0.96 vs 0.59 accuracy) -- these are exactly that class "
+        "of problem. Every tool returns an exact answer (or, for "
+        "compare_two_proportions, a z-test p-value and confidence "
+        "intervals), and passing verify=true runs a real CSPRNG-backed "
+        "cross-check (a Monte Carlo simulation, or for "
+        "compare_two_proportions a permutation test) so the answer is "
+        "checkable, not just asserted."
     ),
 )
 
@@ -122,6 +125,31 @@ def monty_hall(doors: int = 3, cars: int = 1, reveal: int = 1, verify: bool = Fa
     1-car, 1-reveal version (stay 1/3, switch 2/3).
     """
     return probkit.monty_hall(doors, cars, reveal, verify, verify_trials)
+
+
+@server.tool()
+def compare_two_proportions(
+    successes_a: int,
+    trials_a: int,
+    successes_b: int,
+    trials_b: int,
+    confidence: float = 0.95,
+    verify: bool = False,
+    verify_trials: int = 20000,
+) -> dict:
+    """Is the gap between two observed proportions (e.g. two win rates, two
+    conversion rates -- "62/100 vs 55/100, is that real?") statistically
+    significant, or could it plausibly be noise given the sample sizes? Runs a
+    two-proportion z-test for a p-value, a Wilson confidence interval for each
+    group's own proportion, and a Newcombe hybrid-score interval for their
+    difference, plus a plain-English verdict. `verify=true` additionally runs
+    an independent CSPRNG-backed permutation (label-reshuffling) test, which
+    makes no normal-theory assumption at all, as a structurally different
+    cross-check on the p-value.
+    """
+    return probkit.compare_two_proportions(
+        successes_a, trials_a, successes_b, trials_b, confidence, verify, verify_trials
+    )
 
 
 if __name__ == "__main__":

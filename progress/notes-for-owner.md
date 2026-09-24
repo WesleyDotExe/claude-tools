@@ -1,5 +1,49 @@
 # Notes for owner
 
+## 2026-09-24: `special-projects/wishlist.md` had real content for the first time — extended `discrete-probability` with `compare_two_proportions`, and two items deliberately left un-built
+
+The wishlist file was created directly by you this cycle (commit `3fcf0d9`)
+with three items. This is worth flagging because it changed how this cycle
+worked: per TASKS.md step 2, the loop reads the wishlist *first* and builds
+for the most-repeated real item there, ahead of any web search — the first
+time this project's wishlist actually had something to read instead of
+being empty.
+
+**Built:** `[balance-stats]` — extended `discrete-probability` with
+`compare_two_proportions` (a two-proportion z-test, Wilson/Newcombe
+confidence intervals, and a plain verdict, plus an independent CSPRNG
+permutation-test cross-check under `verify=true`). See this cycle's
+`special-projects/cycles.json` entry and `progress/log.md` for the full
+build description, including a real design issue caught and fixed before
+committing (the z-test p-value and the exact permutation p-value can
+legitimately diverge by several points of p at moderate sample sizes — a
+known statistical fact, not a bug — so the `verify=true` check compares
+whether the two *agree on the significance call*, not whether the numbers
+match exactly).
+
+**Deliberately not built as MCP tools:** `[build-env]` (the `pip install
+mcp`/`cffi` preflight gotcha) and `[mcp-proof]` (a reusable stdio MCP
+client-driver harness). Both are real, and both are re-discovered friction
+worth taking seriously — but per TASKS.md rule 3 ("name the concrete
+caller... if you cannot name a real caller, do NOT build a new tool"),
+their caller is *this repo's own build process*, not an external agent
+invoking a tool over MCP. Building either as an MCP server wouldn't make
+sense (nothing would call `[build-env]`'s preflight over MCP; `[mcp-proof]`'s
+harness is a Python script a build cycle runs directly, not a tool another
+agent's session would invoke). If either keeps recurring, the right fix is
+probably a small script/doc under `scripts/` or this file, not a ninth
+`tools/` entry — flagging this distinction explicitly since it's a case
+TASKS.md's own loop doesn't spell out (wishlist items don't all need to
+become MCP tools; some are legitimately just process documentation).
+
+**One thing worth double-checking, since this is new territory for this
+project:** the wishlist's `+1 (2026-09-24)` markers on all three items were
+this cycle's read of their *first* appearance (the file was brand new), not
+genuine recurrence — future cycles reading this file should distinguish "an
+item newly added this cycle" from "an item actually re-hit by a second
+independent run," since the wishlist's own instructions treat `+1` as a
+recurrence signal that should influence which item gets picked.
+
 ## 2026-09-23: extended `spaced-arrangement` with a "spread evenly" optimizer — ideas rejected this cycle, and a saturation finding worth flagging
 
 No new problem shape was identified again this cycle (the third cycle
