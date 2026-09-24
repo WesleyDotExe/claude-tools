@@ -2,6 +2,80 @@
 
 Newest entry on top. One entry per cycle: what was done, honestly.
 
+## 2026-09-24 — twelfth run
+
+- Ran `tools/collection-index/index.py` first (still 8 tools, matches
+  `tools/*/manifest.json`), then re-read `special-projects/current.md`,
+  `progress/quality-debt.md`, `progress/notes-for-owner.md`, per the loop.
+- This cycle's real difference from the last several: `special-projects/
+  wishlist.md` had just been created directly by the owner (commit `3fcf0d9`,
+  not a prior agent run) with three real, concrete, sourced items — the
+  first time this loop's step 2 ("read the wishlist first") actually had
+  live signal to read instead of an empty file. Picked `[balance-stats]`
+  over the other two open items (`[build-env]`, `[mcp-proof]`) because it's
+  the only one with a *named external caller* per TASKS.md rule 3 (the
+  owner's AI TCG balance-testing run) — the other two are real friction but
+  are about this repo's own build process, not something another agent
+  calls over MCP, so they were documented rather than built as tools (see
+  `notes-for-owner.md`).
+- Extended `tools/discrete-probability` (rather than a ninth tool) with
+  `compare_two_proportions`: a two-proportion z-test (p-value), a Wilson CI
+  per group, a Newcombe (1998) hybrid-score CI for the difference (reusing
+  the tool's own existing `_wilson_interval`, built cycle four), and a plain
+  verdict. Added two new stdlib-only helpers it needed: `_norm_cdf`
+  (`math.erf`) and `_norm_ppf` (Peter Acklam's rational inverse-normal-CDF
+  approximation, ~1.15e-9 accurate) so `confidence` isn't hardcoded to 95%.
+  `verify=true` runs an independent CSPRNG permutation (label-reshuffling)
+  test via a new `_partial_sample_sum` helper (partial Fisher-Yates, swaps
+  undone in place — O(min(trials_a, trials_b)) per trial, no per-trial
+  O(n) copy), budget-capped at `verify_trials * min(trials_a, trials_b) <=
+  10,000,000` (benchmarked locally: ~1.3M `secrets.randbelow` calls/sec in
+  this container, so the cap keeps a single call to a few/~10 seconds).
+- **Caught and fixed a real design issue while building, before committing,
+  not after shipping:** the first draft's `verify=true` output asserted the
+  z-test's p-value should fall inside a confidence interval around the
+  permutation test's empirical p-value estimate — and a real worked example
+  (186/300 vs 165/300) failed that check even though both computations were
+  correct. Hand-derived the true exact permutation p-value via the
+  hypergeometric distribution for that exact case (0.09741, independent of
+  any of this tool's own code) and confirmed the permutation test's
+  empirical estimate was correct (within its own CI of that value) while
+  the z-test's pooled-normal-approximation p-value (0.0819) is a
+  legitimately different, smaller quantity — a well-known asymptotic-vs-exact
+  gap, not a bug. Redesigned the check around
+  `agrees_on_significance_call` (do the two methods reach the same
+  significant/not-significant conclusion) with an explanatory note in the
+  tool's own response, instead of a check that would have flagged
+  correct code as broken. Recorded the general lesson in
+  `special-projects/wishlist.md`'s new `[stats-normal-vs-exact-pvalue]` entry
+  for any future significance-test tool in this collection.
+- 15 new unit tests (`tools/discrete-probability/tests/test_probkit.py`; 56
+  in this tool now, up from 41; 296 across all eight tools now, up from
+  281): known-by-hand z-test formula cross-check, each group's Wilson CI
+  cross-checked directly against `_wilson_interval`, `_norm_ppf` against
+  known textbook z-scores and confirmed as `_norm_cdf`'s numerical inverse,
+  the permutation test's Monte Carlo estimate checked against a
+  hand-derived exact hypergeometric-tail p-value on a small case
+  (independent of `probkit.py`'s own code), input validation, the
+  permutation budget cap raising instead of running unboundedly long, and
+  `agrees_on_significance_call` holding for both a clear gap and a clear
+  non-gap.
+- Ran the full repo test suite locally: 296 tests, all green.
+- Installed `mcp`+`cffi` locally, wrote a real stdio MCP client driver, and
+  drove the live server: `list_tools`, the wishlist's own 186/300-vs-165/300
+  worked example (with and without `verify=true`), a clear real gap,
+  identical proportions correctly reported not-significant, a deliberately
+  invalid input and a deliberately oversized permutation budget both coming
+  back as genuine MCP tool errors, and `monty_hall` confirmed still working
+  unchanged. Saved as
+  `tools/discrete-probability/proof/run_2026-09-24.txt`.
+- Updated: `tools/discrete-probability/{probkit.py,server.py,README.md,
+  manifest.json,tests/test_probkit.py}`, `progress/quality-debt.md` (new
+  entry), `README.md` (root tool list), `special-projects/{wishlist.md,
+  cycles.json,current.md}`, `progress/notes-for-owner.md`.
+- Rebuilt `_site/dashboard.html` via `scripts/build_site.py` — runs
+  cleanly, confirmed gitignored and not staged.
+
 ## 2026-09-23 — eleventh run
 
 - Ran `tools/collection-index/index.py` first (still 8 tools, output

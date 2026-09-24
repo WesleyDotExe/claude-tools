@@ -1,13 +1,11 @@
 # Current state
 
-**Last cycle:** 2026-09-23 (eleventh run)
+**Last cycle:** 2026-09-24 (twelfth run)
 
 ## Where things stand
 
-Still eight tools in the collection (no new tool this cycle -- extended an
-existing one instead, per TASKS.md rule 9's "extend rather than duplicate/
-deepen if nothing new clears the bar" guidance, same outcome shape as
-cycles four and ten):
+Still eight tools in the collection (extended an existing one again this
+cycle, but for a new reason this time -- see below):
 
 - `tools/collection-index` — reads `tools/*/manifest.json`, the source of
   truth the dashboard (and future runs) read from instead of re-scanning
@@ -25,6 +23,21 @@ cycles four and ten):
   generalized Monty Hall problem). Every function accepts `verify=true` to
   actually play the scenario out via CSPRNG simulation and check the exact
   answer against the simulated frequency's 95% confidence interval.
+  **New this cycle:** `compare_two_proportions` -- is the gap between two
+  observed proportions (e.g. two win rates) statistically significant, or
+  plausibly noise? A pooled two-proportion z-test p-value, a Wilson CI per
+  group, and a Newcombe (1998) hybrid-score CI for the difference (reusing
+  the tool's own `_wilson_interval`), plus a plain verdict at any
+  caller-chosen confidence level (new `_norm_ppf`/`_norm_cdf` helpers, no
+  scipy needed). `verify=true` runs an independent CSPRNG permutation
+  (label-reshuffling) test, budget-capped like this collection's other
+  search/simulation tools. Built from `special-projects/wishlist.md`'s
+  `[balance-stats]` entry -- the first cycle this project's wishlist had
+  real content to read. See `progress/notes-for-owner.md`'s 2026-09-24
+  entry for a real design issue caught and fixed before committing (the
+  z-test and exact-permutation p-values can legitimately diverge; the
+  `verify=true` check compares the *significance call*, not raw numeric
+  equality).
 - `tools/logic-grid-solver` — MCP server that exactly solves logic grid
   ("zebra") puzzles via constraint propagation (arc consistency + MRV
   backtracking). `solve_logic_grid` proves uniqueness by continuing the
@@ -46,7 +59,7 @@ cycles four and ten):
   direct-definition, cycle-property exchange, max-flow min-cut, DSATUR +
   backtracking exhaustion, Koenig's theorem, LP duality respectively).
   `generate_random_graph` gives a seeded, reproducible graph. Unchanged
-  this cycle -- see cycle ten's entry in `special-projects/cycles.json` for
+  since cycle ten -- see that entry in `special-projects/cycles.json` for
   the bipartite-matching/assignment-problem build.
 - `tools/spaced-arrangement` — MCP server that constructs an ordering of
   items so no two items of the same category land within `min_distance`
@@ -73,9 +86,9 @@ cycles four and ten):
   one directly via proof instead of by sampling.
 
 CI runs each tool's test suite on every PR (`.github/workflows/test.yml`,
-281 tests total across all eight tools as of this cycle: 272 from before
-plus 9 new ones for `spaced-arrangement`'s `maximize_min_distance`) and
-`auto-merge.yml` waits for it genuinely.
+296 tests total across all eight tools as of this cycle: 281 from before
+plus 15 new ones for `discrete-probability`'s `compare_two_proportions`)
+and `auto-merge.yml` waits for it genuinely.
 
 `special-projects/cycles.json` has the full story (searches, source links,
 why each tool was picked, proof) for all cycles so far.
@@ -84,89 +97,85 @@ and `collection-index`'s scan — gitignored, rebuild it, don't commit it.
 
 ## Next step
 
-Options for cycle 12, roughly in order of how promising they looked during
+Options for cycle 13, roughly in order of how promising they looked during
 this cycle's research:
 
-1. **Re-run the TASKS.md loop step 1 first, every cycle** (dogfood
+1. **Check `special-projects/wishlist.md` FIRST, before anything else.**
+   This cycle it had real, concrete, sourced content for the first time
+   (created directly by the owner, commit `3fcf0d9`) and the loop worked
+   exactly as TASKS.md describes: read it, picked the one item with a named
+   external caller (`[balance-stats]`), built for it. Two items remain open
+   (`[build-env]`, `[mcp-proof]`) but were deliberately NOT built as MCP
+   tools -- their caller is this repo's own build process, not an external
+   agent invoking a tool over MCP (see `progress/notes-for-owner.md`'s
+   2026-09-24 entry for the reasoning). If either recurs (a genuine second
+   `+1`, from a different cycle actually re-hitting it, not just this
+   cycle's first-read), consider a small script under `scripts/` or `docs`
+   rather than a `tools/` entry, or reconsider whether an MCP-tool framing
+   actually fits after all. A fresh wishlist item may also have appeared by
+   the next cycle -- check before falling back to any of the below.
+2. **`discrete-probability`'s real remaining gaps** (see its README's "What
+   it doesn't do", updated this cycle): `compare_two_proportions` doesn't
+   handle paired/matched samples (needs McNemar's test, not built), and its
+   permutation-test budget caps out around `verify_trials *
+   min(trials_a, trials_b) <= 10,000,000`. Neither has a surfaced real need
+   yet -- see `progress/quality-debt.md`'s new entry.
+3. **This cycle again found its win by extending an existing tool, not by
+   finding a new problem shape** -- the fourth cycle running now without a
+   seventh shape (see item 6 below), though this time the extension came
+   from the wishlist rather than a search failing to find a new shape.
+4. **Re-run the TASKS.md loop step 1 first, every cycle** (dogfood
    `collection-index`, re-read each tool's own "what it doesn't do"
    section fresh) before searching for new candidates -- this cycle
-   confirmed the collection-index output still matches `tools/*/manifest.json`
-   exactly, and the root README's tool list was already in sync (last
-   cycle's fix held).
-2. **This cycle again found its win by extending an existing tool, not by
-   finding a new problem shape.** Two extend-candidates were checked and
-   explicitly deferred again for lack of a *fresh, sourced* "LLMs get this
-   wrong" complaint (not lack of a real underlying problem):
-   - **General (non-bipartite) graph matching** (Edmonds' blossom
-     algorithm) in `graph-algorithms` -- real applications exist (stable
-     roommates, non-bipartite observational-study matching), but still no
-     sharp real-world "an LLM/tool failed at this" source, same verdict as
-     `progress/quality-debt.md`'s existing entry. Worth building only if a
-     future cycle's search finds one.
-   - **Rectangular/partial assignment** (unequal left/right sizes) in
-     `graph-algorithms`'s `assignment_problem` -- same verdict: real OR
-     problem, no fresh LLM-failure source found this cycle either.
-3. **A promising-looking NEW tool idea was checked and rejected for
-   saturation, not lack of a source:** cross-timezone meeting/availability
+   confirmed the collection-index output still matches
+   `tools/*/manifest.json` exactly, and the root README's tool list was
+   already in sync.
+5. **Two extend-candidates remain checked-and-deferred in `graph-algorithms`**
+   for lack of a *fresh, sourced* "LLMs get this wrong" complaint (not lack
+   of a real underlying problem), last re-checked 2026-09-23: **general
+   (non-bipartite) graph matching** (Edmonds' blossom algorithm -- stable
+   roommates, non-bipartite observational-study matching are real
+   applications, still no sharp real-world failure source) and
+   **rectangular/partial assignment** (unequal left/right sizes in
+   `assignment_problem` -- same verdict).
+6. **A promising-looking NEW tool idea remains rejected for saturation, not
+   lack of a source (2026-09-23):** cross-timezone meeting/availability
    finding (intersect N people's busy-interval lists across timezones and
-   DST, entirely from structured JSON input, no calendar credentials).
-   This cycle found a genuinely sharp, concrete source -- a MindStudio
-   write-up documenting Claude Code's OWN `check_availability` tool
-   computing "end of day" in UTC instead of the user's local timezone,
-   silently returning one slot instead of seven -- but the underlying
-   free/busy-interval-intersection *algorithm* turned out to be
-   implemented by several existing MCP servers already (`mcp-calendar`,
-   `when2meet-mcp`, `mcp-office-suite`'s `free_busy`, `pim-agents`'
-   `findFreeSlots`), even setting aside the ones that need real calendar
-   credentials. **Do not re-propose this without a genuinely differentiated
-   angle** (e.g. a proof/verification angle none of those offer, the way
-   this collection differentiates elsewhere) -- the plain "intersect busy
-   intervals across timezones" shape itself is not unclaimed.
-4. **`spaced-arrangement`'s remaining real gaps** (see its README's "What
-   it doesn't do", updated this cycle): per-category priority/weighting
-   (no way to say a category should appear earlier or matter more), and
-   multi-dimensional spacing (e.g. avoid both same-artist AND same-genre
-   too close at once, as two invariants enforced together). The "spread
-   evenly" gap itself is now closed (`maximize_min_distance`, this cycle).
-5. **`graph-algorithms`'s real remaining gaps** (see its README's "What it
-   doesn't do", unchanged): general (non-bipartite) matching and
-   rectangular/partial assignment -- see item 2 above, same verdict.
-6. **Keep looking for genuinely different problem shapes** before reaching
+   DST). Found a genuinely sharp, concrete source (a MindStudio write-up
+   documenting Claude Code's OWN `check_availability` tool computing "end
+   of day" in UTC instead of the user's local timezone) but the underlying
+   algorithm is already implemented by several existing MCP servers, even
+   keyless ones (`mcp-calendar`, `when2meet-mcp`, `mcp-office-suite`'s
+   `free_busy`, `pim-agents`' `findFreeSlots`). **Do not re-propose without
+   a genuinely differentiated angle** (e.g. a proof/verification angle none
+   of those offer).
+7. **`spaced-arrangement`'s remaining real gaps** (see its README's "What
+   it doesn't do"): per-category priority/weighting, and multi-dimensional
+   spacing (e.g. avoid both same-artist AND same-genre clustering at once).
+   The "spread evenly" gap itself is closed (`maximize_min_distance`,
+   cycle eleven).
+8. **Keep looking for genuinely different problem shapes** before reaching
    for another instance of a shape already covered: calculation, static
    CSP (`logic-grid-solver`), sequential action search (`strips-planner`),
    structural graph algorithms (`graph-algorithms`), and combinatorial
-   generation under a guaranteed invariant (`spaced-arrangement`, now also
-   covering an *optimization* variant of that same shape via
-   `maximize_min_distance`). No new seventh shape was identified this
-   cycle either -- three cycles running now. A future cycle may need to
-   search substantially harder or more laterally (e.g. non-English-language
-   sources, non-Reddit/non-GitHub complaint venues, or a deliberately
-   different search strategy) before accepting a fourth straight
-   extend/harden cycle, OR treat "extend/harden is a fully legitimate,
-   repeatable outcome" (which TASKS.md rule 9 explicitly allows) as simply
-   the collection's steady state once seven-ish tools deep.
-7. **Do not re-propose Secret Santa / derangement-with-exclusions
-   generation** as a new tool -- checked 2026-09-23; real and commonly
-   requested, but the documented AI pain point found was privacy (a
-   volunteer sees all pairings), not a correctness failure, and the
-   underlying problem is already solvable as a special case of
-   `graph-algorithms`' own `maximum_bipartite_matching` (bipartite perfect
-   matching between givers/receivers with excluded edges removed) -- no
-   differentiated new-tool angle.
-8. **Do not re-propose bill-splitting/debt-simplification** (saturated),
-   pairwise/covering-array test generation (saturated by PictMCP), regex
-   generation/ReDoS (saturated), synthetic-data generation with guaranteed
-   correlation (saturated), OR-Tools-based optimization / bin-packing /
-   knapsack / job-shop scheduling (checked again 2026-09-23, same verdict:
-   real but saturated by OR-Tools-based MCP servers, and a poor fit for
-   this collection's stdlib-only discipline), round-robin scheduling, or
-   cryptarithmetic (all checked and rejected in earlier cycles).
-9. **Apportionment/seat-allocation (D'Hondt, Sainte-Laguë, Hamilton) and
-   stable matching (Gale-Shapley)** — plausible shapes, checked again as
-   recently as 2026-09-22, still no sharp real "LLMs get this wrong"
-   complaint found. Worth revisiting only with a real source.
-10. **Do not re-propose sudoku/latin-square/maze generation** (overlaps
-    logic-grid-solver, saturated elsewhere).
+   generation under a guaranteed invariant (`spaced-arrangement`). No new
+   seventh shape has been identified in four cycles now. Treat
+   "extend/harden is a fully legitimate, repeatable outcome" (TASKS.md rule
+   9) as the collection's steady state at eight tools deep unless a future
+   cycle's search (or the wishlist) turns up something genuinely new.
+9. **Do not re-propose:** Secret Santa/derangement-with-exclusions
+   (privacy pain point, not correctness; already a special case of
+   `maximum_bipartite_matching`), bill-splitting/debt-simplification,
+   pairwise/covering-array test generation (PictMCP), regex generation/
+   ReDoS, synthetic-data generation with guaranteed correlation, OR-Tools-
+   based optimization/bin-packing/knapsack/job-shop scheduling,
+   round-robin scheduling, cryptarithmetic, or sudoku/latin-square/maze
+   generation -- all checked and rejected in earlier cycles for saturation
+   or scope-overlap, not infeasibility.
+10. **Apportionment/seat-allocation (D'Hondt, Sainte-Laguë, Hamilton) and
+    stable matching (Gale-Shapley)** — plausible shapes, no sharp real
+    "LLMs get this wrong" complaint found as of 2026-09-22. Worth
+    revisiting only with a real source.
 11. **MCP mechanics notes for live-session proofs:** use
     `result.content[0].text` parsed as JSON if `structured_content` is
     `None`; use `result.is_error` (snake_case), not `result.isError`; the
@@ -176,8 +185,7 @@ this cycle's research:
 12. **If nothing clears the bar:** re-read all eight tools' "what it
     doesn't do" sections fresh, and diff the root README's tool list
     against `tools/*/manifest.json` -- both checked and confirmed in sync
-    this cycle (no repeat of the cycle-ten `spaced-arrangement`-missing
-    incident).
+    this cycle.
 
 Do NOT re-propose natural-language date parsing for `time-arithmetic` — its
 README frames the absence as a deliberate design boundary, not a gap

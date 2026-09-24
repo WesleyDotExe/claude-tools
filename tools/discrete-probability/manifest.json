@@ -1,7 +1,7 @@
 {
   "name": "discrete-probability",
-  "summary": "Exact discrete-probability calculations (birthday-paradox collisions, dice-sum distributions, drawing without replacement, binomial trials, Bayes' theorem, generalized Monty Hall) exposed as an MCP server, each answer optionally cross-checked against a real Monte Carlo simulation.",
-  "problem": "Language models are well-documented to be unreliable at discrete probability, and specifically worse on 'counterintuitive' problems: a 2026 study on counterintuitive discrete-probability problems found models average 0.96 accuracy on standard problems but only 0.59 on counterintuitive ones (arxiv.org/pdf/2606.07516), and the widely-discussed 'LLMs Can't Do Probability' writeup documents the same failure informally. The birthday paradox and the Monty Hall problem are the canonical examples of a single correct answer that both humans and models reliably get wrong by reasoning about it instead of calculating it.",
+  "summary": "Exact discrete-probability calculations (birthday-paradox collisions, dice-sum distributions, drawing without replacement, binomial trials, Bayes' theorem, generalized Monty Hall) plus statistically rigorous two-proportion comparison (a z-test, Wilson/Newcombe confidence intervals, and a plain verdict), exposed as an MCP server, each answer optionally cross-checked against a real CSPRNG-backed simulation.",
+  "problem": "Language models are well-documented to be unreliable at discrete probability, and specifically worse on 'counterintuitive' problems: a 2026 study on counterintuitive discrete-probability problems found models average 0.96 accuracy on standard problems but only 0.59 on counterintuitive ones (arxiv.org/pdf/2606.07516), and the widely-discussed 'LLMs Can't Do Probability' writeup documents the same failure informally. The birthday paradox and the Monty Hall problem are the canonical examples of a single correct answer that both humans and models reliably get wrong by reasoning about it instead of calculating it. Separately, comparing two observed rates (e.g. two win rates over N trials) by eye, without a real significance test, routinely mistakes noise for a real effect or vice versa -- the owner's own AI-TCG balance-testing workflow hand-rolls exactly this comparison every cycle (special-projects/wishlist.md, 2026-09-24).",
   "keyless": true,
   "requires_network": false,
   "language": "python",
@@ -9,14 +9,16 @@
   "entry_point": "server.py",
   "cli_module": "probkit.py",
   "tests": "tests/test_probkit.py",
-  "proof": "proof/run_2026-09-16.txt",
+  "proof": "proof/run_2026-09-24.txt",
   "created": "2026-09-16",
+  "updated": "2026-09-24",
   "tools_exposed": [
     "birthday_collision",
     "dice_sum_distribution",
     "hypergeometric_probability",
     "binomial_probability",
     "bayes_update",
-    "monty_hall"
+    "monty_hall",
+    "compare_two_proportions"
   ]
 }
