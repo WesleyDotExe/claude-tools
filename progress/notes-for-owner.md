@@ -1,5 +1,46 @@
 # Notes for owner
 
+## 2026-09-25: closed both deliberately-deferred wishlist items with dev tooling, not a ninth `tools/` entry
+
+Last cycle (2026-09-24) explicitly left `[build-env]` and `[mcp-proof]`
+open, on the grounds that their caller is this repo's own build process,
+not an external MCP caller, so they didn't belong as a `tools/` entry —
+but flagged that a real second recurrence (a different cycle actually
+re-hitting the friction, not just the first cycle that wrote it down)
+would justify a small script under `scripts/` instead.
+
+This cycle hit exactly that: a fresh container, `python3 -c "import mcp"`
+failed with the same `ModuleNotFoundError` the wishlist entry already
+named, and driving `discrete-probability`'s server live to write this
+cycle's own proof needed the same "parse `content[0].text` as JSON by
+hand" workaround `[mcp-proof]` described. That's a genuine independent
+recurrence, so both got built as internal tooling per last cycle's own
+plan, not as an MCP tool:
+
+- **`scripts/mcp_dev_setup.sh`** — idempotent `pip install --user mcp
+  cffi` preflight.
+- **`scripts/mcp_client.py`** — a reusable stdio MCP client (library +
+  CLI: `list-tools`, `call`, `run`) that extracts a typed result from a
+  `CallToolResult` (`structured_content` first, text-as-JSON fallback)
+  once, instead of every future proof script re-deriving it. `run` takes
+  a JSON list of labeled calls and prints/saves them in this repo's
+  existing `--- label ---\n<value>` proof-file shape — this cycle used it
+  to drive both `secure-random` and `discrete-probability` live
+  (`scripts/proof/run_2026-09-25.txt`), including error cases, and it's
+  what this cycle's own proof was written with (dogfooding it
+  immediately, per TASKS.md step 6).
+
+**No new `tools/` entry this cycle.** Per TASKS.md rule 3 (name the
+caller before building), no fresh wishlist item or web search this cycle
+turned up a candidate with a real *external* caller distinct from
+everything `special-projects/current.md`'s next-step list had already
+checked and deferred — so this cycle followed rule 10 (harden/extend/
+distribute over inventing a need) and paid down confirmed, real internal
+friction instead. `[stats-normal-vs-exact-pvalue]` (last cycle's general
+statistical-design lesson for any future significance-test tool) remains
+open — it's a lesson for a not-yet-built tool, not something a script can
+close.
+
 ## 2026-09-24: `special-projects/wishlist.md` had real content for the first time — extended `discrete-probability` with `compare_two_proportions`, and two items deliberately left un-built
 
 The wishlist file was created directly by you this cycle (commit `3fcf0d9`)

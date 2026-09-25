@@ -3,6 +3,22 @@
 Honest list of known gaps and shortcuts. Not urgent by default — surfaced
 so a future cycle (or the owner) can decide whether to pay them down.
 
+## TASKS.md step 9 ("check usage") has no real mechanism behind it
+
+Noticed this cycle (2026-09-25) while trying to honestly do it: nothing in
+this repo can tell a build cycle whether a shipped MCP server has actually
+been invoked by the owner's other agents since it shipped — there's no
+telemetry, log, or callback from an external MCP client back into this
+repo. Every prior cycle's log either skips this step or, at best, restates
+that the collection-index/manifest counts are unchanged (which shows the
+tool still *exists*, not that anything *called* it). Not fixed because the
+honest fix isn't a `tools/` entry or a script — it needs either the owner
+to report which tools their agents actually reached for, or a change to
+how those agents' MCP clients log calls, both outside this repo's own
+control. Flagging so a future cycle doesn't either silently skip step 9
+(as most have) or claim to have done it more meaningfully than is
+currently possible.
+
 ## `discrete-probability`'s `compare_two_proportions` only handles independent (unpaired) samples, and its permutation test has a size-dependent budget
 
 Added this cycle (2026-09-24): `compare_two_proportions` assumes the two
