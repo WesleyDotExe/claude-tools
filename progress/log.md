@@ -2,6 +2,71 @@
 
 Newest entry on top. One entry per cycle: what was done, honestly.
 
+## 2026-09-25 — thirteenth run
+
+- Ran `tools/collection-index/index.py` first: still 8 tools, output
+  matches `tools/*/manifest.json` exactly. Re-read `special-projects/
+  current.md`, `progress/quality-debt.md`, and `special-projects/
+  wishlist.md` per the loop.
+- `wishlist.md` had two open items left over from last cycle
+  (`[build-env]`, `[mcp-proof]`), deliberately not built as `tools/`
+  entries because their caller is this repo's own build process. Last
+  cycle's `current.md` said to build them only on a genuine *second*
+  recurrence from a different cycle. This cycle supplied exactly that:
+  a fresh container had neither `mcp` nor `cffi` installed (confirmed via
+  `python3 -c "import mcp"` failing before installing, the same error
+  `[build-env]` already named), and writing this cycle's own live-session
+  proof needed the same "parse `content[0].text` as JSON by hand"
+  workaround `[mcp-proof]` described.
+- No fresh wishlist item and no new web search this cycle turned up a
+  new-tool candidate with a named *external* caller beyond what
+  `current.md`'s next-step list had already checked and deferred (the
+  saturated shapes, the deferred `graph-algorithms`/`spaced-arrangement`
+  extensions, the availability-finder rejected for saturation) — so this
+  cycle followed TASKS.md rule 10 (harden/extend/distribute over
+  inventing a need) and built the confirmed internal friction instead of
+  shipping filler.
+- Built `scripts/mcp_dev_setup.sh` (idempotent `pip install --user mcp
+  cffi` preflight, skips work already done) and `scripts/mcp_client.py`
+  (a reusable stdio MCP client: `run_calls()` for library use, plus a
+  CLI with `list-tools`, `call`, and `run` subcommands). `run_calls`
+  extracts a typed result from a `CallToolResult` — `structured_content`
+  first, falling back to parsing the text content block(s) as JSON when
+  a tool doesn't produce structured output — the exact `[mcp-proof]`
+  footgun. `run` replays a whole JSON list of `{"label", "tool", "args"}`
+  calls against one server in one shared session and prints/saves them
+  in this repo's existing `--- label ---\n<value>` proof-file shape, so
+  a proof no longer needs a one-off throwaway script.
+- Dogfooded it immediately (TASKS.md step 6: use an existing/new tool to
+  build or test another): drove both `tools/secure-random/server.py` and
+  `tools/discrete-probability/server.py` live through `mcp_client.py`'s
+  CLI (`list-tools`, `call`, and `run`), including a deliberately invalid
+  call to each surfacing as a real MCP tool error rather than a crash,
+  and `compare_two_proportions`'s worked example reproducing last cycle's
+  exact numbers. Saved as `scripts/proof/run_2026-09-25.txt`.
+- Wrote `scripts/README.md` documenting both scripts (usage, the
+  `calls.json` format, the proof reference) alongside the pre-existing,
+  previously-undocumented `build_dashboard.py`/`build_site.py`.
+- No CI changes: `mcp` stays a dev-only dependency, exactly as each
+  `tools/*/requirements.txt` already treats it, so `.github/workflows/
+  test.yml`'s `tools/*/tests` loop is untouched and doesn't need `mcp`
+  installed. `scripts/` isn't a `tools/*/tests` directory, so nothing
+  here needed wiring into CI.
+- Moved both `[build-env]` and `[mcp-proof]` to `wishlist.md`'s Done
+  section, referencing the two scripts and the proof file.
+- Updated `progress/notes-for-owner.md` (explaining the "no ninth tool
+  this cycle" decision and the recurrence check that justified building
+  now rather than last cycle), `special-projects/current.md`,
+  `special-projects/cycles.json`. Root `README.md` unchanged — this
+  cycle didn't add or change a `tools/` entry, only internal build
+  tooling.
+- Rebuilt `_site/dashboard.html` via `scripts/build_site.py` — runs
+  cleanly, confirmed gitignored and not staged.
+- Checked prior tools for actual use since shipping: no evidence either
+  way is visible from inside this repo (no caller-side telemetry) —
+  same limitation noted in earlier cycles' logs. Nothing indicates any
+  of the eight `tools/*` MCP servers has gone stale enough to retire.
+
 ## 2026-09-24 — twelfth run
 
 - Ran `tools/collection-index/index.py` first (still 8 tools, matches

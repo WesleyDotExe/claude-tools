@@ -1,11 +1,12 @@
 # Current state
 
-**Last cycle:** 2026-09-24 (twelfth run)
+**Last cycle:** 2026-09-25 (thirteenth run)
 
 ## Where things stand
 
-Still eight tools in the collection (extended an existing one again this
-cycle, but for a new reason this time -- see below):
+Still eight `tools/*` MCP servers — this cycle built internal dev tooling
+under `scripts/` instead of a ninth tool or an extension to an existing
+one (see "why" below):
 
 - `tools/collection-index` — reads `tools/*/manifest.json`, the source of
   truth the dashboard (and future runs) read from instead of re-scanning
@@ -20,24 +21,15 @@ cycle, but for a new reason this time -- see below):
 - `tools/discrete-probability` — MCP server for exact discrete-probability
   calculations (birthday-paradox collisions, dice-sum distributions,
   drawing without replacement, binomial trials, Bayes' theorem, a
-  generalized Monty Hall problem). Every function accepts `verify=true` to
-  actually play the scenario out via CSPRNG simulation and check the exact
-  answer against the simulated frequency's 95% confidence interval.
-  **New this cycle:** `compare_two_proportions` -- is the gap between two
-  observed proportions (e.g. two win rates) statistically significant, or
-  plausibly noise? A pooled two-proportion z-test p-value, a Wilson CI per
-  group, and a Newcombe (1998) hybrid-score CI for the difference (reusing
-  the tool's own `_wilson_interval`), plus a plain verdict at any
-  caller-chosen confidence level (new `_norm_ppf`/`_norm_cdf` helpers, no
-  scipy needed). `verify=true` runs an independent CSPRNG permutation
-  (label-reshuffling) test, budget-capped like this collection's other
-  search/simulation tools. Built from `special-projects/wishlist.md`'s
-  `[balance-stats]` entry -- the first cycle this project's wishlist had
-  real content to read. See `progress/notes-for-owner.md`'s 2026-09-24
-  entry for a real design issue caught and fixed before committing (the
-  z-test and exact-permutation p-values can legitimately diverge; the
-  `verify=true` check compares the *significance call*, not raw numeric
-  equality).
+  generalized Monty Hall problem, and `compare_two_proportions`: a
+  two-proportion z-test with Wilson/Newcombe confidence intervals and a
+  plain verdict). Every function accepts `verify=true` to actually play
+  the scenario out via CSPRNG simulation and check the exact answer
+  against the simulated frequency (for `compare_two_proportions`, against
+  an independent permutation test's *significance call*, not raw p-value
+  equality -- see `special-projects/wishlist.md`'s
+  `[stats-normal-vs-exact-pvalue]` entry for why those legitimately
+  differ). Unchanged since cycle twelve.
 - `tools/logic-grid-solver` — MCP server that exactly solves logic grid
   ("zebra") puzzles via constraint propagation (arc consistency + MRV
   backtracking). `solve_logic_grid` proves uniqueness by continuing the
@@ -55,40 +47,48 @@ cycle, but for a new reason this time -- see below):
   `shortest_path`, `topological_sort`, `minimum_spanning_tree`, `max_flow`,
   `graph_coloring` + `chromatic_number`, `maximum_bipartite_matching`, and
   `assignment_problem` -- each solved via one algorithm and independently
-  checked via a second, structurally different one (Bellman-Ford,
-  direct-definition, cycle-property exchange, max-flow min-cut, DSATUR +
-  backtracking exhaustion, Koenig's theorem, LP duality respectively).
-  `generate_random_graph` gives a seeded, reproducible graph. Unchanged
-  since cycle ten -- see that entry in `special-projects/cycles.json` for
-  the bipartite-matching/assignment-problem build.
+  checked via a second, structurally different one. Unchanged since cycle
+  ten.
 - `tools/spaced-arrangement` — MCP server that constructs an ordering of
   items so no two items of the same category land within `min_distance`
   positions of each other, and proves it (budgeted backtracking search,
-  CSPRNG-randomized tie-breaking, `max_search_nodes` contract matching
-  `graph-algorithms`/`strips-planner`: full search-tree exhaustion proves
-  infeasibility, running out of budget raises instead of guessing).
-  `verify_arrangement` independently re-checks any claimed arrangement.
-  `generate_arrangement_problem` gives a seeded, reproducible instance.
-  **New this cycle:** `maximize_min_distance` -- given only the items (no
-  caller-chosen `min_distance`), finds the LARGEST `min_distance` for which
-  a valid arrangement exists and proves it's the largest, via binary
-  search over the existing exhaustive feasibility proof (feasibility is
-  monotonic in `min_distance`, so this is sound: O(log n) feasibility
-  checks, each one still a genuine budgeted exhaustive search). The final
-  answer's optimality is itself proven -- structurally when it hits the
-  `n-1` ceiling (the farthest two of `n` positions can ever be), or by one
-  more exhaustive search one distance higher that comes back impossible.
-  This is the rigorous formalization of "spread categories as evenly as
-  possible" that this tool's own README had flagged as a gap since it was
-  built -- and it directly completes the technique its own cited source
-  (Spotify's 2026 engineering write-up: generate many candidate shuffles,
-  pick the best-spread one) already described, by finding the best-spread
-  one directly via proof instead of by sampling.
+  CSPRNG-randomized tie-breaking). `verify_arrangement` independently
+  re-checks any claimed arrangement; `maximize_min_distance` finds the
+  largest achievable spacing and proves it's the largest. Unchanged since
+  cycle eleven.
+
+**New this cycle: `scripts/` dev tooling**, closing both items
+`special-projects/wishlist.md` had carried as open since cycle twelve:
+
+- `scripts/mcp_dev_setup.sh` — idempotent `pip install --user mcp cffi`
+  preflight (closes `[build-env]`: building/testing any `tools/*` server
+  here needs both, and the second import fails with a confusing pyo3
+  panic without `cffi`).
+- `scripts/mcp_client.py` — a reusable stdio MCP client, as a library
+  (`run_calls()`) and a CLI (`list-tools`/`call`/`run`), that extracts a
+  typed result from a `CallToolResult` (`structured_content` first, text-
+  content-as-JSON fallback) instead of every proof script re-deriving
+  that by hand (closes `[mcp-proof]`). `run` replays a whole JSON list of
+  labeled calls against one server and prints/saves them in this repo's
+  existing `--- label ---\n<value>` proof-file shape.
+
+Both were deliberately deferred at cycle twelve (their caller is this
+repo's own build process, not a named external MCP caller, so TASKS.md
+rule 3 said not to build them as `tools/` entries yet) pending a genuine
+*second* recurrence from a different cycle. This cycle supplied exactly
+that -- a fresh container hit the same missing-`mcp`/`cffi` failure, and
+writing this cycle's own proof needed the same text-parsing workaround --
+so they were built as `scripts/`, per cycle twelve's own plan. Proof
+they work, driving two different existing servers live:
+`scripts/proof/run_2026-09-25.txt`. See `scripts/README.md` for usage.
 
 CI runs each tool's test suite on every PR (`.github/workflows/test.yml`,
-296 tests total across all eight tools as of this cycle: 281 from before
-plus 15 new ones for `discrete-probability`'s `compare_two_proportions`)
-and `auto-merge.yml` waits for it genuinely.
+296 tests total across all eight tools, unchanged this cycle -- no
+`tools/*` code changed) and `auto-merge.yml` waits for it genuinely.
+`mcp` stays a dev-only dependency (installed locally via
+`mcp_dev_setup.sh`, never by CI), exactly as each tool's own
+`requirements.txt` already treats it -- `scripts/` isn't scanned by
+`test.yml`'s `tools/*/tests` loop, so this cycle needed no CI changes.
 
 `special-projects/cycles.json` has the full story (searches, source links,
 why each tool was picked, proof) for all cycles so far.
@@ -97,95 +97,80 @@ and `collection-index`'s scan — gitignored, rebuild it, don't commit it.
 
 ## Next step
 
-Options for cycle 13, roughly in order of how promising they looked during
+Options for cycle 14, roughly in order of how promising they looked during
 this cycle's research:
 
 1. **Check `special-projects/wishlist.md` FIRST, before anything else.**
-   This cycle it had real, concrete, sourced content for the first time
-   (created directly by the owner, commit `3fcf0d9`) and the loop worked
-   exactly as TASKS.md describes: read it, picked the one item with a named
-   external caller (`[balance-stats]`), built for it. Two items remain open
-   (`[build-env]`, `[mcp-proof]`) but were deliberately NOT built as MCP
-   tools -- their caller is this repo's own build process, not an external
-   agent invoking a tool over MCP (see `progress/notes-for-owner.md`'s
-   2026-09-24 entry for the reasoning). If either recurs (a genuine second
-   `+1`, from a different cycle actually re-hitting it, not just this
-   cycle's first-read), consider a small script under `scripts/` or `docs`
-   rather than a `tools/` entry, or reconsider whether an MCP-tool framing
-   actually fits after all. A fresh wishlist item may also have appeared by
-   the next cycle -- check before falling back to any of the below.
+   As of this cycle it has exactly one open item,
+   `[stats-normal-vs-exact-pvalue]` -- a design lesson for any *future*
+   significance-test tool, not a buildable gap on its own (nothing to
+   build until such a tool is proposed). If it's still the only open item
+   next cycle too, that means step 2 falls through to research/hardening
+   the same way it did before cycle twelve's wishlist content existed --
+   don't force a wishlist-sourced pick that isn't there.
 2. **`discrete-probability`'s real remaining gaps** (see its README's "What
-   it doesn't do", updated this cycle): `compare_two_proportions` doesn't
-   handle paired/matched samples (needs McNemar's test, not built), and its
+   it doesn't do"): `compare_two_proportions` doesn't handle
+   paired/matched samples (needs McNemar's test, not built), and its
    permutation-test budget caps out around `verify_trials *
    min(trials_a, trials_b) <= 10,000,000`. Neither has a surfaced real need
-   yet -- see `progress/quality-debt.md`'s new entry.
-3. **This cycle again found its win by extending an existing tool, not by
-   finding a new problem shape** -- the fourth cycle running now without a
-   seventh shape (see item 6 below), though this time the extension came
-   from the wishlist rather than a search failing to find a new shape.
-4. **Re-run the TASKS.md loop step 1 first, every cycle** (dogfood
-   `collection-index`, re-read each tool's own "what it doesn't do"
-   section fresh) before searching for new candidates -- this cycle
-   confirmed the collection-index output still matches
-   `tools/*/manifest.json` exactly, and the root README's tool list was
-   already in sync.
-5. **Two extend-candidates remain checked-and-deferred in `graph-algorithms`**
-   for lack of a *fresh, sourced* "LLMs get this wrong" complaint (not lack
-   of a real underlying problem), last re-checked 2026-09-23: **general
-   (non-bipartite) graph matching** (Edmonds' blossom algorithm -- stable
-   roommates, non-bipartite observational-study matching are real
-   applications, still no sharp real-world failure source) and
-   **rectangular/partial assignment** (unequal left/right sizes in
-   `assignment_problem` -- same verdict).
-6. **A promising-looking NEW tool idea remains rejected for saturation, not
+   yet -- see `progress/quality-debt.md`.
+3. **This cycle's win was internal build tooling, not a `tools/` change at
+   all** -- the first cycle in this collection's history that shipped
+   nothing under `tools/`. Don't read that as a new steady state: it was a
+   direct, deliberate payoff of cycle twelve's specific plan (build on
+   genuine second recurrence), not a general license to default to
+   `scripts/` work. Check the wishlist and search for a real caller before
+   reaching for another `scripts/` task.
+4. **Two extend-candidates remain checked-and-deferred in `graph-algorithms`**
+   for lack of a *fresh, sourced* "LLMs get this wrong" complaint, last
+   re-checked 2026-09-23: **general (non-bipartite) graph matching**
+   (Edmonds' blossom algorithm) and **rectangular/partial assignment**
+   (unequal left/right sizes in `assignment_problem`).
+5. **A promising-looking NEW tool idea remains rejected for saturation, not
    lack of a source (2026-09-23):** cross-timezone meeting/availability
-   finding (intersect N people's busy-interval lists across timezones and
-   DST). Found a genuinely sharp, concrete source (a MindStudio write-up
-   documenting Claude Code's OWN `check_availability` tool computing "end
-   of day" in UTC instead of the user's local timezone) but the underlying
-   algorithm is already implemented by several existing MCP servers, even
-   keyless ones (`mcp-calendar`, `when2meet-mcp`, `mcp-office-suite`'s
-   `free_busy`, `pim-agents`' `findFreeSlots`). **Do not re-propose without
-   a genuinely differentiated angle** (e.g. a proof/verification angle none
+   finding. Found a genuinely sharp source (a MindStudio write-up on
+   Claude Code's own `check_availability` tool miscomputing "end of day"
+   across timezones) but the underlying algorithm is already implemented
+   by several existing keyless MCP servers. **Do not re-propose without a
+   genuinely differentiated angle** (e.g. a proof/verification angle none
    of those offer).
-7. **`spaced-arrangement`'s remaining real gaps** (see its README's "What
-   it doesn't do"): per-category priority/weighting, and multi-dimensional
-   spacing (e.g. avoid both same-artist AND same-genre clustering at once).
-   The "spread evenly" gap itself is closed (`maximize_min_distance`,
-   cycle eleven).
-8. **Keep looking for genuinely different problem shapes** before reaching
+6. **`spaced-arrangement`'s remaining real gaps**: per-category
+   priority/weighting, and multi-dimensional spacing (e.g. avoid both
+   same-artist AND same-genre clustering at once).
+7. **Keep looking for genuinely different problem shapes** before reaching
    for another instance of a shape already covered: calculation, static
    CSP (`logic-grid-solver`), sequential action search (`strips-planner`),
    structural graph algorithms (`graph-algorithms`), and combinatorial
    generation under a guaranteed invariant (`spaced-arrangement`). No new
-   seventh shape has been identified in four cycles now. Treat
-   "extend/harden is a fully legitimate, repeatable outcome" (TASKS.md rule
-   9) as the collection's steady state at eight tools deep unless a future
-   cycle's search (or the wishlist) turns up something genuinely new.
-9. **Do not re-propose:** Secret Santa/derangement-with-exclusions
-   (privacy pain point, not correctness; already a special case of
-   `maximum_bipartite_matching`), bill-splitting/debt-simplification,
-   pairwise/covering-array test generation (PictMCP), regex generation/
-   ReDoS, synthetic-data generation with guaranteed correlation, OR-Tools-
-   based optimization/bin-packing/knapsack/job-shop scheduling,
-   round-robin scheduling, cryptarithmetic, or sudoku/latin-square/maze
-   generation -- all checked and rejected in earlier cycles for saturation
-   or scope-overlap, not infeasibility.
-10. **Apportionment/seat-allocation (D'Hondt, Sainte-Laguë, Hamilton) and
+   sixth shape has been identified in five cycles now (four extend cycles
+   plus this cycle's tooling cycle).
+8. **Do not re-propose:** Secret Santa/derangement-with-exclusions,
+   bill-splitting/debt-simplification, pairwise/covering-array test
+   generation, regex generation/ReDoS, synthetic-data generation with
+   guaranteed correlation, OR-Tools-based optimization/bin-packing/
+   knapsack/job-shop scheduling, round-robin scheduling, cryptarithmetic,
+   sudoku/latin-square/maze generation, word/character/token counting,
+   text-diff, cron-expression/unit/subnet/generic calculators, or
+   regex-ReDoS/WCAG-contrast checking -- all checked and rejected in
+   earlier cycles for saturation or scope-overlap, not infeasibility.
+9. **Apportionment/seat-allocation (D'Hondt, Sainte-Laguë, Hamilton) and
     stable matching (Gale-Shapley)** — plausible shapes, no sharp real
     "LLMs get this wrong" complaint found as of 2026-09-22. Worth
     revisiting only with a real source.
-11. **MCP mechanics notes for live-session proofs:** use
-    `result.content[0].text` parsed as JSON if `structured_content` is
-    `None`; use `result.is_error` (snake_case), not `result.isError`; the
-    local container needs `pip install --user mcp cffi` first. This
-    cycle's `mcp` version was still 2.2.0, same behavior as documented
-    previously.
+10. **`scripts/mcp_client.py` is now available for every future cycle's
+    proof-writing** — use it (`run` mode) instead of a one-off stdio
+    client script when driving a server live for a `tools/*/proof/`
+    transcript; it already handles the `structured_content`-vs-text-JSON
+    extraction and prints the same `--- label ---` shape those files use.
+11. **`progress/quality-debt.md`'s new entry:** TASKS.md step 9 ("check
+    usage") has no real mechanism behind it from inside this repo -- no
+    telemetry shows whether a shipped tool has actually been called by an
+    external agent. Worth the owner's attention if a real fix (agent-side
+    call logging, or the owner just saying what got used) becomes
+    possible; not something a future cycle can fix alone.
 12. **If nothing clears the bar:** re-read all eight tools' "what it
     doesn't do" sections fresh, and diff the root README's tool list
-    against `tools/*/manifest.json` -- both checked and confirmed in sync
-    this cycle.
+    against `tools/*/manifest.json`.
 
 Do NOT re-propose natural-language date parsing for `time-arithmetic` — its
 README frames the absence as a deliberate design boundary, not a gap
