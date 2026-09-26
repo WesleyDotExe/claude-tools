@@ -2,6 +2,46 @@
 
 Newest entry on top. One entry per cycle: what was done, honestly.
 
+## 2026-09-26 — fourteenth run
+
+- Ran `tools/collection-index/index.py` first: still 8 tools, output
+  matches `tools/*/manifest.json` exactly. Re-read `special-projects/
+  current.md`, `progress/quality-debt.md`, and `special-projects/
+  wishlist.md` per the loop. `wishlist.md` still had exactly one open
+  item (`[stats-normal-vs-exact-pvalue]`), a design lesson for a future
+  significance-test tool, not a buildable gap by itself.
+- Ran two fresh web searches on the top deferred extend-candidates
+  (Gale-Shapley stable matching; a generic "keyless MCP gap" search)
+  rather than assume last cycle's rejections still held. Neither
+  surfaced a sharp, sourced "LLMs get this wrong" complaint with a real
+  named caller — the Gale-Shapley hit was academic work on using LLMs to
+  *model* human preferences within stable matching, a different problem
+  from LLMs failing to *solve* it.
+- With no new wishlist item and no fresh sourced candidate, and with
+  cycle 13 having already used the "internal tooling" option, chose a
+  collection-wide verification pass per TASKS.md rule 10 instead of
+  inventing a need or defaulting to another `scripts/` task:
+  1. Ran the full test suite for all 8 tools: 296 tests, all passing,
+     unchanged from cycle 13.
+  2. Used `scripts/mcp_client.py`'s `list-tools` mode to live-drive all 7
+     MCP servers (every `tools/*/server.py`) and programmatically
+     cross-checked each live tool listing against its own
+     `manifest.json`'s `tools_exposed` field — this is the first time
+     `mcp_client.py` was used as an independent, collection-wide check
+     rather than one tool at a time alongside a change to that tool.
+     All 7 match exactly (discrete-probability 7, graph-algorithms 18,
+     logic-grid-solver 3, secure-random 11, spaced-arrangement 5,
+     strips-planner 4, time-arithmetic 5).
+  3. Diffed root `README.md`'s tool list against all 8 `manifest.json`
+     files (`current.md`'s own fallback suggestion) — exact match, no
+     drift.
+- No bugs or drift found. Saved the sweep as
+  `scripts/proof/run_2026-09-26.txt`, appended the cycle to
+  `special-projects/cycles.json`, rebuilt `_site/dashboard.html`, and
+  updated `special-projects/current.md`'s next-step list (flagged that
+  two cycles in a row have now shipped nothing under `tools/`, so cycle
+  15 should not treat this as a new steady state).
+
 ## 2026-09-25 — thirteenth run
 
 - Ran `tools/collection-index/index.py` first: still 8 tools, output

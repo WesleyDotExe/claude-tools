@@ -1,6 +1,6 @@
 # Current state
 
-**Last cycle:** 2026-09-25 (thirteenth run)
+**Last cycle:** 2026-09-26 (fourteenth run)
 
 ## Where things stand
 
@@ -95,9 +95,26 @@ why each tool was picked, proof) for all cycles so far.
 `scripts/build_site.py` renders `_site/dashboard.html` from `cycles.json`
 and `collection-index`'s scan — gitignored, rebuild it, don't commit it.
 
+**Cycle 14: no new `tools/` or `scripts/` entry -- a collection-wide
+verification pass, per TASKS.md rule 10.** `special-projects/wishlist.md`
+still had only the one non-buildable `[stats-normal-vs-exact-pvalue]`
+item, and two fresh, targeted web searches (Gale-Shapley stable matching;
+generic MCP-server gaps) turned up nothing that clears rule 3's "name the
+caller" bar for any of the deferred extend-candidates below. Rather than
+default to another `scripts/`-tooling cycle (which the previous cycle's
+own plan warned against becoming a habit) or invent a need, this cycle
+ran the full 296-test suite (all pass, unchanged) and used
+`scripts/mcp_client.py` -- previously only ever driven one tool at a
+time, alongside a change to that tool -- as an independent, collection-
+wide regression check: live-drove all 7 MCP servers' `list_tools` and
+programmatically cross-checked each one against its own
+`tools/*/manifest.json` `tools_exposed` field (all 7 match exactly), plus
+diffed root `README.md`'s tool list against all 8 manifests (also exact
+match, no drift). No bugs found. Proof: `scripts/proof/run_2026-09-26.txt`.
+
 ## Next step
 
-Options for cycle 14, roughly in order of how promising they looked during
+Options for cycle 15, roughly in order of how promising they looked during
 this cycle's research:
 
 1. **Check `special-projects/wishlist.md` FIRST, before anything else.**
@@ -114,13 +131,13 @@ this cycle's research:
    permutation-test budget caps out around `verify_trials *
    min(trials_a, trials_b) <= 10,000,000`. Neither has a surfaced real need
    yet -- see `progress/quality-debt.md`.
-3. **This cycle's win was internal build tooling, not a `tools/` change at
-   all** -- the first cycle in this collection's history that shipped
-   nothing under `tools/`. Don't read that as a new steady state: it was a
-   direct, deliberate payoff of cycle twelve's specific plan (build on
-   genuine second recurrence), not a general license to default to
-   `scripts/` work. Check the wishlist and search for a real caller before
-   reaching for another `scripts/` task.
+3. **Cycles 13 and 14 both shipped nothing under `tools/`** -- 13 built
+   internal build tooling (a genuine, deliberate payoff of cycle twelve's
+   specific plan), 14 was a verification-only pass (no new wishlist item,
+   no fresh sourced candidate). Two in a row is not license for a third:
+   check the wishlist and search hard for a real named caller before
+   cycle 15 reaches for anything other than a genuine `tools/` build or a
+   concretely-scoped extension.
 4. **Two extend-candidates remain checked-and-deferred in `graph-algorithms`**
    for lack of a *fresh, sourced* "LLMs get this wrong" complaint, last
    re-checked 2026-09-23: **general (non-bipartite) graph matching**
@@ -154,14 +171,20 @@ this cycle's research:
    regex-ReDoS/WCAG-contrast checking -- all checked and rejected in
    earlier cycles for saturation or scope-overlap, not infeasibility.
 9. **Apportionment/seat-allocation (D'Hondt, Sainte-Laguë, Hamilton) and
-    stable matching (Gale-Shapley)** — plausible shapes, no sharp real
-    "LLMs get this wrong" complaint found as of 2026-09-22. Worth
-    revisiting only with a real source.
-10. **`scripts/mcp_client.py` is now available for every future cycle's
+    stable matching (Gale-Shapley)** — plausible shapes, still no sharp
+    real "LLMs get this wrong" complaint as of 2026-09-26 (re-checked this
+    cycle: the only fresh Gale-Shapley hit was academic work using LLMs to
+    *model* human preferences within stable matching, not LLMs failing to
+    *solve* it). Worth revisiting only with a real source.
+10. **`scripts/mcp_client.py` is available for every future cycle's
     proof-writing** — use it (`run` mode) instead of a one-off stdio
     client script when driving a server live for a `tools/*/proof/`
     transcript; it already handles the `structured_content`-vs-text-JSON
     extraction and prints the same `--- label ---` shape those files use.
+    Cycle 14 also used its `list-tools` mode as a collection-wide
+    regression check (all 7 servers' live tool lists vs. their
+    manifests) -- worth repeating periodically, not just when a tool
+    changes.
 11. **`progress/quality-debt.md`'s new entry:** TASKS.md step 9 ("check
     usage") has no real mechanism behind it from inside this repo -- no
     telemetry shows whether a shipped tool has actually been called by an
@@ -169,8 +192,9 @@ this cycle's research:
     call logging, or the owner just saying what got used) becomes
     possible; not something a future cycle can fix alone.
 12. **If nothing clears the bar:** re-read all eight tools' "what it
-    doesn't do" sections fresh, and diff the root README's tool list
-    against `tools/*/manifest.json`.
+    doesn't do" sections fresh. (The README-vs-manifest diff this item
+    used to suggest was done this cycle -- no drift found -- so it's not
+    a fresh fallback next cycle unless a manifest or the README changes.)
 
 Do NOT re-propose natural-language date parsing for `time-arithmetic` — its
 README frames the absence as a deliberate design boundary, not a gap

@@ -1,0 +1,104 @@
+=== Cycle 14 regression sweep: list-tools against all 7 MCP servers, cross-checked against tools/*/manifest.json ===
+
+1. Unit tests: full suite across all 8 tools (296 tests total, unchanged).
+$ for d in tools/*/tests; do python3 -m unittest discover -s "$d"; done
+  tools/collection-index   Ran 4 tests -> OK
+  tools/discrete-probability Ran 56 tests -> OK
+  tools/graph-algorithms   Ran 89 tests -> OK
+  tools/logic-grid-solver  Ran 28 tests -> OK
+  tools/secure-random      Ran 47 tests -> OK
+  tools/spaced-arrangement Ran 34 tests -> OK
+  tools/strips-planner     Ran 25 tests -> OK
+  tools/time-arithmetic    Ran 13 tests -> OK
+
+2. Live driving of every MCP server via scripts/mcp_client.py list-tools, output cross-checked against each tools/*/manifest.json's tools_exposed.
+
+$ python3 scripts/mcp_client.py list-tools tools/discrete-probability/server.py
+--- list_tools ---
+[
+  "birthday_collision",
+  "dice_sum_distribution",
+  "hypergeometric_probability",
+  "binomial_probability",
+  "bayes_update",
+  "monty_hall",
+  "compare_two_proportions"
+]
+
+$ python3 scripts/mcp_client.py list-tools tools/graph-algorithms/server.py
+--- list_tools ---
+[
+  "describe_graph_format",
+  "shortest_path",
+  "verify_shortest_path",
+  "topological_sort",
+  "verify_topological_order",
+  "minimum_spanning_tree",
+  "verify_minimum_spanning_tree",
+  "max_flow",
+  "verify_max_flow",
+  "graph_coloring",
+  "verify_coloring",
+  "chromatic_number",
+  "describe_bipartite_format",
+  "maximum_bipartite_matching",
+  "verify_bipartite_matching",
+  "assignment_problem",
+  "verify_assignment",
+  "generate_random_graph"
+]
+
+$ python3 scripts/mcp_client.py list-tools tools/logic-grid-solver/server.py
+--- list_tools ---
+[
+  "describe_clue_types",
+  "solve_logic_grid",
+  "verify_logic_grid_solution"
+]
+
+$ python3 scripts/mcp_client.py list-tools tools/secure-random/server.py
+--- list_tools ---
+[
+  "roll_dice",
+  "random_integers",
+  "random_floats",
+  "flip_coins",
+  "shuffle_list",
+  "pick_random",
+  "generate_password",
+  "generate_token",
+  "generate_uuid4",
+  "verify_uniformity",
+  "verify_weighted_distribution"
+]
+
+$ python3 scripts/mcp_client.py list-tools tools/spaced-arrangement/server.py
+--- list_tools ---
+[
+  "describe_arrangement_format",
+  "arrange_with_spacing",
+  "verify_arrangement",
+  "maximize_min_distance",
+  "generate_arrangement_problem"
+]
+
+$ python3 scripts/mcp_client.py list-tools tools/strips-planner/server.py
+--- list_tools ---
+[
+  "describe_planning_format",
+  "solve_planning_problem",
+  "verify_plan",
+  "generate_blocks_world_problem"
+]
+
+$ python3 scripts/mcp_client.py list-tools tools/time-arithmetic/server.py
+--- list_tools ---
+[
+  "convert_timezone",
+  "add_time_delta",
+  "time_difference",
+  "date_facts",
+  "search_timezones"
+]
+
+3. Result: every server's live tools_exposed set is byte-for-byte identical (as a set) to its manifest.json declaration -- no drift across all 7 MCP servers in this collection.
