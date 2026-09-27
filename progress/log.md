@@ -2,6 +2,77 @@
 
 Newest entry on top. One entry per cycle: what was done, honestly.
 
+## 2026-09-27 — fifteenth run
+
+- Ran `tools/collection-index/index.py` first: still 8 tools, matches
+  `tools/*/manifest.json` exactly (unchanged). Re-read `special-projects/
+  wishlist.md` per the loop and found it had gained two fresh OWNER
+  entries plus a standing directive since cycle 14: `[ai-tcg-caller]`,
+  `[usage-telemetry]`, and `[distribute-and-harden]`.
+- Picked `[ai-tcg-caller]` — an owner-named external caller (the AI TCG
+  balance harness, TypeScript), an owner-named tool
+  (`discrete-probability.compare_two_proportions`), and an owner-
+  described exact scenario (a 300-vs-900-seed win-rate gap with ~2.9pt
+  standard error). No web search needed: TASKS.md rule 2 says a wishlist
+  item beats a sourced candidate, and this is as clear a "name the
+  caller" hit (rule 3) as this collection has had.
+- Confirmed `node`/`npm`/`npx` are available in this environment and that
+  `npm view @modelcontextprotocol/sdk version` resolves (network access
+  to the npm registry works), before committing to a TypeScript-based
+  deliverable.
+- Built `tools/discrete-probability/examples/ts-client/`:
+  - `src/client.ts` — `McpStdioSession` (reusable connection,
+    `connect()`/`listTools()`/`callTool<T>()`/`close()`) wrapping
+    `@modelcontextprotocol/sdk`'s `Client` + `StdioClientTransport`, plus
+    a one-shot `callTool()` helper. Extraction logic mirrors
+    `scripts/mcp_client.py`'s `_extract()`: prefers `structuredContent`,
+    falls back to parsing the text content block as JSON; a tool error
+    (`isError: true`) throws instead of returning silently.
+  - `src/types.ts` — `CompareTwoProportionsResult`, hand-typed against
+    `probkit.py`'s actual return dict (read the source, not just the
+    docstring, to get the `simulation` key's real shape right — the
+    docstring doesn't name it).
+  - `src/example.ts` — runnable example modeling the wishlist's exact
+    56.0%-vs-58.0% (168/300 vs 522/900) scenario, with `verify: true` and
+    branch-on-`result.significant` logic a real harness would use.
+  - `src/prove.ts` — proof script: `list_tools`, the success-path call,
+    and a deliberate error case (`trials_a: 0`) confirming the client
+    throws with the server's message rather than swallowing it.
+  - `README.md` — exactly how an external TS project wires this in
+    (install `python3` deps via `scripts/mcp_dev_setup.sh`, `npm install
+    @modelcontextprotocol/sdk`, point `SERVER_SCRIPT` at the checkout),
+    plus a note on `stderr` inheriting by default from the spawned
+    Python process.
+- Type-checked (`npx tsc --noEmit`, clean) and live-drove the real
+  server: `npm run example` and `npm run prove` both work end-to-end
+  against the actual Python process over stdio, not a mock. Captured
+  `proof/run_2026-09-27.txt` (list_tools, the full typed
+  `compare_two_proportions` result including the permutation-test
+  cross-check, and the error case's thrown message).
+- Confirmed no regression: `python3 -m unittest discover -s tests` in
+  `tools/discrete-probability/` still passes all 56 tests unchanged (no
+  Python code was touched, only README.md and manifest.json).
+- Updated `tools/discrete-probability/README.md` (new "Calling it from a
+  non-Python project" section) and `manifest.json` (new `examples` array
+  entry, `updated` date). Added `node_modules/`/`dist/` to root
+  `.gitignore`; committed `package-lock.json` for reproducibility.
+- Moved `[ai-tcg-caller]` to `wishlist.md`'s Done section, explicit about
+  scope: this repo built the enabling client + doc, but actually wiring
+  it into AI TCG's own harness is out of this repo's reach (no access to
+  that codebase) and is that repo's own follow-up. Recorded the same
+  caveat in `progress/notes-for-owner.md` so the owner (or that session)
+  sees it.
+- Left `[usage-telemetry]` open for cycle 16 — it needs its own design
+  pass (where the log lives, shared helper vs. per-tool duplication)
+  rather than being squeezed in alongside this build; recorded as the
+  top next-step candidate in `special-projects/current.md`.
+- Added a `progress/quality-debt.md` entry: the new TS example isn't
+  covered by CI (`test.yml` only scans `tools/*/tests`), and
+  `types.ts`'s result type is hand-kept in sync with `probkit.py` with no
+  generated schema to check it against.
+- Appended cycle 15 to `special-projects/cycles.json`, rebuilt
+  `_site/dashboard.html` via `scripts/build_site.py`.
+
 ## 2026-09-26 — fourteenth run
 
 - Ran `tools/collection-index/index.py` first: still 8 tools, output

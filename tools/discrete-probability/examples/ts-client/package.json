@@ -1,0 +1,20 @@
+{
+  "name": "discrete-probability-ts-client-example",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Minimal Node/TypeScript client for the discrete-probability MCP server, built for an external TS project (e.g. a win-rate balance harness) to call compare_two_proportions over stdio.",
+  "type": "module",
+  "scripts": {
+    "example": "tsx src/example.ts",
+    "prove": "tsx src/prove.ts",
+    "build": "tsc -p ."
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0",
+    "@types/node": "^22.10.0"
+  }
+}

@@ -522,3 +522,15 @@ package needs it and errors with a confusing `pyo3_runtime.PanicException`
 Neither is committed to the repo (each tool declares its own
 `requirements.txt`); noting it here so the next cycle doesn't lose time
 rediscovering it if the same container image is reused.
+
+## Cross-repo follow-up needed for [ai-tcg-caller] (2026-09-27)
+
+This cycle built the *enabling* side of the owner's `[ai-tcg-caller]`
+wishlist item: `tools/discrete-probability/examples/ts-client/`, a
+Node/TypeScript client + integration doc so an external TS project can call
+`compare_two_proportions` over stdio. This repo has no access to the AI TCG
+codebase, so the actual wiring — pointing AI TCG's balance harness at this
+client for a real win-rate decision — is a follow-up step for that repo's
+own agent, not something this cycle could complete. Worth telling that
+session (or its next scheduled run) where the example lives, if it isn't
+already watching this repo.

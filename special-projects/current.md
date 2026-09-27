@@ -1,6 +1,47 @@
 # Current state
 
-**Last cycle:** 2026-09-26 (fourteenth run)
+**Last cycle:** 2026-09-27 (fifteenth run)
+
+## This cycle (15): built the enabling side of `[ai-tcg-caller]`
+
+`special-projects/wishlist.md` gained two fresh OWNER entries since cycle
+14 ([ai-tcg-caller], [usage-telemetry]) plus a standing directive
+([distribute-and-harden]). `[ai-tcg-caller]` is the strongest "name the
+caller" hit this collection has had (TASKS.md rule 3): an owner-named
+external project (the AI TCG balance harness, TypeScript), an owner-named
+tool (`discrete-probability.compare_two_proportions`), and an owner-
+described exact question (a win-rate gap at 300 vs 900 seeds, ~2.9pt
+standard error). Built for it, no web search needed (rule 2: a wishlist
+item beats a sourced candidate).
+
+Shipped `tools/discrete-probability/examples/ts-client/` — a minimal,
+reusable Node/TypeScript client (`@modelcontextprotocol/sdk`'s `Client` +
+`StdioClientTransport`, wrapped as `McpStdioSession`) so an external TS
+project can call any tool on this (or any) server here and get a typed
+result, preferring `structuredContent` and falling back to parsing the
+text content block as JSON — the same extraction rule
+`scripts/mcp_client.py` uses on the Python side, kept consistent across
+both language clients. `src/example.ts` models the exact scenario
+`[ai-tcg-caller]` names; `src/prove.ts` drove the live server for both the
+success path and a deliberate error case (`trials_a=0` correctly throwing,
+not swallowed). Proof: `tools/discrete-probability/examples/ts-client/
+proof/run_2026-09-27.txt`. `discrete-probability`'s own Python code is
+unchanged (all 56 unit tests still pass) — only its README and
+`manifest.json` (new `examples` array entry) were touched.
+
+**Not done by this repo, and can't be:** actually wiring this client into
+AI TCG's own harness so it makes a real call. This repo has no access to
+that codebase — see `progress/notes-for-owner.md`'s new entry. Moved
+`[ai-tcg-caller]` to wishlist.md's Done section with that caveat spelled
+out, since the deliverable the entry itself asked for ("deliver the
+enabling side here") is complete.
+
+`[usage-telemetry]` (the other fresh OWNER item) was deliberately left for
+a future cycle — it needs its own design pass (where the log lives, what
+it looks like across all 7 servers) rather than being squeezed in
+alongside this cycle's build; see "Next step" below.
+
+## Before cycle 15 (state as of cycle 14, 2026-09-26)
 
 ## Where things stand
 
@@ -114,36 +155,43 @@ match, no drift). No bugs found. Proof: `scripts/proof/run_2026-09-26.txt`.
 
 ## Next step
 
-Options for cycle 15, roughly in order of how promising they looked during
-this cycle's research:
+Options for cycle 16, roughly in order of how promising they look:
 
 1. **Check `special-projects/wishlist.md` FIRST, before anything else.**
-   As of this cycle it has exactly one open item,
-   `[stats-normal-vs-exact-pvalue]` -- a design lesson for any *future*
-   significance-test tool, not a buildable gap on its own (nothing to
-   build until such a tool is proposed). If it's still the only open item
-   next cycle too, that means step 2 falls through to research/hardening
-   the same way it did before cycle twelve's wishlist content existed --
-   don't force a wishlist-sourced pick that isn't there.
-2. **`discrete-probability`'s real remaining gaps** (see its README's "What
+   As of this cycle it has two open items: `[usage-telemetry]` (an OWNER
+   item — see below) and `[stats-normal-vs-exact-pvalue]` (a design
+   lesson, not a buildable gap by itself).
+2. **`[usage-telemetry]` is the strongest candidate for cycle 16.** OWNER-
+   authored, names its own caller ("the loop itself + the owner's agent
+   stack"), and is exactly the kind of concrete, scoped build rule 4
+   (feasibility gate) wants: each `tools/*/server.py` appends an
+   invocation record (tool name, timestamp, ok/error) to a local, opt-in
+   log. Needs its own design pass this cycle deliberately deferred
+   (where the log lives — per-tool vs. collection-wide; a shared helper
+   module vs. duplicating logging code seven times; whether the log
+   itself needs a size cap/rotation) rather than bolting it on alongside
+   the `[ai-tcg-caller]` build. Read `progress/quality-debt.md`'s
+   standing note on this (TASKS.md step 9 having "no real mechanism")
+   before starting.
+3. **`[distribute-and-harden]` (OWNER standing directive)** says idle
+   cycles should default to hardening + distribution, not another
+   verification pass, until real usage data is flowing. `[usage-
+   telemetry]` is the prerequisite for that data existing at all — build
+   it before reaching for generic "package for an MCP registry" work,
+   since telemetry is what will tell future cycles which tool is actually
+   worth that investment.
+4. **`discrete-probability`'s real remaining gaps** (see its README's "What
    it doesn't do"): `compare_two_proportions` doesn't handle
    paired/matched samples (needs McNemar's test, not built), and its
    permutation-test budget caps out around `verify_trials *
    min(trials_a, trials_b) <= 10,000,000`. Neither has a surfaced real need
    yet -- see `progress/quality-debt.md`.
-3. **Cycles 13 and 14 both shipped nothing under `tools/`** -- 13 built
-   internal build tooling (a genuine, deliberate payoff of cycle twelve's
-   specific plan), 14 was a verification-only pass (no new wishlist item,
-   no fresh sourced candidate). Two in a row is not license for a third:
-   check the wishlist and search hard for a real named caller before
-   cycle 15 reaches for anything other than a genuine `tools/` build or a
-   concretely-scoped extension.
-4. **Two extend-candidates remain checked-and-deferred in `graph-algorithms`**
+5. **Two extend-candidates remain checked-and-deferred in `graph-algorithms`**
    for lack of a *fresh, sourced* "LLMs get this wrong" complaint, last
    re-checked 2026-09-23: **general (non-bipartite) graph matching**
    (Edmonds' blossom algorithm) and **rectangular/partial assignment**
    (unequal left/right sizes in `assignment_problem`).
-5. **A promising-looking NEW tool idea remains rejected for saturation, not
+6. **A promising-looking NEW tool idea remains rejected for saturation, not
    lack of a source (2026-09-23):** cross-timezone meeting/availability
    finding. Found a genuinely sharp source (a MindStudio write-up on
    Claude Code's own `check_availability` tool miscomputing "end of day"
@@ -151,16 +199,9 @@ this cycle's research:
    by several existing keyless MCP servers. **Do not re-propose without a
    genuinely differentiated angle** (e.g. a proof/verification angle none
    of those offer).
-6. **`spaced-arrangement`'s remaining real gaps**: per-category
+7. **`spaced-arrangement`'s remaining real gaps**: per-category
    priority/weighting, and multi-dimensional spacing (e.g. avoid both
    same-artist AND same-genre clustering at once).
-7. **Keep looking for genuinely different problem shapes** before reaching
-   for another instance of a shape already covered: calculation, static
-   CSP (`logic-grid-solver`), sequential action search (`strips-planner`),
-   structural graph algorithms (`graph-algorithms`), and combinatorial
-   generation under a guaranteed invariant (`spaced-arrangement`). No new
-   sixth shape has been identified in five cycles now (four extend cycles
-   plus this cycle's tooling cycle).
 8. **Do not re-propose:** Secret Santa/derangement-with-exclusions,
    bill-splitting/debt-simplification, pairwise/covering-array test
    generation, regex generation/ReDoS, synthetic-data generation with
@@ -172,29 +213,22 @@ this cycle's research:
    earlier cycles for saturation or scope-overlap, not infeasibility.
 9. **Apportionment/seat-allocation (D'Hondt, Sainte-Laguë, Hamilton) and
     stable matching (Gale-Shapley)** — plausible shapes, still no sharp
-    real "LLMs get this wrong" complaint as of 2026-09-26 (re-checked this
-    cycle: the only fresh Gale-Shapley hit was academic work using LLMs to
-    *model* human preferences within stable matching, not LLMs failing to
-    *solve* it). Worth revisiting only with a real source.
+    real "LLMs get this wrong" complaint as of 2026-09-26. Worth
+    revisiting only with a real source.
 10. **`scripts/mcp_client.py` is available for every future cycle's
     proof-writing** — use it (`run` mode) instead of a one-off stdio
-    client script when driving a server live for a `tools/*/proof/`
-    transcript; it already handles the `structured_content`-vs-text-JSON
-    extraction and prints the same `--- label ---` shape those files use.
-    Cycle 14 also used its `list-tools` mode as a collection-wide
-    regression check (all 7 servers' live tool lists vs. their
-    manifests) -- worth repeating periodically, not just when a tool
-    changes.
-11. **`progress/quality-debt.md`'s new entry:** TASKS.md step 9 ("check
-    usage") has no real mechanism behind it from inside this repo -- no
-    telemetry shows whether a shipped tool has actually been called by an
-    external agent. Worth the owner's attention if a real fix (agent-side
-    call logging, or the owner just saying what got used) becomes
-    possible; not something a future cycle can fix alone.
+    client script when driving a *Python* server live. This cycle's TS
+    example needed its own equivalent extraction logic on the Node side
+    (`tools/discrete-probability/examples/ts-client/src/client.ts`) since
+    `mcp_client.py` is Python-only — worth generalizing only if a *second*
+    TS-caller need appears (rule per this project's own pattern: don't
+    build the shared version until a genuine second recurrence).
+11. **`progress/quality-debt.md`'s new entry (2026-09-27):** the new TS
+    example isn't covered by CI (`test.yml` only runs `tools/*/tests`) --
+    worth a lightweight CI job if this "non-Python example client"
+    pattern recurs for another tool.
 12. **If nothing clears the bar:** re-read all eight tools' "what it
-    doesn't do" sections fresh. (The README-vs-manifest diff this item
-    used to suggest was done this cycle -- no drift found -- so it's not
-    a fresh fallback next cycle unless a manifest or the README changes.)
+    doesn't do" sections fresh.
 
 Do NOT re-propose natural-language date parsing for `time-arithmetic` — its
 README frames the absence as a deliberate design boundary, not a gap

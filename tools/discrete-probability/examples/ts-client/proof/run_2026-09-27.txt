@@ -1,0 +1,96 @@
+--- list_tools ---
+[
+  "birthday_collision",
+  "dice_sum_distribution",
+  "hypergeometric_probability",
+  "binomial_probability",
+  "bayes_update",
+  "monty_hall",
+  "compare_two_proportions"
+]
+
+--- compare_two_proportions (300 vs 900 seeds, verify=true) ---
+{
+  "group_a": {
+    "successes": 168,
+    "trials": 300,
+    "proportion": 0.56,
+    "wilson_ci": [
+      0.503422,
+      0.615061
+    ]
+  },
+  "group_b": {
+    "successes": 522,
+    "trials": 900,
+    "proportion": 0.58,
+    "wilson_ci": [
+      0.547482,
+      0.611838
+    ]
+  },
+  "confidence_level": 0.95,
+  "difference_a_minus_b": -0.02,
+  "difference_ci_newcombe": [
+    -0.084921,
+    0.043946
+  ],
+  "z_statistic": -0.606866,
+  "p_value": 0.54394,
+  "significant": false,
+  "verdict": "The observed gap (56.0% vs 58.0%, n=300/900) is NOT statistically significant at the 95% confidence level (p=0.5439, difference CI [-8.5%, 4.4%] includes 0) -- plausibly noise given the sample sizes.",
+  "simulation": {
+    "method": "permutation test: pool both groups' outcomes, reshuffle group labels via CSPRNG verify_trials times, count how often the relabeled gap is >= the one actually observed (makes no normal-theory assumption)",
+    "trials": 20000,
+    "empirical_p_value": 0.58265,
+    "empirical_p_value_95_ci": [
+      0.5758,
+      0.589468
+    ],
+    "analytic_p_value": 0.54394,
+    "agrees_on_significance_call": true,
+    "note": "analytic_p_value is the pooled-variance z-test's large-sample normal approximation; empirical_p_value is a Monte Carlo estimate of the exact permutation-test p-value (confirmed against an exact hypergeometric-tail calculation during development), which makes no normal-theory assumption. The two are expected to be close but are not the same quantity, and can differ by a few points of p especially at moderate sample sizes -- what matters in practice is whether they agree on the significance call (agrees_on_significance_call), not exact numeric equality."
+  }
+}
+
+--- compare_two_proportions error case (trials_a=0, expect thrown error) ---
+Tool 'compare_two_proportions' raised an unexpected exception
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/base.py", line 176, in run
+    result = await self.fn_metadata.call_fn(self.fn, self.is_async, validated, pass_directly)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/utilities/func_metadata.py", line 164, in call_fn
+    return await anyio.to_thread.run_sync(functools.partial(fn, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/discrete-probability/server.py", line 150, in compare_two_proportions
+    return probkit.compare_two_proportions(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/claude-tools/tools/discrete-probability/probkit.py", line 619, in compare_two_proportions
+    raise ValueError("trials_a and trials_b must each be >= 1")
+ValueError: trials_a and trials_b must each be >= 1
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/server.py", line 433, in _handle_call_tool
+    return await self.call_tool(params.name, params.arguments or {}, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/server.py", line 539, in call_tool
+    return await self._tool_manager.call_tool(name, arguments, context, convert_result=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/tool_manager.py", line 87, in call_tool
+    return await tool.run(arguments, context, convert_result=convert_result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/lib/python3.11/site-packages/mcp/server/mcpserver/tools/base.py", line 210, in run
+    raise UnexpectedToolError(f"Error executing tool {self.name}") from exc
+mcp.server.mcpserver.exceptions.UnexpectedToolError: Error executing tool compare_two_proportions
+Correctly threw: compare_two_proportions failed: Error executing tool compare_two_proportions

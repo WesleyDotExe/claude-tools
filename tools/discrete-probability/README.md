@@ -170,3 +170,13 @@ Point an MCP client at it, e.g. in Claude Desktop/Code's MCP config:
   }
 }
 ```
+
+## Calling it from a non-Python project
+
+If your caller is a Node/TypeScript project (e.g. a balance-testing
+harness) rather than an MCP-aware host, see
+[`examples/ts-client/`](examples/ts-client/) — a minimal, reusable client
+built on `@modelcontextprotocol/sdk`, with a runnable example that models
+exactly the "is a win-rate gap between two sample sizes real or noise"
+question, and a proof transcript driving the live server (success + error
+paths) from Node.

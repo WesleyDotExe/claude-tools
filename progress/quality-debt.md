@@ -238,3 +238,19 @@ tool that chi-square-tests real draws against the requested weights,
 extending the same proof-not-assertion pattern `verify_uniformity` already
 used for the uniform case. 13 new unit tests plus a live MCP session
 (`proof/run_2026-09-15.txt`).
+
+## `discrete-probability/examples/ts-client` isn't covered by CI (2026-09-27)
+
+`.github/workflows/test.yml` only runs `tools/*/tests` (Python) and the
+collection-index sanity check; the new TS example has no `tests/` dir (it's
+an example + proof, not a unit-tested library) and needs `npm install`
+first, so it isn't wired into CI. This means a future `@modelcontextprotocol/
+sdk` major version, or a change to `compare_two_proportions`'s return
+shape, could silently break `src/client.ts`/`src/types.ts` without a test
+catching it — the only guard right now is the committed proof transcript
+from this cycle. Also, `src/types.ts`'s `CompareTwoProportionsResult` is
+hand-kept in sync with `probkit.py`'s return dict; there's no generated
+schema to check it against. Worth a future cycle adding a lightweight CI
+job (`npm ci && npm run build && npm run prove`) if this pattern
+(non-Python example clients) recurs for another tool, rather than fixing
+it in isolation for just this one directory.

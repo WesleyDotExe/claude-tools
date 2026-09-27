@@ -11,7 +11,15 @@
   "tests": "tests/test_probkit.py",
   "proof": "proof/run_2026-09-24.txt",
   "created": "2026-09-16",
-  "updated": "2026-09-24",
+  "updated": "2026-09-27",
+  "examples": [
+    {
+      "path": "examples/ts-client",
+      "language": "typescript",
+      "summary": "Minimal Node/TS client (@modelcontextprotocol/sdk) for an external non-Python caller, e.g. a win-rate balance harness, to call compare_two_proportions.",
+      "proof": "examples/ts-client/proof/run_2026-09-27.txt"
+    }
+  ],
   "tools_exposed": [
     "birthday_collision",
     "dice_sum_distribution",
