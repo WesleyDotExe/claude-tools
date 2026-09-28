@@ -1,5 +1,34 @@
 # Notes for owner
 
+## 2026-09-28: `[usage-telemetry]` shipped — one action needed from you (or your agents' MCP config) for it to start collecting anything real
+
+This cycle built `tools/usage-telemetry/`, closing the OWNER-authored
+`[usage-telemetry]` wishlist item: every other server in this collection
+(`secure-random`, `discrete-probability`, `graph-algorithms`,
+`logic-grid-solver`, `spaced-arrangement`, `strips-planner`,
+`time-arithmetic` — all 53 tool functions across them) now records
+`{timestamp, server, tool, ok/error}` to a local JSONL file *if and only
+if* `CLAUDE_TOOLS_USAGE_LOG` is set in that server process's environment.
+`usage-telemetry`'s own `read_usage_summary`/`tail_usage_events` tools read
+that file back into real counts. Fully proven working end-to-end this
+cycle (`tools/usage-telemetry/proof/run_2026-09-28.txt`): drove
+`secure-random` and `time-arithmetic` live with the env var set, confirmed
+both processes' calls landed in the same file, then drove `usage-telemetry`
+itself and confirmed its aggregate matches exactly.
+
+**What this repo can't do, and needs from you:** turn the env var on in
+your actual MCP client config for these servers, the same way
+`[ai-tcg-caller]`'s TS client needed cross-repo wiring this repo has no
+access to. Nothing will accumulate in the log — and TASKS.md step 9 will
+stay unanswerable in practice, even though the mechanism now exists — until
+`CLAUDE_TOOLS_USAGE_LOG` is set to the same path on every `tools/*/server.py`
+entry in whatever MCP client config your agent stack actually runs
+(`tools/usage-telemetry/README.md` has the exact config snippet). Once
+that's live, a future build cycle can call `read_usage_summary` at the top
+of its own loop and get a real answer to "has this tool actually been
+called since it shipped?" instead of guessing from whether the code still
+exists.
+
 ## 2026-09-25: closed both deliberately-deferred wishlist items with dev tooling, not a ninth `tools/` entry
 
 Last cycle (2026-09-24) explicitly left `[build-env]` and `[mcp-proof]`

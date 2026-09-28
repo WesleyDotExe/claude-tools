@@ -15,5 +15,6 @@
     "describe_clue_types",
     "solve_logic_grid",
     "verify_logic_grid_solution"
-  ]
+  ],
+  "updated": "2026-09-28"
 }

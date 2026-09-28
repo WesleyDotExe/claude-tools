@@ -4,6 +4,22 @@ Run: python3 server.py
 Wire into an MCP client (e.g. Claude Desktop/Code) with a stdio server
 entry pointing at this file. See README.md for a config snippet.
 """
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "usage-telemetry"))
+try:
+    from telemetrykit import track
+except ImportError:  # usage-telemetry not present alongside this tool
+
+    def track(_server_name):
+        def _decorator(fn):
+            return fn
+
+        return _decorator
+
+
 from typing import Any
 
 from mcp.server.mcpserver import MCPServer
@@ -26,36 +42,42 @@ server = MCPServer(
 
 
 @server.tool()
+@track("secure-random")
 def roll_dice(notation: str) -> dict:
     """Roll dice in standard notation: 'NdM' with optional '+K'/'-K', e.g. '2d6+3'."""
     return randkit.roll_dice(notation)
 
 
 @server.tool()
+@track("secure-random")
 def random_integers(low: int, high: int, count: int = 1) -> list[int]:
     """`count` independent, uniform, CSPRNG integers in the inclusive range [low, high]."""
     return randkit.random_integers(low, high, count)
 
 
 @server.tool()
+@track("secure-random")
 def random_floats(low: float = 0.0, high: float = 1.0, count: int = 1) -> list[float]:
     """`count` independent, uniform, CSPRNG floats in [low, high)."""
     return randkit.random_floats(low, high, count)
 
 
 @server.tool()
+@track("secure-random")
 def flip_coins(count: int = 1) -> dict:
     """Flip `count` fair coins; returns each result plus heads/tails totals."""
     return randkit.flip_coins(count)
 
 
 @server.tool()
+@track("secure-random")
 def shuffle_list(items: list[Any]) -> list[Any]:
     """Return a CSPRNG-shuffled copy of `items` (Fisher-Yates)."""
     return randkit.shuffle_list(items)
 
 
 @server.tool()
+@track("secure-random")
 def pick_random(
     items: list[Any], count: int = 1, unique: bool = True, weights: list[float] | None = None
 ) -> list[Any]:
@@ -67,6 +89,7 @@ def pick_random(
 
 
 @server.tool()
+@track("secure-random")
 def generate_password(
     length: int = 16,
     use_upper: bool = True,
@@ -82,18 +105,21 @@ def generate_password(
 
 
 @server.tool()
+@track("secure-random")
 def generate_token(nbytes: int = 32, encoding: str = "hex") -> str:
     """A CSPRNG token of `nbytes` random bytes, as 'hex' or 'urlsafe' text."""
     return randkit.generate_token(nbytes, encoding)
 
 
 @server.tool()
+@track("secure-random")
 def generate_uuid4() -> str:
     """A random (version 4) UUID."""
     return randkit.generate_uuid4()
 
 
 @server.tool()
+@track("secure-random")
 def verify_uniformity(low: int, high: int, samples: int = 10000) -> dict:
     """Chi-square-test `samples` draws from [low, high] for uniformity and report a p-value --
     proof that this tool's output doesn't cluster on a favorite value the way a language
@@ -103,6 +129,7 @@ def verify_uniformity(low: int, high: int, samples: int = 10000) -> dict:
 
 
 @server.tool()
+@track("secure-random")
 def verify_weighted_distribution(weights: list[float], samples: int = 10000) -> dict:
     """Chi-square-test `samples` weighted picks over `weights` against the distribution
     they should follow, and report a p-value -- proof that pick_random's weighted mode

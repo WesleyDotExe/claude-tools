@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -91,13 +92,29 @@ def _error_text(result: Any) -> str:
 
 
 async def run_calls(
-    server_path: str, calls: list[dict[str, Any]], python: str | None = None
+    server_path: str,
+    calls: list[dict[str, Any]],
+    python: str | None = None,
+    env: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     """Drive `server_path` over stdio for the whole session, executing
     `calls` in order against one shared ClientSession (matching how a real
     MCP client talks to a server: one initialize, many calls).
+
+    The spawned server inherits this process's full environment (merged
+    with `env`, if given, taking precedence) rather than `mcp`'s own
+    client-library default of a small safe-to-inherit allowlist -- that
+    default exists for a client talking to a third party's server, which
+    isn't this: a repo's own dev harness driving its own `tools/*/server.py`
+    needs a caller-set var like `CLAUDE_TOOLS_USAGE_LOG` to actually reach
+    the server, the same as running it directly with `python3 server.py`
+    would.
     """
-    params = StdioServerParameters(command=python or sys.executable, args=[server_path])
+    params = StdioServerParameters(
+        command=python or sys.executable,
+        args=[server_path],
+        env={**os.environ, **(env or {})},
+    )
     results: list[dict[str, Any]] = []
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as session:

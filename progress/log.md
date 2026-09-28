@@ -2,6 +2,82 @@
 
 Newest entry on top. One entry per cycle: what was done, honestly.
 
+## 2026-09-28 — sixteenth run
+
+- Ran `tools/collection-index/index.py` first: 8 tools, matches
+  `tools/*/manifest.json` exactly (unchanged going in). Re-read
+  `special-projects/wishlist.md` per the loop: one OWNER item open
+  (`[usage-telemetry]`, 2026-09-26), plus the `[distribute-and-harden]`
+  standing directive and the non-buildable `[stats-normal-vs-exact-pvalue]`
+  design note. `special-projects/current.md`'s own next-step list already
+  ranked `[usage-telemetry]` as the strongest cycle-16 candidate — OWNER-
+  authored, names its own caller ("the loop itself + the owner's agent
+  stack"), and directly closes `progress/quality-debt.md`'s standing "check
+  usage has no real mechanism" note. No web search needed (TASKS.md rule 2:
+  a wishlist item beats a sourced candidate).
+- Designed the mechanism per the wishlist item's own spec: each MCP server
+  appends `{ts, server, tool, ok, error?}` (no payloads) to a local,
+  opt-in log. Decided a shared module wired into all 7 existing servers
+  (not 7 copies of logging code) plus a genuine 9th `tools/` entry whose
+  own MCP tools read that log back into counts — this is what actually
+  answers TASKS.md step 9, not just the writing side.
+- Built `tools/usage-telemetry/`:
+  - `telemetrykit.py` — `record` (append one line via a single `os.write`
+    to an `O_APPEND` fd, atomic under `PIPE_BUF` across the several OS
+    processes that are this collection's stdio servers; a no-op unless a
+    log path is given or `CLAUDE_TOOLS_USAGE_LOG` is set), `track` (a
+    decorator recording ok/error around a call and re-raising), `summarize`
+    (per-server/per-tool aggregate counts, first/last-seen, malformed-line
+    count), `tail` (last N raw entries). Stdlib only.
+  - `server.py` — `read_usage_summary`/`tail_usage_events` MCP tools.
+  - Wired `@track("<server-name>")` into all 53 `@server.tool()` functions
+    across `discrete-probability` (7), `graph-algorithms` (18),
+    `logic-grid-solver` (3), `secure-random` (11), `spaced-arrangement`
+    (5), `strips-planner` (4), and `time-arithmetic` (5) — each
+    `server.py` adds this tool's directory to `sys.path` and imports
+    `track`, with a no-op fallback if `usage-telemetry` isn't present
+    alongside it (so any tool copied out of this repo standalone keeps
+    working, just without logging).
+  - 17 new unit tests (`tools/usage-telemetry/tests/`): logging truly off
+    by default, never logs beyond the five allowed fields, `track` records
+    both the success and exception paths and never swallows the exception,
+    `summarize`/`tail` aggregate and skip malformed lines correctly.
+- Found and fixed a real bug while writing this cycle's own proof:
+  `scripts/mcp_client.py`'s `run_calls()` didn't forward the calling
+  process's environment to the spawned server (`mcp`'s `stdio_client`
+  only inherits a small safe allowlist by default) — meant
+  `CLAUDE_TOOLS_USAGE_LOG` set in the shell never reached the server
+  process, so telemetry would have silently logged nothing. Fixed by
+  passing `env={**os.environ, **(env or {})}` to `StdioServerParameters`.
+  Verified ordinary `mcp_client.py` usage against an existing server is
+  unaffected. See `progress/quality-debt.md`'s new entry.
+- Full end-to-end proof (`tools/usage-telemetry/proof/run_2026-09-28.txt`):
+  ran the 17 unit tests, then with `CLAUDE_TOOLS_USAGE_LOG` set, drove
+  `secure-random` (success + a deliberate `roll_dice` error) and
+  `time-arithmetic` live via `scripts/mcp_client.py` — two separate OS
+  processes appending to the same file — then drove `usage-telemetry`
+  itself: once with no log configured (confirms `exists: false`, not an
+  error), once with an explicit `log_path`, and once via the env var on
+  `usage-telemetry`'s own process (the real owner-config path), all three
+  correctly reporting the exact calls made.
+- Confirmed no regression: full collection test suite (309 tests across
+  all 8 tool directories, up from 296 — the 17 new ones) passes;
+  `tools/collection-index/index.py` picks up the new tool automatically
+  (manifest-glob based, no hardcoding needed) and now reports 9.
+- Updated: root `README.md` (new tool bullet), all 7 touched tools'
+  `manifest.json` (`updated: 2026-09-28`, real code changed), `special-
+  projects/wishlist.md` (`[usage-telemetry]` moved to Done),
+  `progress/quality-debt.md` (both fixes logged), `progress/notes-for-
+  owner.md` (the one thing this repo can't do: actually turning
+  `CLAUDE_TOOLS_USAGE_LOG` on in the owner's real MCP client config).
+- **Usage check (TASKS.md step 9), first cycle this can be answered for
+  real going forward:** no prior cycle's tools have logged anything yet —
+  the mechanism didn't exist until this cycle, and turning it on in the
+  owner's actual agent-stack config is outside this repo's control (see
+  the notes-for-owner entry). Once that's live, a future cycle's step 9
+  is `read_usage_summary` against the real log, not a restated manifest
+  diff.
+
 ## 2026-09-27 — fifteenth run
 
 - Ran `tools/collection-index/index.py` first: still 8 tools, matches

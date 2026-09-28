@@ -1,0 +1,237 @@
+=== Proof: usage-telemetry, end to end (2026-09-28) ===
+
+Unit tests (tools/usage-telemetry/tests/test_telemetrykit.py):
+test_creates_parent_directories (test_telemetrykit.TestRecord.test_creates_parent_directories) ... ok
+test_empty_env_var_counts_as_unset (test_telemetrykit.TestRecord.test_empty_env_var_counts_as_unset) ... ok
+test_env_var_fallback (test_telemetrykit.TestRecord.test_env_var_fallback) ... ok
+test_never_logs_payloads (test_telemetrykit.TestRecord.test_never_logs_payloads) ... ok
+test_no_op_when_no_path_given_and_env_unset (test_telemetrykit.TestRecord.test_no_op_when_no_path_given_and_env_unset) ... ok
+test_writes_one_json_line_per_call (test_telemetrykit.TestRecord.test_writes_one_json_line_per_call) ... ok
+test_aggregates_per_server_and_tool (test_telemetrykit.TestSummarize.test_aggregates_per_server_and_tool) ... ok
+test_first_seen_and_last_seen (test_telemetrykit.TestSummarize.test_first_seen_and_last_seen) ... ok
+test_missing_log_reports_not_exists (test_telemetrykit.TestSummarize.test_missing_log_reports_not_exists) ... ok
+test_skips_malformed_lines_without_crashing (test_telemetrykit.TestSummarize.test_skips_malformed_lines_without_crashing) ... ok
+test_unset_reports_none_path (test_telemetrykit.TestSummarize.test_unset_reports_none_path) ... ok
+test_empty_when_no_log (test_telemetrykit.TestTail.test_empty_when_no_log) ... ok
+test_most_recent_first_and_limit (test_telemetrykit.TestTail.test_most_recent_first_and_limit) ... ok
+test_zero_n_returns_empty (test_telemetrykit.TestTail.test_zero_n_returns_empty) ... ok
+test_preserves_function_metadata (test_telemetrykit.TestTrack.test_preserves_function_metadata) ... ok
+test_records_error_and_reraises (test_telemetrykit.TestTrack.test_records_error_and_reraises) ... ok
+test_records_success_and_returns_value (test_telemetrykit.TestTrack.test_records_success_and_returns_value) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.006s
+
+OK
+
+----------------------------------------------------------------------
+Step 1: CLAUDE_TOOLS_USAGE_LOG=/tmp/usage_proof.jsonl, drive secure-random
+(a real MCP client, scripts/mcp_client.py, over stdio -- success + a
+deliberate error case, roll_dice with invalid notation)
+----------------------------------------------------------------------
+--- list_tools ---
+[
+  "roll_dice",
+  "random_integers",
+  "random_floats",
+  "flip_coins",
+  "shuffle_list",
+  "pick_random",
+  "generate_password",
+  "generate_token",
+  "generate_uuid4",
+  "verify_uniformity",
+  "verify_weighted_distribution"
+]
+
+--- roll_dice 2d6+3 ---
+{
+  "notation": "2d6+3",
+  "rolls": [
+    4,
+    3
+  ],
+  "modifier": 3,
+  "total": 10
+}
+
+--- generate_uuid4 ---
+{
+  "result": "afae26c2-1ecc-4028-a29e-3aebd0007de8"
+}
+
+--- roll_dice invalid notation (deliberate error) ---
+ERROR: Error executing tool roll_dice
+
+----------------------------------------------------------------------
+Step 2: same log, drive time-arithmetic
+----------------------------------------------------------------------
+--- list_tools ---
+[
+  "convert_timezone",
+  "add_time_delta",
+  "time_difference",
+  "date_facts",
+  "search_timezones"
+]
+
+--- add_time_delta +1 day ---
+{
+  "input": {
+    "iso": "2026-09-28T10:00:00+00:00",
+    "timezone": "UTC",
+    "utc_offset": "+00:00",
+    "is_dst": false,
+    "weekday": "Monday"
+  },
+  "output": {
+    "iso": "2026-09-29T10:00:00+00:00",
+    "timezone": "UTC",
+    "utc_offset": "+00:00",
+    "is_dst": false,
+    "weekday": "Tuesday"
+  }
+}
+
+----------------------------------------------------------------------
+Step 3: raw log file after steps 1-2 (secure-random and time-arithmetic
+are separate OS processes, both appending to the same file)
+----------------------------------------------------------------------
+{"ts":"2026-09-28T13:30:19Z","server":"secure-random","tool":"roll_dice","ok":true}
+{"ts":"2026-09-28T13:30:19Z","server":"secure-random","tool":"generate_uuid4","ok":true}
+{"ts":"2026-09-28T13:30:19Z","server":"secure-random","tool":"roll_dice","ok":false,"error":"ValueError"}
+{"ts":"2026-09-28T13:30:21Z","server":"time-arithmetic","tool":"add_time_delta","ok":true}
+
+----------------------------------------------------------------------
+Step 4: drive usage-telemetry itself against that same log -- once with
+no log configured (proves the opt-in off-by-default path reports
+exists=false rather than erroring), once with an explicit log_path,
+and tail_usage_events for the raw view
+----------------------------------------------------------------------
+--- list_tools ---
+[
+  "read_usage_summary",
+  "tail_usage_events"
+]
+
+--- read_usage_summary (unset log, logging off) ---
+{
+  "log_path": null,
+  "exists": false,
+  "total_invocations": 0,
+  "malformed_lines": 0,
+  "first_seen": null,
+  "last_seen": null,
+  "servers": {}
+}
+
+--- read_usage_summary (explicit log_path) ---
+{
+  "log_path": "/tmp/usage_proof.jsonl",
+  "exists": true,
+  "total_invocations": 4,
+  "malformed_lines": 0,
+  "first_seen": "2026-09-28T13:30:19Z",
+  "last_seen": "2026-09-28T13:30:21Z",
+  "servers": {
+    "secure-random": {
+      "total": 3,
+      "ok": 2,
+      "error": 1,
+      "tools": {
+        "roll_dice": {
+          "total": 2,
+          "ok": 1,
+          "error": 1,
+          "last_seen": "2026-09-28T13:30:19Z"
+        },
+        "generate_uuid4": {
+          "total": 1,
+          "ok": 1,
+          "error": 0,
+          "last_seen": "2026-09-28T13:30:19Z"
+        }
+      }
+    },
+    "time-arithmetic": {
+      "total": 1,
+      "ok": 1,
+      "error": 0,
+      "tools": {
+        "add_time_delta": {
+          "total": 1,
+          "ok": 1,
+          "error": 0,
+          "last_seen": "2026-09-28T13:30:21Z"
+        }
+      }
+    }
+  }
+}
+
+--- tail_usage_events n=2 (explicit log_path) ---
+[
+  {
+    "ts": "2026-09-28T13:30:21Z",
+    "server": "time-arithmetic",
+    "tool": "add_time_delta",
+    "ok": true
+  },
+  {
+    "ts": "2026-09-28T13:30:19Z",
+    "server": "secure-random",
+    "tool": "roll_dice",
+    "ok": false,
+    "error": "ValueError"
+  }
+]
+
+----------------------------------------------------------------------
+Step 5: same read_usage_summary call, this time via CLAUDE_TOOLS_USAGE_LOG
+on usage-telemetry's own process env instead of an explicit log_path --
+the config an owner's MCP client would actually use (README's snippet:
+the same env var set on every server entry)
+----------------------------------------------------------------------
+--- read_usage_summary (via CLAUDE_TOOLS_USAGE_LOG env var, no log_path arg) ---
+{
+  "log_path": "/tmp/usage_proof.jsonl",
+  "exists": true,
+  "total_invocations": 4,
+  "malformed_lines": 0,
+  "first_seen": "2026-09-28T13:30:19Z",
+  "last_seen": "2026-09-28T13:30:21Z",
+  "servers": {
+    "secure-random": {
+      "total": 3,
+      "ok": 2,
+      "error": 1,
+      "tools": {
+        "roll_dice": {
+          "total": 2,
+          "ok": 1,
+          "error": 1,
+          "last_seen": "2026-09-28T13:30:19Z"
+        },
+        "generate_uuid4": {
+          "total": 1,
+          "ok": 1,
+          "error": 0,
+          "last_seen": "2026-09-28T13:30:19Z"
+        }
+      }
+    },
+    "time-arithmetic": {
+      "total": 1,
+      "ok": 1,
+      "error": 0,
+      "tools": {
+        "add_time_delta": {
+          "total": 1,
+          "ok": 1,
+          "error": 0,
+          "last_seen": "2026-09-28T13:30:21Z"
+        }
+      }
+    }
+  }
+}

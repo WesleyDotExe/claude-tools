@@ -3,21 +3,68 @@
 Honest list of known gaps and shortcuts. Not urgent by default — surfaced
 so a future cycle (or the owner) can decide whether to pay them down.
 
-## TASKS.md step 9 ("check usage") has no real mechanism behind it
+## Fixed this cycle (2026-09-28): TASKS.md step 9 ("check usage") had no real mechanism behind it
 
-Noticed this cycle (2026-09-25) while trying to honestly do it: nothing in
-this repo can tell a build cycle whether a shipped MCP server has actually
-been invoked by the owner's other agents since it shipped — there's no
-telemetry, log, or callback from an external MCP client back into this
-repo. Every prior cycle's log either skips this step or, at best, restates
-that the collection-index/manifest counts are unchanged (which shows the
-tool still *exists*, not that anything *called* it). Not fixed because the
-honest fix isn't a `tools/` entry or a script — it needs either the owner
-to report which tools their agents actually reached for, or a change to
-how those agents' MCP clients log calls, both outside this repo's own
-control. Flagging so a future cycle doesn't either silently skip step 9
-(as most have) or claim to have done it more meaningfully than is
-currently possible.
+Was: nothing in this repo could tell a build cycle whether a shipped MCP
+server had actually been invoked by the owner's other agents since it
+shipped — there was no telemetry, log, or callback from an external MCP
+client back into this repo. Every prior cycle's log either skipped this
+step or, at best, restated that the collection-index/manifest counts were
+unchanged (which shows a tool still *exists*, not that anything *called*
+it).
+
+Fixed by adding `tools/usage-telemetry/` (`telemetrykit.py`'s `record`/
+`track`, wired via `@track("<server-name>")` into all 53 tool functions
+across the other 7 servers) plus its own MCP server exposing
+`read_usage_summary`/`tail_usage_events`. Off by default (`record` no-ops
+unless `CLAUDE_TOOLS_USAGE_LOG` is set or a `log_path` is passed
+explicitly), never logs a payload (just `{ts, server, tool, ok, error?}`,
+`error` an exception type name at most), and concurrency-safe by a single
+`os.write` to an `O_APPEND` fd per line rather than a lock (atomic under
+`PIPE_BUF` on POSIX, the actual situation here since every `tools/*/
+server.py` is its own OS process). 17 new unit tests plus a live end-to-end
+proof (`tools/usage-telemetry/proof/run_2026-09-28.txt`): drove
+`secure-random` and `time-arithmetic` live with logging on, confirmed both
+processes' calls landed in one shared file, then drove `usage-telemetry`
+itself and confirmed its aggregate exactly matches.
+
+**Still not fixed, and can't be from inside this repo:** the mechanism
+existing doesn't mean it's *collecting* anything — that needs
+`CLAUDE_TOOLS_USAGE_LOG` actually set in the owner's real MCP client
+config, outside this repo's control. See `progress/notes-for-owner.md`'s
+2026-09-28 entry. Also not built this cycle, deliberately out of scope: log
+rotation/size cap (a long-running log grows unbounded; `summarize`/`tail`
+are linear scans, fine at personal-agent-stack call volumes, not designed
+for high-throughput production logging) and cross-machine aggregation (each
+machine's log is local unless pointed at a shared path) — see
+`tools/usage-telemetry/README.md`'s "What it doesn't do" for the full list.
+Worth a future cycle's attention only if real usage volume through this
+mechanism makes either one bite.
+
+## Fixed this cycle (2026-09-28): `scripts/mcp_client.py` silently dropped any env var a caller set, including this cycle's own `CLAUDE_TOOLS_USAGE_LOG`
+
+Discovered while writing this cycle's own proof: `mcp`'s `stdio_client`
+spawns the server subprocess with only a small safe-to-inherit allowlist
+(`get_default_environment()`, e.g. `PATH`/`HOME`), not the calling
+process's actual environment — a deliberate security default in the `mcp`
+client *library*, meant for a client talking to a third party's server.
+`scripts/mcp_client.py`'s `run_calls()` didn't override it, so
+`CLAUDE_TOOLS_USAGE_LOG=/tmp/x.jsonl python3 scripts/mcp_client.py run
+tools/secure-random/server.py calls.json` silently spawned the server
+*without* that variable — no error, just a server that never logged
+anything, which would have made this cycle's own proof falsely look like
+telemetry wasn't working. Fixed by passing `env={**os.environ, **(env or
+{})}` to `StdioServerParameters` in `run_calls` (a new optional `env`
+parameter, plus always inheriting the caller's full environment by
+default) — appropriate for this specific script because it's a local dev
+harness driving this repo's *own* servers from a trusted shell, not a
+general-purpose client connecting to arbitrary third-party MCP servers
+where `mcp`'s restrictive default earns its keep. Confirmed this cycle's
+own proof depended on the fix (env var reached both `secure-random` and
+`time-arithmetic`'s spawned processes) and that ordinary `mcp_client.py`
+calls against an existing server still work unchanged
+(`python3 scripts/mcp_client.py call tools/secure-random/server.py
+roll_dice '{"notation": "2d6+3"}'`, re-run manually this cycle).
 
 ## `discrete-probability`'s `compare_two_proportions` only handles independent (unpaired) samples, and its permutation test has a size-dependent budget
 
