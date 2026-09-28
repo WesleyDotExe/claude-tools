@@ -4,6 +4,22 @@ Run: python3 server.py
 Wire into an MCP client (e.g. Claude Desktop/Code) with a stdio server
 entry pointing at this file. See README.md for a config snippet.
 """
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "usage-telemetry"))
+try:
+    from telemetrykit import track
+except ImportError:  # usage-telemetry not present alongside this tool
+
+    def track(_server_name):
+        def _decorator(fn):
+            return fn
+
+        return _decorator
+
+
 from mcp.server.mcpserver import MCPServer
 
 import graphkit
@@ -51,6 +67,7 @@ server = MCPServer(
 
 
 @server.tool()
+@track("graph-algorithms")
 def describe_graph_format() -> dict:
     """Describe the fixed JSON vocabulary for nodes/edges (and per-tool notes on directed-
     ness, weight vs. capacity, and defaults), plus a tiny worked example graph. Call this
@@ -59,6 +76,7 @@ def describe_graph_format() -> dict:
 
 
 @server.tool()
+@track("graph-algorithms")
 def shortest_path(nodes: list[str], edges: list[dict], source: str, target: str, directed: bool = True) -> dict:
     """Find the shortest path from source to target via Dijkstra's algorithm (edges need
     weight >= 0; 'weight' defaults to 1 if omitted, so an unweighted graph works too).
@@ -70,6 +88,7 @@ def shortest_path(nodes: list[str], edges: list[dict], source: str, target: str,
 
 
 @server.tool()
+@track("graph-algorithms")
 def verify_shortest_path(
     nodes: list[str], edges: list[dict], source: str, target: str, path: list[str], distance: float, directed: bool = True
 ) -> dict:
@@ -83,6 +102,7 @@ def verify_shortest_path(
 
 
 @server.tool()
+@track("graph-algorithms")
 def topological_sort(nodes: list[str], edges: list[dict]) -> dict:
     """Find a topological order (every directed edge points forward) via Kahn's algorithm.
     If the graph isn't a DAG, returns is_dag: false with a concrete cycle (found via DFS)
@@ -93,6 +113,7 @@ def topological_sort(nodes: list[str], edges: list[dict]) -> dict:
 
 
 @server.tool()
+@track("graph-algorithms")
 def verify_topological_order(nodes: list[str], edges: list[dict], order: list[str]) -> dict:
     """Independently check a claimed topological order against the direct definition (a
     permutation of nodes where every edge points forward) -- never re-runs Kahn's
@@ -102,6 +123,7 @@ def verify_topological_order(nodes: list[str], edges: list[dict], order: list[st
 
 
 @server.tool()
+@track("graph-algorithms")
 def minimum_spanning_tree(nodes: list[str], edges: list[dict]) -> dict:
     """Find a minimum spanning tree (or forest, if disconnected) via Kruskal's algorithm.
     Always undirected; weight may be any real number. Returns the tree edges, total
@@ -111,6 +133,7 @@ def minimum_spanning_tree(nodes: list[str], edges: list[dict]) -> dict:
 
 
 @server.tool()
+@track("graph-algorithms")
 def verify_minimum_spanning_tree(nodes: list[str], edges: list[dict], tree_edges: list[dict]) -> dict:
     """Independently check a claimed minimum spanning tree/forest: every edge is real,
     it's acyclic, it spans the same components as the full graph, and -- via the
@@ -122,6 +145,7 @@ def verify_minimum_spanning_tree(nodes: list[str], edges: list[dict], tree_edges
 
 
 @server.tool()
+@track("graph-algorithms")
 def max_flow(nodes: list[str], edges: list[dict], source: str, sink: str) -> dict:
     """Find the maximum flow from source to sink via Edmonds-Karp (directed graph, edges
     need 'capacity' >= 0, no duplicate (from, to) pairs). Always returns a minimum cut
@@ -132,6 +156,7 @@ def max_flow(nodes: list[str], edges: list[dict], source: str, sink: str) -> dic
 
 
 @server.tool()
+@track("graph-algorithms")
 def verify_max_flow(
     nodes: list[str], edges: list[dict], source: str, sink: str, flow_edges: list[dict], cut: dict | None = None
 ) -> dict:
@@ -144,6 +169,7 @@ def verify_max_flow(
 
 
 @server.tool()
+@track("graph-algorithms")
 def graph_coloring(nodes: list[str], edges: list[dict], num_colors: int, max_search_nodes: int = 200_000) -> dict:
     """Find a proper coloring using at most num_colors colors (0..num_colors-1) via
     backtracking search (DSATUR ordering + forward checking, budgeted by max_search_nodes).
@@ -155,6 +181,7 @@ def graph_coloring(nodes: list[str], edges: list[dict], num_colors: int, max_sea
 
 
 @server.tool()
+@track("graph-algorithms")
 def verify_coloring(nodes: list[str], edges: list[dict], coloring: dict) -> dict:
     """Independently check a claimed coloring (the solver's own, or a hand-written/
     model-proposed one) against the direct definition: every node has exactly one color,
@@ -165,6 +192,7 @@ def verify_coloring(nodes: list[str], edges: list[dict], coloring: dict) -> dict
 
 
 @server.tool()
+@track("graph-algorithms")
 def chromatic_number(nodes: list[str], edges: list[dict], max_search_nodes: int = 200_000) -> dict:
     """Find the minimum number of colors a proper coloring needs. Proves its lower bound
     by exhibiting a clique (no search needed for that half) and proves every smaller
@@ -176,6 +204,7 @@ def chromatic_number(nodes: list[str], edges: list[dict], max_search_nodes: int 
 
 
 @server.tool()
+@track("graph-algorithms")
 def describe_bipartite_format() -> dict:
     """Describe the fixed JSON vocabulary for the bipartite-matching tools
     (left_nodes/right_nodes/edges -- different from describe_graph_format's single
@@ -185,6 +214,7 @@ def describe_bipartite_format() -> dict:
 
 
 @server.tool()
+@track("graph-algorithms")
 def maximum_bipartite_matching(left_nodes: list[str], right_nodes: list[str], edges: list[dict]) -> dict:
     """Find a maximum matching between left_nodes and right_nodes via Kuhn's algorithm
     (does a pairing of the largest possible size exist -- unweighted; for the weighted
@@ -196,6 +226,7 @@ def maximum_bipartite_matching(left_nodes: list[str], right_nodes: list[str], ed
 
 
 @server.tool()
+@track("graph-algorithms")
 def verify_bipartite_matching(left_nodes: list[str], right_nodes: list[str], edges: list[dict], matching: list[dict]) -> dict:
     """Independently check a claimed matching (the solver's own, a hand-written one, or a
     model's guess): it's structurally valid (real edges, no node reused), then whether
@@ -208,6 +239,7 @@ def verify_bipartite_matching(left_nodes: list[str], right_nodes: list[str], edg
 
 
 @server.tool()
+@track("graph-algorithms")
 def assignment_problem(left_nodes: list[str], right_nodes: list[str], edges: list[dict], maximize: bool = False) -> dict:
     """Solve the assignment problem (n workers, n tasks -- len(left_nodes) must equal
     len(right_nodes)): match every left node to exactly one right node minimizing (or, if
@@ -222,6 +254,7 @@ def assignment_problem(left_nodes: list[str], right_nodes: list[str], edges: lis
 
 
 @server.tool()
+@track("graph-algorithms")
 def verify_assignment(
     left_nodes: list[str],
     right_nodes: list[str],
@@ -241,6 +274,7 @@ def verify_assignment(
 
 
 @server.tool()
+@track("graph-algorithms")
 def generate_random_graph(
     num_nodes: int,
     num_edges: int,

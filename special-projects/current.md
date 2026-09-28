@@ -1,6 +1,61 @@
 # Current state
 
-**Last cycle:** 2026-09-27 (fifteenth run)
+**Last cycle:** 2026-09-28 (sixteenth run)
+
+## This cycle (16): built `[usage-telemetry]` — TASKS.md step 9 finally has a real mechanism
+
+`special-projects/wishlist.md` had exactly one open OWNER item going into
+this cycle: `[usage-telemetry]` (2026-09-26), deliberately deferred by
+cycle 15 for its own design pass. It named its own caller ("the loop itself
++ the owner's agent stack") and directly closed `progress/quality-debt.md`'s
+standing "check usage has no real mechanism" note — the strongest possible
+TASKS.md rule-3 hit, no web search needed (rule 2).
+
+Built `tools/usage-telemetry/`, a genuine ninth MCP server whose whole job
+is reading a shared log the other eight now write to:
+
+- **`telemetrykit.py`** (stdlib only) — `record`/`track` (a decorator
+  appending `{ts, server, tool, ok, error?}` — never a payload — via a
+  single `os.write` to an `O_APPEND` fd, atomic under `PIPE_BUF` across the
+  several OS processes this collection's stdio servers actually are;
+  a no-op unless `CLAUDE_TOOLS_USAGE_LOG` is set or a `log_path` is passed
+  explicitly, so nothing changes unless a caller opts in), `summarize`
+  (per-server/per-tool aggregate counts), `tail` (last N raw entries).
+- **`server.py`** exposes `read_usage_summary`/`tail_usage_events`.
+- **Wired into all 53 `@server.tool()` functions** across the other seven
+  servers (`@track("<server-name>")` between `@server.tool()` and each
+  `def`) — one shared module, not seven copies of logging code, with a
+  no-op fallback if `usage-telemetry` is ever missing so any tool copied
+  out of this repo standalone still works.
+
+Along the way, found and fixed a real bug in `scripts/mcp_client.py`: it
+silently dropped any caller-set env var (including this cycle's own
+`CLAUDE_TOOLS_USAGE_LOG`) because `mcp`'s `stdio_client` only inherits a
+small safe allowlist by default — would have made this cycle's own proof
+falsely look like telemetry wasn't working. Fixed by forwarding the
+caller's environment explicitly (appropriate here since it's a trusted
+local dev harness driving this repo's own servers, not a client connecting
+to arbitrary third-party servers).
+
+Full end-to-end proof, not just unit tests in isolation:
+`tools/usage-telemetry/proof/run_2026-09-28.txt` drives `secure-random`
+and `time-arithmetic` live (two separate processes, success + a deliberate
+error) into one shared log, then drives `usage-telemetry` itself and
+confirms its aggregate matches exactly — both via an explicit `log_path`
+and via the `CLAUDE_TOOLS_USAGE_LOG` env var (the real owner-config path).
+17 new unit tests; full collection suite now 309 tests (up from 296),
+all passing, no regression in any of the seven touched servers.
+
+**Not done by this repo, and can't be:** the mechanism existing doesn't
+mean anything is being collected yet — that needs `CLAUDE_TOOLS_USAGE_LOG`
+actually set in the owner's real MCP client config, across every server
+entry, which is outside this repo's control. See
+`progress/notes-for-owner.md`'s 2026-09-28 entry. Moved `[usage-telemetry]`
+to wishlist.md's Done section with that caveat spelled out, same shape as
+`[ai-tcg-caller]`'s "enabling side shipped, cross-repo wiring is on someone
+else" pattern last cycle.
+
+## Before cycle 16 (state as of cycle 15, 2026-09-27)
 
 ## This cycle (15): built the enabling side of `[ai-tcg-caller]`
 
@@ -45,9 +100,19 @@ alongside this cycle's build; see "Next step" below.
 
 ## Where things stand
 
-Still eight `tools/*` MCP servers — this cycle built internal dev tooling
-under `scripts/` instead of a ninth tool or an extension to an existing
-one (see "why" below):
+Nine `tools/*` MCP servers as of cycle 16 (`usage-telemetry`, described
+first below, is the newest). The rest of this list is unchanged since
+cycle 14 (2026-09-26) except where noted:
+
+- `tools/usage-telemetry` — MCP server that reads the opt-in local call
+  log the other eight servers can now append to (`CLAUDE_TOOLS_USAGE_LOG`;
+  `{ts, server, tool, ok, error?}`, never a payload) and aggregates it into
+  real per-server, per-tool invocation counts via `read_usage_summary` and
+  `tail_usage_events`. Built cycle 16 (2026-09-28) — see this file's top
+  section and `progress/quality-debt.md`'s newly-fixed entry for the full
+  design and what it still can't do (rotation, cross-machine aggregation,
+  and — outside this repo's control — actually being turned on in the
+  owner's real MCP config).
 
 - `tools/collection-index` — reads `tools/*/manifest.json`, the source of
   truth the dashboard (and future runs) read from instead of re-scanning
@@ -155,43 +220,40 @@ match, no drift). No bugs found. Proof: `scripts/proof/run_2026-09-26.txt`.
 
 ## Next step
 
-Options for cycle 16, roughly in order of how promising they look:
+Options for cycle 17, roughly in order of how promising they look:
 
 1. **Check `special-projects/wishlist.md` FIRST, before anything else.**
-   As of this cycle it has two open items: `[usage-telemetry]` (an OWNER
-   item — see below) and `[stats-normal-vs-exact-pvalue]` (a design
-   lesson, not a buildable gap by itself).
-2. **`[usage-telemetry]` is the strongest candidate for cycle 16.** OWNER-
-   authored, names its own caller ("the loop itself + the owner's agent
-   stack"), and is exactly the kind of concrete, scoped build rule 4
-   (feasibility gate) wants: each `tools/*/server.py` appends an
-   invocation record (tool name, timestamp, ok/error) to a local, opt-in
-   log. Needs its own design pass this cycle deliberately deferred
-   (where the log lives — per-tool vs. collection-wide; a shared helper
-   module vs. duplicating logging code seven times; whether the log
-   itself needs a size cap/rotation) rather than bolting it on alongside
-   the `[ai-tcg-caller]` build. Read `progress/quality-debt.md`'s
-   standing note on this (TASKS.md step 9 having "no real mechanism")
-   before starting.
-3. **`[distribute-and-harden]` (OWNER standing directive)** says idle
-   cycles should default to hardening + distribution, not another
-   verification pass, until real usage data is flowing. `[usage-
-   telemetry]` is the prerequisite for that data existing at all — build
-   it before reaching for generic "package for an MCP registry" work,
-   since telemetry is what will tell future cycles which tool is actually
-   worth that investment.
-4. **`discrete-probability`'s real remaining gaps** (see its README's "What
+   As of this cycle it has one open item left: `[stats-normal-vs-exact-
+   pvalue]` (a design lesson for a not-yet-built tool, not a buildable
+   gap by itself) — `[usage-telemetry]` shipped this cycle and moved to
+   Done. If a fresh wishlist item has appeared since (from the owner or
+   from a recurring cycle), it beats everything below per TASKS.md rule 2.
+2. **`[distribute-and-harden]` (OWNER standing directive) is now the
+   strongest candidate for cycle 17.** It was explicitly gated on
+   `[usage-telemetry]` existing as the prerequisite for real usage data —
+   that's now built, but check `read_usage_summary` first: if the owner
+   has turned `CLAUDE_TOOLS_USAGE_LOG` on since this cycle (see
+   `progress/notes-for-owner.md`'s 2026-09-28 entry), real call counts
+   should now drive which tool gets hardened/distributed/packaged for an
+   MCP registry first, rather than guessing. If it's still empty (the env
+   var hasn't been wired into the owner's actual MCP config yet), that
+   itself is worth restating plainly rather than treated as "no signal,
+   proceed anyway" — either wait one more cycle to see if it's been
+   turned on, or pick a harden/distribute target on the same reasoning
+   prior cycles used before telemetry existed (most-referenced-in-
+   quality-debt, or least-recently-touched).
+3. **`discrete-probability`'s real remaining gaps** (see its README's "What
    it doesn't do"): `compare_two_proportions` doesn't handle
    paired/matched samples (needs McNemar's test, not built), and its
    permutation-test budget caps out around `verify_trials *
    min(trials_a, trials_b) <= 10,000,000`. Neither has a surfaced real need
    yet -- see `progress/quality-debt.md`.
-5. **Two extend-candidates remain checked-and-deferred in `graph-algorithms`**
+4. **Two extend-candidates remain checked-and-deferred in `graph-algorithms`**
    for lack of a *fresh, sourced* "LLMs get this wrong" complaint, last
    re-checked 2026-09-23: **general (non-bipartite) graph matching**
    (Edmonds' blossom algorithm) and **rectangular/partial assignment**
    (unequal left/right sizes in `assignment_problem`).
-6. **A promising-looking NEW tool idea remains rejected for saturation, not
+5. **A promising-looking NEW tool idea remains rejected for saturation, not
    lack of a source (2026-09-23):** cross-timezone meeting/availability
    finding. Found a genuinely sharp source (a MindStudio write-up on
    Claude Code's own `check_availability` tool miscomputing "end of day"
@@ -199,10 +261,10 @@ Options for cycle 16, roughly in order of how promising they look:
    by several existing keyless MCP servers. **Do not re-propose without a
    genuinely differentiated angle** (e.g. a proof/verification angle none
    of those offer).
-7. **`spaced-arrangement`'s remaining real gaps**: per-category
+6. **`spaced-arrangement`'s remaining real gaps**: per-category
    priority/weighting, and multi-dimensional spacing (e.g. avoid both
    same-artist AND same-genre clustering at once).
-8. **Do not re-propose:** Secret Santa/derangement-with-exclusions,
+7. **Do not re-propose:** Secret Santa/derangement-with-exclusions,
    bill-splitting/debt-simplification, pairwise/covering-array test
    generation, regex generation/ReDoS, synthetic-data generation with
    guaranteed correlation, OR-Tools-based optimization/bin-packing/
@@ -211,23 +273,27 @@ Options for cycle 16, roughly in order of how promising they look:
    text-diff, cron-expression/unit/subnet/generic calculators, or
    regex-ReDoS/WCAG-contrast checking -- all checked and rejected in
    earlier cycles for saturation or scope-overlap, not infeasibility.
-9. **Apportionment/seat-allocation (D'Hondt, Sainte-Laguë, Hamilton) and
+8. **Apportionment/seat-allocation (D'Hondt, Sainte-Laguë, Hamilton) and
     stable matching (Gale-Shapley)** — plausible shapes, still no sharp
     real "LLMs get this wrong" complaint as of 2026-09-26. Worth
     revisiting only with a real source.
-10. **`scripts/mcp_client.py` is available for every future cycle's
+9. **`scripts/mcp_client.py` is available for every future cycle's
     proof-writing** — use it (`run` mode) instead of a one-off stdio
-    client script when driving a *Python* server live. This cycle's TS
-    example needed its own equivalent extraction logic on the Node side
+    client script when driving a *Python* server live. Now forwards the
+    caller's environment to the spawned server (fixed cycle 16 — see
+    `progress/quality-debt.md`), so a var like `CLAUDE_TOOLS_USAGE_LOG`
+    set in the shell actually reaches it. This cycle's TS example still
+    needed its own equivalent extraction logic on the Node side
     (`tools/discrete-probability/examples/ts-client/src/client.ts`) since
     `mcp_client.py` is Python-only — worth generalizing only if a *second*
     TS-caller need appears (rule per this project's own pattern: don't
     build the shared version until a genuine second recurrence).
-11. **`progress/quality-debt.md`'s new entry (2026-09-27):** the new TS
-    example isn't covered by CI (`test.yml` only runs `tools/*/tests`) --
-    worth a lightweight CI job if this "non-Python example client"
-    pattern recurs for another tool.
-12. **If nothing clears the bar:** re-read all eight tools' "what it
+10. **`progress/quality-debt.md`'s standing entry (2026-09-27):** the TS
+    example under `discrete-probability/examples/ts-client` isn't covered
+    by CI (`test.yml` only runs `tools/*/tests`) -- worth a lightweight CI
+    job if this "non-Python example client" pattern recurs for another
+    tool.
+11. **If nothing clears the bar:** re-read all nine tools' "what it
     doesn't do" sections fresh.
 
 Do NOT re-propose natural-language date parsing for `time-arithmetic` — its

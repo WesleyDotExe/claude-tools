@@ -4,6 +4,22 @@ Run: python3 server.py
 Wire into an MCP client (e.g. Claude Desktop/Code) with a stdio server
 entry pointing at this file. See README.md for a config snippet.
 """
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "usage-telemetry"))
+try:
+    from telemetrykit import track
+except ImportError:  # usage-telemetry not present alongside this tool
+
+    def track(_server_name):
+        def _decorator(fn):
+            return fn
+
+        return _decorator
+
+
 from mcp.server.mcpserver import MCPServer
 
 import spacedkit
@@ -43,6 +59,7 @@ server = MCPServer(
 
 
 @server.tool()
+@track("spaced-arrangement")
 def describe_arrangement_format() -> dict:
     """Describe the fixed JSON vocabulary for items/min_distance, plus a tiny worked
     example. Call this before the other tools if you're building an items list from
@@ -51,6 +68,7 @@ def describe_arrangement_format() -> dict:
 
 
 @server.tool()
+@track("spaced-arrangement")
 def arrange_with_spacing(items: list[dict], min_distance: int = 2, max_search_nodes: int = 200_000) -> dict:
     """Construct an ordering of items so no two items of the SAME category are within
     min_distance positions of each other (min_distance=2 means 'no two adjacent'), via
@@ -64,6 +82,7 @@ def arrange_with_spacing(items: list[dict], min_distance: int = 2, max_search_no
 
 
 @server.tool()
+@track("spaced-arrangement")
 def verify_arrangement(items: list[dict], min_distance: int, arrangement: list[str]) -> dict:
     """Independently check a claimed arrangement (the solver's own, a hand-written one,
     or a model's guess) against the direct definition: it's a permutation of the given
@@ -75,6 +94,7 @@ def verify_arrangement(items: list[dict], min_distance: int, arrangement: list[s
 
 
 @server.tool()
+@track("spaced-arrangement")
 def maximize_min_distance(items: list[dict], max_search_nodes: int = 200_000) -> dict:
     """Find the LARGEST min_distance for which a valid arrangement of items exists (no
     min_distance is given -- this searches for the best one), and prove no larger value is
@@ -91,6 +111,7 @@ def maximize_min_distance(items: list[dict], max_search_nodes: int = 200_000) ->
 
 
 @server.tool()
+@track("spaced-arrangement")
 def generate_arrangement_problem(num_items: int, num_categories: int, seed: int | None = None) -> dict:
     """Generate a random, reproducible (seeded) items list -- num_items items spread
     across num_categories categories, every category used at least once -- ready to feed

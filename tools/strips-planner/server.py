@@ -4,6 +4,22 @@ Run: python3 server.py
 Wire into an MCP client (e.g. Claude Desktop/Code) with a stdio server
 entry pointing at this file. See README.md for a config snippet.
 """
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "usage-telemetry"))
+try:
+    from telemetrykit import track
+except ImportError:  # usage-telemetry not present alongside this tool
+
+    def track(_server_name):
+        def _decorator(fn):
+            return fn
+
+        return _decorator
+
+
 from mcp.server.mcpserver import MCPServer
 
 import planner
@@ -40,6 +56,7 @@ server = MCPServer(
 
 
 @server.tool()
+@track("strips-planner")
 def describe_planning_format() -> dict:
     """Describe the fixed JSON vocabulary for facts, action schemas, negation, and
     goals, plus a tiny worked example domain (a light switch) showing every piece.
@@ -49,6 +66,7 @@ def describe_planning_format() -> dict:
 
 
 @server.tool()
+@track("strips-planner")
 def solve_planning_problem(
     objects: list[str],
     initial_state: list[list[str]],
@@ -73,6 +91,7 @@ def solve_planning_problem(
 
 
 @server.tool()
+@track("strips-planner")
 def verify_plan(
     objects: list[str],
     initial_state: list[list[str]],
@@ -92,6 +111,7 @@ def verify_plan(
 
 
 @server.tool()
+@track("strips-planner")
 def generate_blocks_world_problem(num_blocks: int, seed: int | None = None) -> dict:
     """Generate a random instance of the classic Blocksworld benchmark domain (pick up/
     put down one block at a time, stack/unstack, hand holds at most one block) --

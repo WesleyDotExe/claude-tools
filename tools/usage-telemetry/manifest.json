@@ -1,0 +1,19 @@
+{
+  "name": "usage-telemetry",
+  "summary": "Reads the opt-in local call log every other MCP server in this collection can now append to (tool name, timestamp, ok/error -- never payloads), and aggregates it into real per-server, per-tool invocation counts.",
+  "problem": "TASKS.md's build loop has a step ('check usage') that asks whether prior tools have actually been called since they shipped, but until now nothing in this repo could answer that: no telemetry, log, or callback existed from an external MCP client back into this repo, so every cycle either skipped the step or restated that the collection-index/manifest counts were unchanged (which shows a tool still *exists*, not that anything *called* it) -- see progress/quality-debt.md's standing note, and special-projects/wishlist.md's OWNER-authored [usage-telemetry] entry (2026-09-26) asking for exactly this.",
+  "keyless": true,
+  "requires_network": false,
+  "language": "python",
+  "python_version": ">=3.9",
+  "entry_point": "server.py",
+  "cli_module": "telemetrykit.py",
+  "tests": "tests/test_telemetrykit.py",
+  "proof": "proof/run_2026-09-28.txt",
+  "created": "2026-09-28",
+  "updated": "2026-09-28",
+  "tools_exposed": [
+    "read_usage_summary",
+    "tail_usage_events"
+  ]
+}

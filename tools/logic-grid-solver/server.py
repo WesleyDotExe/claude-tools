@@ -4,6 +4,22 @@ Run: python3 server.py
 Wire into an MCP client (e.g. Claude Desktop/Code) with a stdio server
 entry pointing at this file. See README.md for a config snippet.
 """
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "usage-telemetry"))
+try:
+    from telemetrykit import track
+except ImportError:  # usage-telemetry not present alongside this tool
+
+    def track(_server_name):
+        def _decorator(fn):
+            return fn
+
+        return _decorator
+
+
 from mcp.server.mcpserver import MCPServer
 
 import puzzlekit
@@ -34,6 +50,7 @@ server = MCPServer(
 
 
 @server.tool()
+@track("logic-grid-solver")
 def describe_clue_types() -> dict:
     """List the supported clue-type vocabulary (fields, meaning, and a worked example
     for each type): position, same_position, different_position, immediately_left_of,
@@ -45,6 +62,7 @@ def describe_clue_types() -> dict:
 
 
 @server.tool()
+@track("logic-grid-solver")
 def solve_logic_grid(
     categories: dict[str, list[str]],
     clues: list[dict],
@@ -67,6 +85,7 @@ def solve_logic_grid(
 
 
 @server.tool()
+@track("logic-grid-solver")
 def verify_logic_grid_solution(
     categories: dict[str, list[str]],
     clues: list[dict],

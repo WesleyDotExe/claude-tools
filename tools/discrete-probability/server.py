@@ -4,6 +4,22 @@ Run: python3 server.py
 Wire into an MCP client (e.g. Claude Desktop/Code) with a stdio server
 entry pointing at this file. See README.md for a config snippet.
 """
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "usage-telemetry"))
+try:
+    from telemetrykit import track
+except ImportError:  # usage-telemetry not present alongside this tool
+
+    def track(_server_name):
+        def _decorator(fn):
+            return fn
+
+        return _decorator
+
+
 from typing import Any
 
 from mcp.server.mcpserver import MCPServer
@@ -34,6 +50,7 @@ server = MCPServer(
 
 
 @server.tool()
+@track("discrete-probability")
 def birthday_collision(n: int, categories: int = 365, verify: bool = False, verify_trials: int = 20000) -> dict:
     """Exact probability that >=2 of `n` items drawn uniformly (with replacement)
     from `categories` possible values collide -- the birthday paradox, generalized
@@ -43,6 +60,7 @@ def birthday_collision(n: int, categories: int = 365, verify: bool = False, veri
 
 
 @server.tool()
+@track("discrete-probability")
 def dice_sum_distribution(
     num_dice: int,
     sides: int = 6,
@@ -61,6 +79,7 @@ def dice_sum_distribution(
 
 
 @server.tool()
+@track("discrete-probability")
 def hypergeometric_probability(
     population_size: int,
     success_states: int,
@@ -82,6 +101,7 @@ def hypergeometric_probability(
 
 
 @server.tool()
+@track("discrete-probability")
 def binomial_probability(
     n: int,
     prob_success: Any,
@@ -100,6 +120,7 @@ def binomial_probability(
 
 
 @server.tool()
+@track("discrete-probability")
 def bayes_update(
     prior: Any,
     likelihood_given_true: Any,
@@ -117,6 +138,7 @@ def bayes_update(
 
 
 @server.tool()
+@track("discrete-probability")
 def monty_hall(doors: int = 3, cars: int = 1, reveal: int = 1, verify: bool = False, verify_trials: int = 20000) -> dict:
     """Exact win probability for staying vs. switching in a generalized Monty Hall
     problem: `doors` total doors, `cars` of which hide a prize, the host opens
@@ -128,6 +150,7 @@ def monty_hall(doors: int = 3, cars: int = 1, reveal: int = 1, verify: bool = Fa
 
 
 @server.tool()
+@track("discrete-probability")
 def compare_two_proportions(
     successes_a: int,
     trials_a: int,

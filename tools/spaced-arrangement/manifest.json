@@ -11,7 +11,7 @@
   "tests": "tests/test_spacedkit.py",
   "proof": "proof/run_2026-09-23.txt",
   "created": "2026-09-21",
-  "updated": "2026-09-23",
+  "updated": "2026-09-28",
   "tools_exposed": [
     "describe_arrangement_format",
     "arrange_with_spacing",

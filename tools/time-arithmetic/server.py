@@ -4,6 +4,22 @@ Run: python3 server.py
 Wire into an MCP client (e.g. Claude Desktop/Code) with a stdio server
 entry pointing at this file. See README.md for a config snippet.
 """
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "usage-telemetry"))
+try:
+    from telemetrykit import track
+except ImportError:  # usage-telemetry not present alongside this tool
+
+    def track(_server_name):
+        def _decorator(fn):
+            return fn
+
+        return _decorator
+
+
 from mcp.server.mcpserver import MCPServer
 
 import timekit
@@ -20,6 +36,7 @@ server = MCPServer(
 
 
 @server.tool()
+@track("time-arithmetic")
 def convert_timezone(when: str, from_tz: str, to_tz: str) -> dict:
     """Convert a local wall-clock time from one IANA timezone to another.
 
@@ -30,6 +47,7 @@ def convert_timezone(when: str, from_tz: str, to_tz: str) -> dict:
 
 
 @server.tool()
+@track("time-arithmetic")
 def add_time_delta(
     when: str,
     tz: str,
@@ -50,18 +68,21 @@ def add_time_delta(
 
 
 @server.tool()
+@track("time-arithmetic")
 def time_difference(when1: str, tz1: str, when2: str, tz2: str) -> dict:
     """Real elapsed time between two local timestamps, which may be in different timezones."""
     return timekit.diff(when1, tz1, when2, tz2)
 
 
 @server.tool()
+@track("time-arithmetic")
 def date_facts(date: str) -> dict:
     """Weekday, ISO week number, day-of-year, leap-year status, and days-in-month for a date."""
     return timekit.day_info(date)
 
 
 @server.tool()
+@track("time-arithmetic")
 def search_timezones(query: str, limit: int = 20) -> list[str]:
     """Case-insensitive substring search over the IANA timezone database (e.g. 'tokyo')."""
     return timekit.find_timezones(query, limit)

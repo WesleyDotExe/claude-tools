@@ -11,7 +11,7 @@
   "tests": "tests/test_graphkit.py",
   "proof": "proof/run_2026-09-22.txt",
   "created": "2026-09-19",
-  "updated": "2026-09-22",
+  "updated": "2026-09-28",
   "tools_exposed": [
     "describe_graph_format",
     "shortest_path",
