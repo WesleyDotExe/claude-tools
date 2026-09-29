@@ -1,0 +1,85 @@
+{
+  "mcpServers": {
+    "discrete-probability": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/claude-tools/tools/discrete-probability/server.py"
+      ],
+      "env": {
+        "CLAUDE_TOOLS_USAGE_LOG": "/root/.claude-tools/usage.jsonl"
+      }
+    },
+    "graph-algorithms": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/claude-tools/tools/graph-algorithms/server.py"
+      ],
+      "env": {
+        "CLAUDE_TOOLS_USAGE_LOG": "/root/.claude-tools/usage.jsonl"
+      }
+    },
+    "logic-grid-solver": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/claude-tools/tools/logic-grid-solver/server.py"
+      ],
+      "env": {
+        "CLAUDE_TOOLS_USAGE_LOG": "/root/.claude-tools/usage.jsonl"
+      }
+    },
+    "secure-random": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/claude-tools/tools/secure-random/server.py"
+      ],
+      "env": {
+        "CLAUDE_TOOLS_USAGE_LOG": "/root/.claude-tools/usage.jsonl"
+      }
+    },
+    "spaced-arrangement": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/claude-tools/tools/spaced-arrangement/server.py"
+      ],
+      "env": {
+        "CLAUDE_TOOLS_USAGE_LOG": "/root/.claude-tools/usage.jsonl"
+      }
+    },
+    "strips-planner": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/claude-tools/tools/strips-planner/server.py"
+      ],
+      "env": {
+        "CLAUDE_TOOLS_USAGE_LOG": "/root/.claude-tools/usage.jsonl"
+      }
+    },
+    "time-arithmetic": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/claude-tools/tools/time-arithmetic/server.py"
+      ],
+      "env": {
+        "CLAUDE_TOOLS_USAGE_LOG": "/root/.claude-tools/usage.jsonl"
+      }
+    },
+    "usage-telemetry": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/claude-tools/tools/usage-telemetry/server.py"
+      ],
+      "env": {
+        "CLAUDE_TOOLS_USAGE_LOG": "/root/.claude-tools/usage.jsonl"
+      }
+    }
+  }
+}
+
+ok   discrete-probability: 7 tools
+ok   graph-algorithms: 18 tools
+ok   logic-grid-solver: 3 tools
+ok   secure-random: 11 tools
+ok   spaced-arrangement: 5 tools
+ok   strips-planner: 4 tools
+ok   time-arithmetic: 5 tools
+ok   usage-telemetry: 2 tools

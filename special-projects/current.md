@@ -1,6 +1,9 @@
 # Current state
 
-**Last cycle:** 2026-09-28 (sixteenth run)
+**Last cycle:** 2026-09-29 (seventeenth run)
+
+## Cycle 17: no new tool — added `scripts/gen_mcp_config.py` (combined MCP config + telemetry wiring, `--check` verified 8/8 servers). Next: check `read_usage_summary` for real data once the owner enables `CLAUDE_TOOLS_USAGE_LOG`; otherwise continue [distribute-and-harden] (eval harness / registry packaging).
+
 
 ## This cycle (16): built `[usage-telemetry]` — TASKS.md step 9 finally has a real mechanism
 

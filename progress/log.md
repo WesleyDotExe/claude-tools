@@ -993,3 +993,12 @@ math). 13 unit tests + a live MCP client session, both passing. Also added
 the project README, MIT license, and the `auto-merge` GitHub workflow for
 `claude/*` branch PRs (see `progress/quality-debt.md` for a gap noticed in
 that workflow this cycle).
+
+## 2026-09-29 — seventeenth run
+
+Wishlist empty of fresh items; followed [distribute-and-harden]. Added
+`scripts/gen_mcp_config.py` (combined mcpServers config from manifests,
+optional usage-log wiring, `--check` live-starts every server; 8/8 ok).
+Usage check: `CLAUDE_TOOLS_USAGE_LOG` is not set in this environment, so no
+real usage data exists yet — still unverified whether the owner's agents call
+any tool. Not a new tool; no `tools/` change, tests unchanged.
