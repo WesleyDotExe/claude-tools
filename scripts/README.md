@@ -59,3 +59,18 @@ entries.
 Neither script is a repo dependency — `mcp`/`cffi` stay dev-only, exactly
 like each `tools/*/requirements.txt` already declares them as that tool's
 own concern, not the collection's.
+
+## Combined MCP config
+
+- **`gen_mcp_config.py`** — prints one `mcpServers` block covering every
+  `tools/*` MCP server (read from each `manifest.json`, so new tools appear
+  automatically). `--usage-log PATH` sets `CLAUDE_TOOLS_USAGE_LOG` on every
+  entry, which is what makes `usage-telemetry` collect anything. `--check`
+  starts each generated server and confirms it answers `list_tools`.
+
+  ```bash
+  python3 scripts/gen_mcp_config.py --usage-log ~/.claude-tools/usage.jsonl
+  python3 scripts/gen_mcp_config.py --check
+  ```
+
+  Proof: `scripts/proof/run_2026-09-29.txt`.

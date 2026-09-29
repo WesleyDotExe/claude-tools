@@ -301,3 +301,7 @@ schema to check it against. Worth a future cycle adding a lightweight CI
 job (`npm ci && npm run build && npm run prove`) if this pattern
 (non-Python example clients) recurs for another tool, rather than fixing
 it in isolation for just this one directory.
+
+## gen_mcp_config.py has no unit test (2026-09-29)
+
+Only exercised by its `--check` proof run; `scripts/` isn't covered by CI.

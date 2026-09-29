@@ -563,3 +563,9 @@ client for a real win-rate decision — is a follow-up step for that repo's
 own agent, not something this cycle could complete. Worth telling that
 session (or its next scheduled run) where the example lives, if it isn't
 already watching this repo.
+
+## 2026-09-29
+
+To turn on usage telemetry across all servers at once, generate your config
+with `python3 scripts/gen_mcp_config.py --usage-log ~/.claude-tools/usage.jsonl`
+and paste the block into your MCP client config. Until then no usage data exists.
